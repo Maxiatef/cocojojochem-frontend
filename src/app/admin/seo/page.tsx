@@ -110,9 +110,9 @@ export default function SeoAdminPage() {
     setError(null);
     const body = {
       path: form.path,
-      metaTitle: form.metaTitle || undefined,
-      metaDescription: form.metaDescription || undefined,
-      ogImageUrl: form.ogImageUrl || undefined,
+      metaTitle: form.metaTitle || null,
+      metaDescription: form.metaDescription || null,
+      ogImageUrl: form.ogImageUrl || null,
     };
     if (form.id) {
       updateMutation.mutate({ id: form.id, body });
