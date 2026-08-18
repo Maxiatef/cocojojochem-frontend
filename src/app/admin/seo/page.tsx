@@ -5,8 +5,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireAdmin } from '@/components/AdminShell';
-import { SeoPage } from '@/lib/types';
+import { SeoAnalyzeResult, SeoIssue, SeoMetric, SeoOverview, SeoPage } from '@/lib/types';
 import {
+  Badge,
   Button,
   Card,
   ConfirmDialog,
@@ -16,6 +17,7 @@ import {
   LoadingState,
   Modal,
   PageHeader,
+  StatCard,
   Table,
   TableHead,
   Td,
@@ -24,7 +26,18 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { CheckCircleIcon, EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import {
+  AlertTriangleIcon,
+  ChartIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EditIcon,
+  GlobeIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@/components/icons';
+
+type SeoTab = 'meta-tags' | 'site-analysis';
 
 interface SeoFormState {
   id: number | null;
@@ -43,6 +56,42 @@ const EMPTY_FORM: SeoFormState = {
 };
 
 export default function SeoAdminPage() {
+  const [tab, setTab] = useState<SeoTab>('meta-tags');
+
+  return (
+    <RequireAdmin>
+      <div>
+        <PageHeader title="SEO" description="Per-path meta overrides and real-time site analysis." />
+
+        <div className="mb-6 flex gap-1 border-b border-slate-200">
+          {(
+            [
+              ['meta-tags', 'Meta Tags'],
+              ['site-analysis', 'Site Analysis'],
+            ] as [SeoTab, string][]
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
+                tab === key
+                  ? 'border-brand-600 text-brand-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'meta-tags' && <MetaTagsTab />}
+        {tab === 'site-analysis' && <SiteAnalysisTab />}
+      </div>
+    </RequireAdmin>
+  );
+}
+
+function MetaTagsTab() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<SeoFormState>(EMPTY_FORM);
@@ -125,14 +174,16 @@ export default function SeoAdminPage() {
   const saving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <RequireAdmin>
-      <div>
-        <div className="mb-6 flex items-center justify-between">
-          <PageHeader title="SEO Pages" description="Per-path meta title, description, and social image overrides." />
-          <Button onClick={openCreateModal} icon={PlusIcon}>
-            Add SEO Page
-          </Button>
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Meta Tags</h2>
+          <p className="text-xs text-slate-500">Per-path meta title, description, and social image overrides.</p>
         </div>
+        <Button onClick={openCreateModal} icon={PlusIcon}>
+          Add SEO Page
+        </Button>
+      </div>
 
         {isLoading && <LoadingState />}
         {isError && <ErrorState message="Couldn't load SEO pages." />}
@@ -225,7 +276,188 @@ export default function SeoAdminPage() {
           onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
           onCancel={() => setPendingDelete(null)}
         />
+    </div>
+  );
+}
+
+// --- Site Analysis tab ------------------------------------------------------
+
+function scorePillClass(score: number | null): string {
+  if (score === null) return 'bg-slate-100 text-slate-500';
+  if (score >= 80) return 'bg-green-50 text-green-700';
+  if (score >= 60) return 'bg-amber-50 text-amber-700';
+  return 'bg-red-50 text-red-700';
+}
+
+function fmtDateTime(d: string | null) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString();
+}
+
+function SiteAnalysisTab() {
+  const queryClient = useQueryClient();
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
+  const overviewQuery = useQuery({
+    queryKey: ['seo-analyzer-overview'],
+    queryFn: () => api.get<SeoOverview>('/seo-analyzer/overview'),
+  });
+
+  const metricsQuery = useQuery({
+    queryKey: ['seo-analyzer-metrics'],
+    queryFn: () => api.get<SeoMetric[]>('/seo-analyzer/metrics'),
+  });
+
+  const issuesQuery = useQuery({
+    queryKey: ['seo-analyzer-issues'],
+    queryFn: () => api.get<SeoIssue[]>('/seo-analyzer/issues'),
+  });
+
+  const analyzeMutation = useMutation({
+    mutationFn: () => api.post<SeoAnalyzeResult>('/seo-analyzer/analyze', {}),
+    onSuccess: () => {
+      setAnalyzeError(null);
+      queryClient.invalidateQueries({ queryKey: ['seo-analyzer-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['seo-analyzer-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['seo-analyzer-issues'] });
+    },
+    onError: (err) => setAnalyzeError(getFriendlyErrorMessage(err)),
+  });
+
+  const overview = overviewQuery.data;
+  const metrics = metricsQuery.data || [];
+  const issues = issuesQuery.data || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Site Analysis</h2>
+          <p className="text-xs text-slate-500">
+            Crawls the live storefront pages and detects real SEO issues — titles, meta descriptions, headings, content length, and image alt text.
+          </p>
+        </div>
+        <Button onClick={() => analyzeMutation.mutate()} loading={analyzeMutation.isPending} icon={GlobeIcon}>
+          Analyze Site
+        </Button>
       </div>
-    </RequireAdmin>
+
+      {analyzeError && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{analyzeError}</div>}
+
+      {overviewQuery.isLoading && <LoadingState />}
+      {overviewQuery.isError && <ErrorState message="Couldn't load SEO overview." />}
+
+      {overview && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Pages Analyzed" value={overview.totalPagesAnalyzed} icon={GlobeIcon} />
+          <StatCard label="Average SEO Score" value={overview.averageScore} accent="brand" icon={ChartIcon} />
+          <StatCard
+            label="Open Issues"
+            value={overview.totalIssues}
+            accent={overview.totalIssues > 0 ? 'red' : 'slate'}
+            icon={AlertTriangleIcon}
+          />
+          <StatCard
+            label="Last Analyzed"
+            value={overview.lastAnalyzed ? fmtDateTime(overview.lastAnalyzed) : 'Never'}
+            accent="slate"
+            icon={ClockIcon}
+          />
+        </div>
+      )}
+
+      {overview && overview.totalIssues > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((sev) => (
+            <div key={sev} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3.5 py-2.5">
+              <Badge status={sev} />
+              <span className="text-sm font-semibold text-slate-900">{overview.issuesBySeverity[sev] || 0}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Card>
+        <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">Per-Page Metrics</div>
+        {metricsQuery.isLoading && <LoadingState />}
+        {metricsQuery.isError && <ErrorState message="Couldn't load SEO metrics." />}
+        {!metricsQuery.isLoading && !metricsQuery.isError && metrics.length === 0 && (
+          <EmptyState message="No pages analyzed yet — click Analyze Site to run a crawl." />
+        )}
+        {!metricsQuery.isLoading && metrics.length > 0 && (
+          <Table minWidth={780}>
+            <TableHead>
+              <Th>Path</Th>
+              <Th>Title</Th>
+              <Th>Meta Description</Th>
+              <Th align="right">Word Count</Th>
+              <Th align="right">SEO Score</Th>
+              <Th>Last Analyzed</Th>
+            </TableHead>
+            <tbody>
+              {metrics.map((m) => (
+                <Tr key={m.id}>
+                  <Td className="font-medium text-slate-900">{m.path}</Td>
+                  <Td>
+                    {m.title ? (
+                      <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </Td>
+                  <Td>
+                    {m.metaDescription ? (
+                      <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </Td>
+                  <Td align="right" className="text-slate-600">
+                    {m.wordCount ?? '—'}
+                  </Td>
+                  <Td align="right">
+                    <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${scorePillClass(m.seoScore)}`}>
+                      {m.seoScore ?? '—'}
+                    </span>
+                  </Td>
+                  <Td className="text-slate-500">{fmtDateTime(m.lastAnalyzed)}</Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+
+      <Card>
+        <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">Issues</div>
+        {issuesQuery.isLoading && <LoadingState />}
+        {issuesQuery.isError && <ErrorState message="Couldn't load SEO issues." />}
+        {!issuesQuery.isLoading && !issuesQuery.isError && issues.length === 0 && (
+          <EmptyState message="No issues detected." />
+        )}
+        {!issuesQuery.isLoading && issues.length > 0 && (
+          <Table minWidth={780}>
+            <TableHead>
+              <Th>Path</Th>
+              <Th>Issue</Th>
+              <Th>Severity</Th>
+              <Th>Description</Th>
+            </TableHead>
+            <tbody>
+              {issues.map((i) => (
+                <Tr key={i.id}>
+                  <Td className="font-medium text-slate-900">{i.path}</Td>
+                  <Td className="text-slate-600">{i.issueType.replace(/_/g, ' ')}</Td>
+                  <Td>
+                    <Badge status={i.severity} />
+                  </Td>
+                  <Td className="text-slate-500">{i.description}</Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card>
+    </div>
   );
 }

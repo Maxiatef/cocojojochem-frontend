@@ -10,8 +10,10 @@ import {
   Paginated,
   Product,
   ProductFunction,
+  SeoPage,
   Testimonial,
 } from '@/lib/types';
+import { Metadata } from 'next';
 import {
   ArrowRightIcon,
   BottleIcon,
@@ -28,11 +30,23 @@ import {
   SparklesIcon,
 } from '@/components/icons';
 
-export const metadata = {
+const DEFAULT_METADATA: Metadata = {
   title: 'CocoJojoChem Wholesale — Cosmetic Ingredient Supply',
   description:
     'Wholesale cosmetic ingredients, sourced and supplied at scale for brands, formulators, and manufacturers.',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/')}`, {
+    cache: 'no-store',
+  });
+  if (!seo || !seo.metaTitle) return DEFAULT_METADATA;
+  return {
+    title: seo.metaTitle,
+    description: seo.metaDescription || DEFAULT_METADATA.description,
+    ...(seo.ogImageUrl ? { openGraph: { images: [seo.ogImageUrl] } } : {}),
+  };
+}
 
 function categoryIcon(name: string) {
   const n = name.toLowerCase();

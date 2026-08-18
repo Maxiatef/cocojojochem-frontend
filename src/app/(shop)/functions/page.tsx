@@ -1,11 +1,24 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
-import { ProductFunction } from '@/lib/types';
+import { ProductFunction, SeoPage } from '@/lib/types';
 
-export const metadata = {
+const DEFAULT_METADATA: Metadata = {
   title: 'Shop by Function — CocoJojoChem Wholesale',
   description: 'Find ingredients by what they do — anti-aging, antioxidant, humectant, and more.',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/functions')}`, {
+    cache: 'no-store',
+  });
+  if (!seo || !seo.metaTitle) return DEFAULT_METADATA;
+  return {
+    title: seo.metaTitle,
+    description: seo.metaDescription || DEFAULT_METADATA.description,
+    ...(seo.ogImageUrl ? { openGraph: { images: [seo.ogImageUrl] } } : {}),
+  };
+}
 
 export default async function FunctionsPage() {
   const functions = (await serverFetch<ProductFunction[]>('/wholesale/functions')) || [];

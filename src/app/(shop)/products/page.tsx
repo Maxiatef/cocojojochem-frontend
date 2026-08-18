@@ -1,9 +1,24 @@
+import { Metadata } from 'next';
 import { ProductFilterGrid } from '@/components/storefront/ProductFilterGrid';
+import { serverFetch } from '@/lib/serverFetch';
+import { SeoPage } from '@/lib/types';
 
-export const metadata = {
+const DEFAULT_METADATA: Metadata = {
   title: 'All Products — CocoJojoChem Wholesale',
   description: 'Browse the full wholesale ingredient catalog with search, filters, and sorting.',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/products')}`, {
+    cache: 'no-store',
+  });
+  if (!seo || !seo.metaTitle) return DEFAULT_METADATA;
+  return {
+    title: seo.metaTitle,
+    description: seo.metaDescription || DEFAULT_METADATA.description,
+    ...(seo.ogImageUrl ? { openGraph: { images: [seo.ogImageUrl] } } : {}),
+  };
+}
 
 export default function ProductsPage() {
   return (

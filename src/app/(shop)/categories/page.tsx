@@ -1,12 +1,25 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
-import { Category, Paginated } from '@/lib/types';
+import { Category, Paginated, SeoPage } from '@/lib/types';
 import { FlaskIcon } from '@/components/icons';
 
-export const metadata = {
+const DEFAULT_METADATA: Metadata = {
   title: 'Categories — CocoJojoChem Wholesale',
   description: 'Browse the full wholesale ingredient catalog by category.',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/categories')}`, {
+    cache: 'no-store',
+  });
+  if (!seo || !seo.metaTitle) return DEFAULT_METADATA;
+  return {
+    title: seo.metaTitle,
+    description: seo.metaDescription || DEFAULT_METADATA.description,
+    ...(seo.ogImageUrl ? { openGraph: { images: [seo.ogImageUrl] } } : {}),
+  };
+}
 
 export default async function CategoriesPage() {
   const res = await serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100');

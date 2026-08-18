@@ -1,10 +1,24 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
+import { SeoPage } from '@/lib/types';
 
-export const metadata = {
+const DEFAULT_METADATA: Metadata = {
   title: 'A-Z Product Index — CocoJojoChem Wholesale',
   description: 'Browse every wholesale ingredient alphabetically.',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/a-z')}`, {
+    cache: 'no-store',
+  });
+  if (!seo || !seo.metaTitle) return DEFAULT_METADATA;
+  return {
+    title: seo.metaTitle,
+    description: seo.metaDescription || DEFAULT_METADATA.description,
+    ...(seo.ogImageUrl ? { openGraph: { images: [seo.ogImageUrl] } } : {}),
+  };
+}
 
 type AZGroup = Record<string, { id: number; name: string; slug: string }[]>;
 

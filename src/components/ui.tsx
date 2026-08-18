@@ -59,6 +59,10 @@ const STATUS_STYLES: Record<string, string> = {
   UNREAD: 'bg-blue-50 text-blue-700',
   READ: 'bg-slate-100 text-slate-500',
   ARCHIVED: 'bg-slate-100 text-slate-400',
+  CRITICAL: 'bg-red-50 text-red-700',
+  HIGH: 'bg-orange-50 text-orange-700',
+  MEDIUM: 'bg-amber-50 text-amber-700',
+  LOW: 'bg-slate-100 text-slate-500',
 };
 
 export function Badge({ status }: { status: string }) {

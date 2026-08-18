@@ -297,6 +297,62 @@ export interface SeoPage {
   ogImageUrl: string | null;
 }
 
+// --- SEO analyzer ---------------------------------------------------------------
+
+export type SeoIssueType =
+  | 'MISSING_TITLE'
+  | 'MISSING_META_DESCRIPTION'
+  | 'MISSING_H1'
+  | 'MULTIPLE_H1'
+  | 'THIN_CONTENT'
+  | 'MISSING_ALT_TEXT';
+
+export type SeoIssueSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface SeoMetric {
+  id: number;
+  path: string;
+  title: string | null;
+  metaDescription: string | null;
+  h1Tag: string | null;
+  wordCount: number | null;
+  internalLinks: number;
+  externalLinks: number;
+  imageCount: number;
+  imagesWithAltText: number;
+  pageLoadTimeMs: number | null;
+  seoScore: number | null;
+  lastAnalyzed: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SeoIssue {
+  id: number;
+  path: string;
+  issueType: SeoIssueType;
+  severity: SeoIssueSeverity;
+  description: string;
+  isFixed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SeoOverview {
+  totalPagesAnalyzed: number;
+  averageScore: number;
+  totalIssues: number;
+  issuesBySeverity: Record<SeoIssueSeverity, number>;
+  lastAnalyzed: string | null;
+}
+
+export interface SeoAnalyzeResult {
+  analyzed: number;
+  total: number;
+  metrics: SeoMetric[];
+  issues: SeoIssue[];
+}
+
 // --- Site settings --------------------------------------------------------------
 
 export interface SiteSettingsResponse {
