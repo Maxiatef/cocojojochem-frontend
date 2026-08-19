@@ -14,7 +14,9 @@ export async function serverFetch<T>(
         : { next: { revalidate: options.revalidate ?? 3600 } }),
     });
     if (!res.ok) return null;
-    return res.json();
+    const text = await res.text();
+    if (!text) return null;
+    return JSON.parse(text) as T;
   } catch {
     return null;
   }
