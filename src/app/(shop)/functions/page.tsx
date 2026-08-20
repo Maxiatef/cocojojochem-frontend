@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
-import { ProductFunction, SeoPage } from '@/lib/types';
+import { Paginated, ProductFunction, SeoPage } from '@/lib/types';
 
 const DEFAULT_METADATA: Metadata = {
   title: 'Shop by Function — CocoJojoChem Wholesale',
@@ -21,7 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FunctionsPage() {
-  const functions = (await serverFetch<ProductFunction[]>('/wholesale/functions')) || [];
+  const functionsRes = await serverFetch<Paginated<ProductFunction>>('/wholesale/functions?page=1&limit=200');
+  const functions = functionsRes?.data || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">

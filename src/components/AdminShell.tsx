@@ -284,8 +284,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+      {/* Desktop sidebar — sticky to the viewport so the logout button stays
+          reachable without scrolling, no matter how tall the page content is. */}
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-r md:border-slate-200 md:bg-white">
         <SidebarContent
           email={email}
           role={role}

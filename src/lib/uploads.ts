@@ -42,3 +42,32 @@ async function upload(endpoint: string, file: File): Promise<string> {
 export const uploadProductImage = (file: File) => upload('product-image', file);
 export const uploadVariantImage = (file: File) => upload('variant-image', file);
 export const uploadCategoryImage = (file: File) => upload('category-image', file);
+
+interface MultipleUploadResponse {
+  success: boolean;
+  message: string;
+  data: { filename: string; originalName: string; size: number; mimetype: string; url: string; path: string }[];
+}
+
+// For the product image gallery — uploads several files in one request to
+// POST /uploads/multiple-images (subfolder defaults to "gallery" server-side),
+// returning each file's ready-to-use local URL in the same order they were sent.
+export async function uploadMultipleProductImages(files: File[]): Promise<string[]> {
+  const token = getToken();
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+
+  const res = await fetch(`${API_URL}/uploads/multiple-images`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: res.statusText }));
+    throw new ApiError(res.status, body.message || 'Upload failed');
+  }
+
+  const body: MultipleUploadResponse = await res.json();
+  return body.data.map((f) => f.url);
+}

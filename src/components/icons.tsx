@@ -266,6 +266,14 @@ export function HeartIcon({ className = base }: IconProps) {
   );
 }
 
+export function StarIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2.5l2.9 6.06 6.6.77-4.86 4.6 1.28 6.57L12 17.3l-5.92 3.2 1.28-6.57-4.86-4.6 6.6-.77L12 2.5z" />
+    </svg>
+  );
+}
+
 export function ClockIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>

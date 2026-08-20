@@ -73,15 +73,16 @@ const CAPABILITIES = [
 ];
 
 export default async function HomePage() {
-  const [categoriesRes, functions, featured, certifications, testimonials] = await Promise.all([
+  const [categoriesRes, functionsRes, featured, certifications, testimonials] = await Promise.all([
     serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=8'),
-    serverFetch<ProductFunction[]>('/wholesale/functions'),
+    serverFetch<Paginated<ProductFunction>>('/wholesale/functions?page=1&limit=200'),
     serverFetch<Product[]>('/wholesale/products/featured?limit=8'),
     serverFetch<Certification[]>('/wholesale/certifications'),
     serverFetch<Testimonial[]>('/wholesale/testimonials'),
   ]);
 
   const categories = categoriesRes?.data || [];
+  const functions = functionsRes?.data || [];
   const spotlight = featured?.[0];
   const spotlightVariant = spotlight ? getDefaultVariant(spotlight.variants) : null;
   const spotlightRange = spotlight ? getPriceRange(spotlight.variants) : null;

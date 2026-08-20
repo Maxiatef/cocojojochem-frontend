@@ -64,10 +64,11 @@ function ProductFilterGridInner({ fixedCategoryId }: { fixedCategoryId?: number 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minPriceInput, maxPriceInput]);
 
-  const { data: functions } = useQuery({
+  const { data: functionsRes } = useQuery({
     queryKey: ['storefront-functions'],
-    queryFn: () => customerApi.get<ProductFunction[]>('/wholesale/functions'),
+    queryFn: () => customerApi.get<Paginated<ProductFunction>>('/wholesale/functions?page=1&limit=200'),
   });
+  const functions = functionsRes?.data;
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();

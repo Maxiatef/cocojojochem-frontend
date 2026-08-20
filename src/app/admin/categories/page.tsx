@@ -17,6 +17,8 @@ import {
   LoadingState,
   Modal,
   PageHeader,
+  Pagination,
+  SelectField,
   Table,
   TableHead,
   Td,
@@ -26,6 +28,8 @@ import {
   Tr,
 } from '@/components/ui';
 import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+
+type CategorySort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
 interface CategoryFormState {
   id: number | null;
@@ -51,11 +55,28 @@ export default function CategoriesAdminPage() {
   const [form, setForm] = useState<CategoryFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<CategorySort>('name_asc');
+  const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-categories'],
-    queryFn: () => api.get<Paginated<Category>>('/wholesale/categories?page=1&limit=200'),
+    queryKey: ['admin-categories', search, sort, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '20');
+      params.set('sort', sort);
+      if (search) params.set('search', search);
+      return api.get<Paginated<Category>>(`/wholesale/categories?${params.toString()}`);
+    },
   });
+
+  function resetPageAnd<T>(setter: (v: T) => void) {
+    return (v: T) => {
+      setter(v);
+      setPage(1);
+    };
+  }
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
 
@@ -138,6 +159,29 @@ export default function CategoriesAdminPage() {
         </Button>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="w-64">
+          <TextField
+            label="Search"
+            value={search}
+            onChange={(e) => resetPageAnd(setSearch)(e.target.value)}
+            placeholder="Search by name…"
+          />
+        </div>
+        <div className="w-56">
+          <SelectField
+            label="Sort"
+            value={sort}
+            onChange={(e) => resetPageAnd(setSort)(e.target.value as CategorySort)}
+          >
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="name_desc">Name (Z-A)</option>
+            <option value="products_desc">Most products</option>
+            <option value="products_asc">Fewest products</option>
+          </SelectField>
+        </div>
+      </div>
+
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Couldn't load categories." />}
       {data && categories.length === 0 && <EmptyState message="No categories yet." />}
@@ -174,6 +218,14 @@ export default function CategoriesAdminPage() {
               ))}
             </tbody>
           </Table>
+
+          <Pagination
+            page={page}
+            totalPages={data?.pagination.totalPages || 1}
+            onPageChange={setPage}
+            totalItems={data?.pagination.total}
+            itemLabel="category"
+          />
         </Card>
       )}
 

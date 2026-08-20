@@ -84,7 +84,7 @@ export default function AdminOverviewPage() {
         <StatCard
           label="Inventory Alerts"
           value={inventoryAlerts}
-          sublabel={`${d.inventory.outOfStockCount} out of stock · ${d.inventory.onBackorderCount} backorder`}
+          sublabel={`${d.inventory.outOfStockCount} out of stock · ${d.inventory.onBackorderCount} backorder · ${d.inventory.lowStockCount} running low`}
           accent={inventoryAlerts > 0 ? 'red' : 'slate'}
           icon={AlertTriangleIcon}
         />
@@ -190,6 +190,57 @@ export default function AdminOverviewPage() {
                   <span className="text-sm font-semibold text-slate-900">{formatUsd(p.revenue)}</span>
                 </div>
               ))}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-3">
+          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Running Low Soon</h2>
+              <p className="text-xs text-slate-500">
+                Still in stock, but at or below {d.inventory.lowStockCount > 0 ? '10 units' : 'the reorder threshold'} — reorder before these go out of stock.
+              </p>
+            </div>
+            <Link href="/admin/products" className="text-xs font-medium text-brand-700 hover:underline">
+              Manage products
+            </Link>
+          </div>
+          {d.inventory.lowStockProducts.length === 0 ? (
+            <p className="px-6 py-10 text-center text-sm text-slate-400">Nothing running low right now.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <tbody>
+                  {d.inventory.lowStockProducts.map((v) => (
+                    <tr key={v.variantId} className="border-b border-slate-50 last:border-0">
+                      <td className="px-6 py-3 font-medium text-slate-900">
+                        <Link href={`/admin/products/${v.productId}/edit`} className="hover:underline">
+                          {v.productName}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-3 text-slate-500">{v.variantLabel}</td>
+                      <td className="px-6 py-3 text-slate-400">{v.sku}</td>
+                      <td className="px-6 py-3 text-right">
+                        <span
+                          className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            v.stockQuantity <= 3 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {v.stockQuantity} left
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {d.inventory.lowStockCount > d.inventory.lowStockProducts.length && (
+                <p className="border-t border-slate-100 px-6 py-2.5 text-xs text-slate-400">
+                  +{d.inventory.lowStockCount - d.inventory.lowStockProducts.length} more not shown
+                </p>
+              )}
             </div>
           )}
         </Card>

@@ -64,7 +64,15 @@ export interface Product {
   functions?: ProductFunction[];
   certifications?: Certification[];
   variants: ProductVariant[];
+  gallery?: ProductGalleryImage[];
   createdAt: string;
+}
+
+export interface ProductGalleryImage {
+  id: number;
+  url: string;
+  altText: string | null;
+  sortOrder: number;
 }
 
 export interface ServerCartItem {
@@ -227,7 +235,20 @@ export interface DashboardOverview {
   revenue: {
     last30Days: { day: string; revenue: number; orderCount: number }[];
   };
-  inventory: { outOfStockCount: number; onBackorderCount: number };
+  inventory: {
+    outOfStockCount: number;
+    onBackorderCount: number;
+    lowStockCount: number;
+    lowStockProducts: {
+      variantId: number;
+      variantLabel: string;
+      sku: string;
+      stockQuantity: number;
+      productId: number;
+      productName: string;
+      productSlug: string;
+    }[];
+  };
   topProducts: { name: string; unitsSold: number; revenue: number }[];
   marketing: { subscriberCount: number };
 }

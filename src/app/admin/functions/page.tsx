@@ -4,7 +4,7 @@ import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { ProductFunction } from '@/lib/types';
+import { Paginated, ProductFunction } from '@/lib/types';
 import {
   Button,
   Card,
@@ -15,6 +15,8 @@ import {
   LoadingState,
   Modal,
   PageHeader,
+  Pagination,
+  SelectField,
   Table,
   TableHead,
   Td,
@@ -24,6 +26,8 @@ import {
   Tr,
 } from '@/components/ui';
 import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+
+type FunctionSort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
 interface FunctionFormState {
   id: number | null;
@@ -40,11 +44,28 @@ export default function FunctionsAdminPage() {
   const [form, setForm] = useState<FunctionFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ProductFunction | null>(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<FunctionSort>('name_asc');
+  const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-functions'],
-    queryFn: () => api.get<ProductFunction[]>('/wholesale/functions'),
+    queryKey: ['admin-functions', search, sort, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '20');
+      params.set('sort', sort);
+      if (search) params.set('search', search);
+      return api.get<Paginated<ProductFunction>>(`/wholesale/functions?${params.toString()}`);
+    },
   });
+
+  function resetPageAnd<T>(setter: (v: T) => void) {
+    return (v: T) => {
+      setter(v);
+      setPage(1);
+    };
+  }
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-functions'] });
 
@@ -106,7 +127,7 @@ export default function FunctionsAdminPage() {
     }
   }
 
-  const functions = data || [];
+  const functions = data?.data || [];
   const saving = createMutation.isPending || updateMutation.isPending;
 
   return (
@@ -116,6 +137,29 @@ export default function FunctionsAdminPage() {
         <Button onClick={openCreateModal} icon={PlusIcon}>
           Add Function
         </Button>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="w-64">
+          <TextField
+            label="Search"
+            value={search}
+            onChange={(e) => resetPageAnd(setSearch)(e.target.value)}
+            placeholder="Search by name…"
+          />
+        </div>
+        <div className="w-56">
+          <SelectField
+            label="Sort"
+            value={sort}
+            onChange={(e) => resetPageAnd(setSort)(e.target.value as FunctionSort)}
+          >
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="name_desc">Name (Z-A)</option>
+            <option value="products_desc">Most products</option>
+            <option value="products_asc">Fewest products</option>
+          </SelectField>
+        </div>
       </div>
 
       {isLoading && <LoadingState />}
@@ -152,6 +196,14 @@ export default function FunctionsAdminPage() {
               ))}
             </tbody>
           </Table>
+
+          <Pagination
+            page={page}
+            totalPages={data?.pagination.totalPages || 1}
+            onPageChange={setPage}
+            totalItems={data?.pagination.total}
+            itemLabel="function"
+          />
         </Card>
       )}
 
