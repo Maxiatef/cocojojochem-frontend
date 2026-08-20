@@ -1,286 +1,266 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireAdmin } from '@/components/AdminShell';
-import { SeoAnalyzeResult, SeoIssue, SeoMetric, SeoOverview, SeoPage } from '@/lib/types';
+import { SeoAnalyzeResult, SeoIssue, SeoMetric, SeoOverview } from '@/lib/types';
 import {
   Badge,
   Button,
   Card,
-  ConfirmDialog,
   EmptyState,
   ErrorState,
-  IconButton,
   LoadingState,
-  Modal,
   PageHeader,
   StatCard,
   Table,
   TableHead,
   Td,
-  TextAreaField,
-  TextField,
   Th,
   Tr,
 } from '@/components/ui';
-import {
-  AlertTriangleIcon,
-  ChartIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  EditIcon,
-  GlobeIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@/components/icons';
+import { AlertTriangleIcon, ChartIcon, CheckCircleIcon, ClockIcon, GlobeIcon } from '@/components/icons';
 
-type SeoTab = 'meta-tags' | 'site-analysis';
-
-interface SeoFormState {
-  id: number | null;
-  path: string;
-  metaTitle: string;
-  metaDescription: string;
-  ogImageUrl: string;
-}
-
-const EMPTY_FORM: SeoFormState = {
-  id: null,
-  path: '',
-  metaTitle: '',
-  metaDescription: '',
-  ogImageUrl: '',
-};
+/* ---------------------------------------------------------------------------
+ * Meta Tags editor — DISABLED, kept for reference in case it's needed again.
+ *
+ * This used to be a tab on this page (a per-path meta title/description/OG
+ * image CRUD editor over the `SeoPage` entity), removed alongside disabling
+ * the backend's SeoPagesModule (see the commented-out import + registration
+ * in `cocojojochem-backend/src/app.module.ts`).
+ *
+ * To bring this back:
+ *   1. Uncomment SeoPagesModule in the backend's app.module.ts.
+ *   2. Uncomment the block below.
+ *   3. Restore these imports at the top of this file:
+ *      `FormEvent` from 'react' (add to the existing `useState` import line)
+ *      `ConfirmDialog, IconButton, Modal, TextAreaField, TextField` from '@/components/ui'
+ *      `EditIcon, PlusIcon, TrashIcon` from '@/components/icons'
+ *      `SeoPage` from '@/lib/types'
+ *   4. Add a tab switcher back to `SeoAdminPage()` below (it previously
+ *      toggled between 'meta-tags' and 'site-analysis' with local useState),
+ *      and render `<MetaTagsTab />` alongside `<SiteAnalysisTab />`.
+ *
+ * interface SeoFormState {
+ *   id: number | null;
+ *   path: string;
+ *   metaTitle: string;
+ *   metaDescription: string;
+ *   ogImageUrl: string;
+ * }
+ *
+ * const EMPTY_FORM: SeoFormState = {
+ *   id: null,
+ *   path: '',
+ *   metaTitle: '',
+ *   metaDescription: '',
+ *   ogImageUrl: '',
+ * };
+ *
+ * function MetaTagsTab() {
+ *   const queryClient = useQueryClient();
+ *   const [modalOpen, setModalOpen] = useState(false);
+ *   const [form, setForm] = useState<SeoFormState>(EMPTY_FORM);
+ *   const [error, setError] = useState<string | null>(null);
+ *   const [pendingDelete, setPendingDelete] = useState<SeoPage | null>(null);
+ *
+ *   const { data, isLoading, isError } = useQuery({
+ *     queryKey: ['admin-seo-pages'],
+ *     queryFn: () => api.get<SeoPage[]>('/seo-pages'),
+ *   });
+ *
+ *   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
+ *
+ *   const createMutation = useMutation({
+ *     mutationFn: (body: Record<string, unknown>) => api.post('/seo-pages', body),
+ *     onSuccess: () => {
+ *       invalidate();
+ *       closeModal();
+ *     },
+ *     onError: (err) => setError(getFriendlyErrorMessage(err)),
+ *   });
+ *
+ *   const updateMutation = useMutation({
+ *     mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
+ *       api.patch(`/seo-pages/${id}`, body),
+ *     onSuccess: () => {
+ *       invalidate();
+ *       closeModal();
+ *     },
+ *     onError: (err) => setError(getFriendlyErrorMessage(err)),
+ *   });
+ *
+ *   const deleteMutation = useMutation({
+ *     mutationFn: (id: number) => api.delete(`/seo-pages/${id}`),
+ *     onSuccess: () => {
+ *       invalidate();
+ *       setPendingDelete(null);
+ *     },
+ *   });
+ *
+ *   function openCreateModal() {
+ *     setForm(EMPTY_FORM);
+ *     setError(null);
+ *     setModalOpen(true);
+ *   }
+ *
+ *   function openEditModal(p: SeoPage) {
+ *     setForm({
+ *       id: p.id,
+ *       path: p.path,
+ *       metaTitle: p.metaTitle || '',
+ *       metaDescription: p.metaDescription || '',
+ *       ogImageUrl: p.ogImageUrl || '',
+ *     });
+ *     setError(null);
+ *     setModalOpen(true);
+ *   }
+ *
+ *   function closeModal() {
+ *     setModalOpen(false);
+ *   }
+ *
+ *   function handleSubmit(e: FormEvent) {
+ *     e.preventDefault();
+ *     setError(null);
+ *     const body = {
+ *       path: form.path,
+ *       metaTitle: form.metaTitle || null,
+ *       metaDescription: form.metaDescription || null,
+ *       ogImageUrl: form.ogImageUrl || null,
+ *     };
+ *     if (form.id) {
+ *       updateMutation.mutate({ id: form.id, body });
+ *     } else {
+ *       createMutation.mutate(body);
+ *     }
+ *   }
+ *
+ *   const pages = data || [];
+ *   const saving = createMutation.isPending || updateMutation.isPending;
+ *
+ *   return (
+ *     <div>
+ *       <div className="mb-4 flex items-center justify-between">
+ *         <div>
+ *           <h2 className="text-sm font-semibold text-slate-900">Meta Tags</h2>
+ *           <p className="text-xs text-slate-500">Per-path meta title, description, and social image overrides.</p>
+ *         </div>
+ *         <Button onClick={openCreateModal} icon={PlusIcon}>
+ *           Add SEO Page
+ *         </Button>
+ *       </div>
+ *
+ *         {isLoading && <LoadingState />}
+ *         {isError && <ErrorState message="Couldn't load SEO pages." />}
+ *         {!isLoading && !isError && pages.length === 0 && <EmptyState message="No SEO pages configured yet." />}
+ *
+ *         {!isLoading && pages.length > 0 && (
+ *           <Card>
+ *             <Table minWidth={640}>
+ *               <TableHead>
+ *                 <Th>Path</Th>
+ *                 <Th>Meta Title</Th>
+ *                 <Th>Has Description</Th>
+ *                 <Th align="right">Actions</Th>
+ *               </TableHead>
+ *               <tbody>
+ *                 {pages.map((p) => (
+ *                   <Tr key={p.id}>
+ *                     <Td className="font-medium text-slate-900">{p.path}</Td>
+ *                     <Td className="text-slate-600">{p.metaTitle || '—'}</Td>
+ *                     <Td>
+ *                       {p.metaDescription ? (
+ *                         <CheckCircleIcon className="h-4 w-4 text-green-600" />
+ *                       ) : (
+ *                         <span className="text-slate-300">—</span>
+ *                       )}
+ *                     </Td>
+ *                     <Td align="right">
+ *                       <div className="flex justify-end gap-1.5">
+ *                         <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(p)} />
+ *                         <IconButton
+ *                           icon={TrashIcon}
+ *                           label="Delete"
+ *                           variant="danger"
+ *                           onClick={() => setPendingDelete(p)}
+ *                         />
+ *                       </div>
+ *                     </Td>
+ *                   </Tr>
+ *                 ))}
+ *               </tbody>
+ *             </Table>
+ *           </Card>
+ *         )}
+ *
+ *         <Modal open={modalOpen} onClose={closeModal} title={form.id ? 'Edit SEO Page' : 'Add SEO Page'}>
+ *           <form onSubmit={handleSubmit} className="space-y-4">
+ *             <TextField
+ *               label="Path"
+ *               placeholder="/products/example-product"
+ *               required
+ *               value={form.path}
+ *               onChange={(e) => setForm({ ...form, path: e.target.value })}
+ *             />
+ *             <TextField
+ *               label="Meta Title"
+ *               value={form.metaTitle}
+ *               onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+ *             />
+ *             <TextAreaField
+ *               label="Meta Description"
+ *               rows={3}
+ *               value={form.metaDescription}
+ *               onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+ *             />
+ *             <TextField
+ *               label="OG Image URL"
+ *               value={form.ogImageUrl}
+ *               onChange={(e) => setForm({ ...form, ogImageUrl: e.target.value })}
+ *             />
+ *
+ *             {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
+ *
+ *             <div className="flex justify-end gap-2 pt-2">
+ *               <Button type="button" variant="secondary" onClick={closeModal}>
+ *                 Cancel
+ *               </Button>
+ *               <Button type="submit" loading={saving}>
+ *                 {form.id ? 'Save Changes' : 'Create SEO Page'}
+ *               </Button>
+ *             </div>
+ *           </form>
+ *         </Modal>
+ *
+ *         <ConfirmDialog
+ *           open={!!pendingDelete}
+ *           title="Delete SEO page"
+ *           message={`Delete SEO overrides for "${pendingDelete?.path}"? This cannot be undone.`}
+ *           confirmLabel="Delete"
+ *           loading={deleteMutation.isPending}
+ *           onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
+ *           onCancel={() => setPendingDelete(null)}
+ *         />
+ *     </div>
+ *   );
+ * }
+ * ------------------------------------------------------------------------- */
 
 export default function SeoAdminPage() {
-  const [tab, setTab] = useState<SeoTab>('meta-tags');
-
   return (
     <RequireAdmin>
       <div>
-        <PageHeader title="SEO" description="Per-path meta overrides and real-time site analysis." />
-
-        <div className="mb-6 flex gap-1 border-b border-slate-200">
-          {(
-            [
-              ['meta-tags', 'Meta Tags'],
-              ['site-analysis', 'Site Analysis'],
-            ] as [SeoTab, string][]
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
-                tab === key
-                  ? 'border-brand-600 text-brand-700'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'meta-tags' && <MetaTagsTab />}
-        {tab === 'site-analysis' && <SiteAnalysisTab />}
+        <PageHeader title="SEO" description="Real-time crawl-based site analysis." />
+        <SiteAnalysisTab />
       </div>
     </RequireAdmin>
   );
 }
 
-function MetaTagsTab() {
-  const queryClient = useQueryClient();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState<SeoFormState>(EMPTY_FORM);
-  const [error, setError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<SeoPage | null>(null);
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-seo-pages'],
-    queryFn: () => api.get<SeoPage[]>('/seo-pages'),
-  });
-
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
-
-  const createMutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api.post('/seo-pages', body),
-    onSuccess: () => {
-      invalidate();
-      closeModal();
-    },
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
-      api.patch(`/seo-pages/${id}`, body),
-    onSuccess: () => {
-      invalidate();
-      closeModal();
-    },
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/seo-pages/${id}`),
-    onSuccess: () => {
-      invalidate();
-      setPendingDelete(null);
-    },
-  });
-
-  function openCreateModal() {
-    setForm(EMPTY_FORM);
-    setError(null);
-    setModalOpen(true);
-  }
-
-  function openEditModal(p: SeoPage) {
-    setForm({
-      id: p.id,
-      path: p.path,
-      metaTitle: p.metaTitle || '',
-      metaDescription: p.metaDescription || '',
-      ogImageUrl: p.ogImageUrl || '',
-    });
-    setError(null);
-    setModalOpen(true);
-  }
-
-  function closeModal() {
-    setModalOpen(false);
-  }
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const body = {
-      path: form.path,
-      metaTitle: form.metaTitle || null,
-      metaDescription: form.metaDescription || null,
-      ogImageUrl: form.ogImageUrl || null,
-    };
-    if (form.id) {
-      updateMutation.mutate({ id: form.id, body });
-    } else {
-      createMutation.mutate(body);
-    }
-  }
-
-  const pages = data || [];
-  const saving = createMutation.isPending || updateMutation.isPending;
-
-  return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900">Meta Tags</h2>
-          <p className="text-xs text-slate-500">Per-path meta title, description, and social image overrides.</p>
-        </div>
-        <Button onClick={openCreateModal} icon={PlusIcon}>
-          Add SEO Page
-        </Button>
-      </div>
-
-        {isLoading && <LoadingState />}
-        {isError && <ErrorState message="Couldn't load SEO pages." />}
-        {!isLoading && !isError && pages.length === 0 && <EmptyState message="No SEO pages configured yet." />}
-
-        {!isLoading && pages.length > 0 && (
-          <Card>
-            <Table minWidth={640}>
-              <TableHead>
-                <Th>Path</Th>
-                <Th>Meta Title</Th>
-                <Th>Has Description</Th>
-                <Th align="right">Actions</Th>
-              </TableHead>
-              <tbody>
-                {pages.map((p) => (
-                  <Tr key={p.id}>
-                    <Td className="font-medium text-slate-900">{p.path}</Td>
-                    <Td className="text-slate-600">{p.metaTitle || '—'}</Td>
-                    <Td>
-                      {p.metaDescription ? (
-                        <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </Td>
-                    <Td align="right">
-                      <div className="flex justify-end gap-1.5">
-                        <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(p)} />
-                        <IconButton
-                          icon={TrashIcon}
-                          label="Delete"
-                          variant="danger"
-                          onClick={() => setPendingDelete(p)}
-                        />
-                      </div>
-                    </Td>
-                  </Tr>
-                ))}
-              </tbody>
-            </Table>
-          </Card>
-        )}
-
-        <Modal open={modalOpen} onClose={closeModal} title={form.id ? 'Edit SEO Page' : 'Add SEO Page'}>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <TextField
-              label="Path"
-              placeholder="/products/example-product"
-              required
-              value={form.path}
-              onChange={(e) => setForm({ ...form, path: e.target.value })}
-            />
-            <TextField
-              label="Meta Title"
-              value={form.metaTitle}
-              onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
-            />
-            <TextAreaField
-              label="Meta Description"
-              rows={3}
-              value={form.metaDescription}
-              onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
-            />
-            <TextField
-              label="OG Image URL"
-              value={form.ogImageUrl}
-              onChange={(e) => setForm({ ...form, ogImageUrl: e.target.value })}
-            />
-
-            {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="secondary" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={saving}>
-                {form.id ? 'Save Changes' : 'Create SEO Page'}
-              </Button>
-            </div>
-          </form>
-        </Modal>
-
-        <ConfirmDialog
-          open={!!pendingDelete}
-          title="Delete SEO page"
-          message={`Delete SEO overrides for "${pendingDelete?.path}"? This cannot be undone.`}
-          confirmLabel="Delete"
-          loading={deleteMutation.isPending}
-          onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
-          onCancel={() => setPendingDelete(null)}
-        />
-    </div>
-  );
-}
-
-// --- Site Analysis tab ------------------------------------------------------
+// --- Site Analysis ----------------------------------------------------------
 
 function scorePillClass(score: number | null): string {
   if (score === null) return 'bg-slate-100 text-slate-500';

@@ -174,7 +174,36 @@ export interface Order {
   user?: { id: number; fullName: string; email: string; company?: Company | null };
   // Present only when a guest checkout created a new account — lets the frontend auto-log-in.
   accessToken?: string;
+  trackingNumber: string | null;
+  carrierCode: string | null;
 }
+
+// Shape returned by GET /orders/:id/tracking (and /orders/:id/tracking/admin).
+export interface TrackingCheckpoint {
+  status: string;
+  description: string;
+  location: string | null;
+  timestamp: string;
+}
+
+export type TrackingInfo =
+  | { available: false; reason: 'not_shipped_yet' | 'tracking_not_configured' | 'lookup_failed' }
+  | {
+      available: true;
+      carrier: string;
+      trackingNumber: string;
+      currentStatus:
+        | 'PRE_TRANSIT'
+        | 'TRANSIT'
+        | 'OUT_FOR_DELIVERY'
+        | 'PICKUP'
+        | 'DELIVERED'
+        | 'RETURNED'
+        | 'FAILURE'
+        | 'UNKNOWN';
+      eta: string | null;
+      checkpoints: TrackingCheckpoint[];
+    };
 
 export interface DashboardRecentOrder {
   id: number;

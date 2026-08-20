@@ -9,6 +9,7 @@ import { clearCustomerToken, getCustomerToken } from '@/lib/customerAuth';
 import { CustomerProfile, Order } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
 
 const STATUS_INK: Record<string, string> = {
   APPROVED: 'border-emerald-700 text-emerald-700',
@@ -41,6 +42,7 @@ export default function AccountPage() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [expandedTracking, setExpandedTracking] = useState<number | null>(null);
 
   useEffect(() => {
     if (!getCustomerToken()) {
@@ -87,7 +89,7 @@ export default function AccountPage() {
 
   function handleLogout() {
     clearCustomerToken();
-    router.push('/');
+    router.push('/account/login');
   }
 
   if (!ready) return null;
@@ -148,6 +150,7 @@ export default function AccountPage() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[340px_1fr]">
+          <div className="space-y-8">
           {/* ── Particulars ledger ── */}
           <div className="border border-[#16241c]/15 bg-white p-6">
             <div className="flex items-center justify-between border-b border-[#16241c]/10 pb-3">
@@ -231,10 +234,13 @@ export default function AccountPage() {
             )}
           </div>
 
-          {/* ── Transaction log ── */}
+          <ChangePasswordCard fontMono={fontMono} />
+          </div>
+
+          {/* ── Recent orders ── */}
           <div>
             <p style={fontMono} className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#16241c]/50">
-              Transaction Log
+              Recent Orders
             </p>
 
             {ordersLoading && (
@@ -247,7 +253,7 @@ export default function AccountPage() {
 
             {orders && orders.length === 0 && (
               <div className="border border-dashed border-[#16241c]/20 bg-white px-6 py-16 text-center">
-                <p className="text-sm text-[#16241c]/50">No transactions on record yet.</p>
+                <p className="text-sm text-[#16241c]/50">No orders yet.</p>
                 <Link href="/products" className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline">
                   Browse products →
                 </Link>
@@ -291,11 +297,34 @@ export default function AccountPage() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex justify-end border-t border-[#16241c]/10 px-5 py-2.5">
+                    <div className="flex items-center justify-between border-t border-[#16241c]/10 px-5 py-2.5">
+                      {order.trackingNumber ? (
+                        <button
+                          onClick={() =>
+                            setExpandedTracking(expandedTracking === order.id ? null : order.id)
+                          }
+                          style={fontMono}
+                          className="text-xs font-semibold uppercase tracking-wide text-brand-700 hover:underline"
+                        >
+                          {expandedTracking === order.id ? 'Hide tracking' : 'Track package'}
+                        </button>
+                      ) : (
+                        <span />
+                      )}
                       <span style={fontMono} className="text-sm font-semibold text-[#16241c]">
                         Total {formatUsd(order.total)}
                       </span>
                     </div>
+                    {order.trackingNumber && expandedTracking === order.id && (
+                      <div className="border-t border-dashed border-[#16241c]/10 px-5">
+                        <TrackingTimeline
+                          orderId={order.id}
+                          enabled={expandedTracking === order.id}
+                          client={customerApi}
+                          theme="shop"
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -303,6 +332,151 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ChangePasswordCard({ fontMono }: { fontMono: React.CSSProperties }) {
+  const [open, setOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (body: { currentPassword: string; newPassword: string }) =>
+      customerApi.patch('/auth/me/password', body),
+    onSuccess: () => {
+      setSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setFormError(null);
+    },
+    onError: (err) => {
+      setSuccess(false);
+      setFormError(getFriendlyErrorMessage(err));
+    },
+  });
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    setSuccess(false);
+    if (newPassword.length < 8) {
+      setFormError('New password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setFormError('New password and confirmation do not match.');
+      return;
+    }
+    mutation.mutate({ currentPassword, newPassword });
+  }
+
+  return (
+    <div className="border border-[#16241c]/15 bg-white p-6">
+      <div className="flex items-center justify-between border-b border-[#16241c]/10 pb-3">
+        <p style={fontMono} className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#16241c]/50">
+          Password
+        </p>
+        {!open && (
+          <button
+            onClick={() => {
+              setOpen(true);
+              setSuccess(false);
+              setFormError(null);
+            }}
+            className="text-xs font-medium text-brand-700 hover:underline"
+          >
+            Change
+          </button>
+        )}
+      </div>
+
+      {!open && success && (
+        <p className="pt-4 text-[13px] text-emerald-700">Password changed successfully.</p>
+      )}
+
+      {!open && !success && (
+        <p className="pt-4 text-[13px] text-[#16241c]/50">••••••••</p>
+      )}
+
+      {open && (
+        <form onSubmit={handleSubmit} style={fontMono} className="space-y-4 pt-4 text-[13px]">
+          <div>
+            <label className="mb-1 block text-[11px] uppercase tracking-wide text-[#16241c]/40">
+              Current password
+            </label>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full border border-[#16241c]/20 bg-transparent px-2.5 py-1.5 outline-none focus:border-brand-600"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] uppercase tracking-wide text-[#16241c]/40">
+              New password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border border-[#16241c]/20 bg-transparent px-2.5 py-1.5 outline-none focus:border-brand-600"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] uppercase tracking-wide text-[#16241c]/40">
+              Confirm new password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-[#16241c]/20 bg-transparent px-2.5 py-1.5 outline-none focus:border-brand-600"
+            />
+          </div>
+
+          {formError && (
+            <p className="border border-red-700/30 bg-red-50 px-2.5 py-2 text-[12px] font-sans text-red-700">
+              {formError}
+            </p>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="bg-brand-600 px-4 py-1.5 font-sans text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {mutation.isPending ? 'Saving…' : 'Save password'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setFormError(null);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+              className="px-4 py-1.5 font-sans text-[13px] font-medium text-[#16241c]/50 hover:text-[#16241c]"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
