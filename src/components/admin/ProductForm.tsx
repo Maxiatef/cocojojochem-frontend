@@ -13,6 +13,7 @@ import {
   SelectField,
   TextAreaField,
   TextField,
+  useToast,
 } from '@/components/ui';
 import { ImagePlaceholderIcon, PlusIcon, StarIcon, TrashIcon } from '@/components/icons';
 
@@ -32,6 +33,10 @@ interface VariantFormRow {
   backorder: boolean;
   imageUrl: string;
   moq: string;
+  lowStockThreshold: string;
+  limitPerOrder: boolean;
+  maxOrderQuantity: string;
+  availableFrom: string;
 }
 
 const EMPTY_VARIANT: VariantFormRow = {
@@ -43,6 +48,10 @@ const EMPTY_VARIANT: VariantFormRow = {
   backorder: false,
   imageUrl: '',
   moq: '',
+  lowStockThreshold: '',
+  limitPerOrder: false,
+  maxOrderQuantity: '',
+  availableFrom: '',
 };
 
 function toVariantRow(v: Product['variants'][number]): VariantFormRow {
@@ -55,12 +64,17 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     backorder: v.stockStatus === 'ON_BACKORDER',
     imageUrl: v.imageUrl || '',
     moq: '',
+    lowStockThreshold: v.lowStockThreshold != null ? String(v.lowStockThreshold) : '',
+    limitPerOrder: v.limitPerOrder ?? false,
+    maxOrderQuantity: v.maxOrderQuantity != null ? String(v.maxOrderQuantity) : '',
+    availableFrom: v.availableFrom ? v.availableFrom.slice(0, 16) : '',
   };
 }
 
 export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const isEdit = !!product;
 
   const [name, setName] = useState(product?.name || '');
@@ -130,13 +144,20 @@ export function ProductForm({ product }: { product?: Product }) {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
+    mutationFn: ({ body }: { body: Record<string, unknown>; redirect: boolean }) =>
       isEdit ? api.patch(`/wholesale/products/${product!.id}`, body) : api.post('/wholesale/products', body),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      router.push('/admin/products');
+      toast.success(isEdit ? 'Product updated successfully.' : 'Product created successfully.');
+      if (variables.redirect) {
+        router.push('/admin/products');
+      }
     },
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
+    onError: (err) => {
+      const message = getFriendlyErrorMessage(err);
+      setError(message);
+      toast.error(message);
+    },
   });
 
   function toggleId(list: number[], id: number, setList: (v: number[]) => void) {
@@ -167,15 +188,30 @@ export function ProductForm({ product }: { product?: Product }) {
     setSpecs((rows) => rows.filter((_, i) => i !== index));
   }
 
+  // Tags live in their own sidebar card with no visible "Save" button nearby,
+  // so — unlike the rest of the form — adding/removing one persists right
+  // away instead of waiting for a full form submit (only possible once the
+  // product actually exists; for a brand-new not-yet-created product, tags
+  // just stay in local state until the first full Save/Publish).
   function addTag(raw: string) {
     const t = raw.trim();
     if (!t) return;
-    setTags((list) => (list.includes(t) ? list : [...list, t]));
+    const next = tags.includes(t) ? tags : [...tags, t];
+    setTags(next);
     setTagInput('');
+    if (isEdit) persistTags(next);
   }
 
   function removeTag(t: string) {
-    setTags((list) => list.filter((x) => x !== t));
+    const next = tags.filter((x) => x !== t);
+    setTags(next);
+    if (isEdit) persistTags(next);
+  }
+
+  function persistTags(nextTags: string[]) {
+    const body = buildBody({ tagsOverride: nextTags });
+    if (!body) return;
+    saveMutation.mutate({ body, redirect: false });
   }
 
   function handleTagInputKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -187,20 +223,22 @@ export function ProductForm({ product }: { product?: Product }) {
     }
   }
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  // Returns null (and sets the inline error) if validation fails, so both the
+  // full form submit and the SEO panel's standalone "Save" button share the
+  // exact same checks and payload shape.
+  function buildBody(opts?: { tagsOverride?: string[] }): Record<string, unknown> | null {
     setError(null);
 
     if (!categoryId) {
       setError('Please choose a category.');
-      return;
+      return null;
     }
     if (variants.length === 0 || variants.some((v) => !v.sku || !v.label || !v.price)) {
       setError('Every variant needs at least a SKU, size label, and price.');
-      return;
+      return null;
     }
 
-    const body = {
+    return {
       name,
       slug,
       sku,
@@ -229,7 +267,7 @@ export function ProductForm({ product }: { product?: Product }) {
         socialTitle: socialTitle || undefined,
         socialDescription: socialDescription || undefined,
         socialImageUrl: socialImageUrl || undefined,
-        tags,
+        tags: opts?.tagsOverride ?? tags,
       },
       variants: variants.map((v) => ({
         sku: v.sku,
@@ -243,17 +281,116 @@ export function ProductForm({ product }: { product?: Product }) {
         stockStatus: v.backorder ? 'ON_BACKORDER' : undefined,
         imageUrl: v.imageUrl || undefined,
         moq: v.moq ? Number(v.moq) : undefined,
+        lowStockThreshold: v.lowStockThreshold ? Number(v.lowStockThreshold) : undefined,
+        limitPerOrder: v.limitPerOrder,
+        maxOrderQuantity: v.limitPerOrder && v.maxOrderQuantity ? Number(v.maxOrderQuantity) : undefined,
+        availableFrom: v.availableFrom ? new Date(v.availableFrom).toISOString() : undefined,
       })),
       gallery: gallery.map((url, i) => ({ url, sortOrder: i })),
     };
+  }
 
-    saveMutation.mutate(body);
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    const body = buildBody();
+    if (!body) return;
+    saveMutation.mutate({ body, redirect: true });
+  }
+
+  // SEO panel's standalone Save button — persists the whole product (SEO
+  // fields are part of the same record) but stays on the edit page instead
+  // of navigating back to the list, since you're likely still tuning fields.
+  function handleSaveSeo() {
+    const body = buildBody();
+    if (!body) return;
+    saveMutation.mutate({ body, redirect: false });
+  }
+
+  // Pressing Enter in a plain text field would otherwise submit the form and
+  // bounce back to the product list — instead, treat it as a quick save that
+  // stays on the page. Textareas/buttons/selects are untouched (Enter in a
+  // textarea just adds a newline), and the tag input's own Enter-to-add-chip
+  // behavior (data-tag-input) is deliberately left alone.
+  function handleFormKeyDown(e: KeyboardEvent<HTMLFormElement>) {
+    if (e.key !== 'Enter') return;
+    const target = e.target as HTMLElement;
+    if (target.tagName !== 'INPUT') return;
+    if ((target as HTMLInputElement).dataset.tagInput) return;
+    e.preventDefault();
+    handleSaveSeo();
   }
 
   const categories = categoriesRes?.data || [];
 
+  // Stock alerts — evaluated the same way the backend derives status: a
+  // tracked quantity of 0 (and not on backorder) is Out of Stock; anything
+  // at or below its threshold (per-variant override, else the global
+  // default of 10) is Running Low. Computed from the current form state so
+  // it reflects what was fetched on load and stays live if the admin edits
+  // quantity/threshold before saving.
+  const stockAlerts = variants
+    .map((v, i) => {
+      if (v.stockQuantity === '') return null;
+      const qty = Number(v.stockQuantity);
+      const threshold = v.lowStockThreshold ? Number(v.lowStockThreshold) : 10;
+      const label = v.label || v.sku || `Variant ${i + 1}`;
+      if (qty <= 0 && !v.backorder) {
+        return { index: i, label, kind: 'out' as const, qty };
+      }
+      if (qty > 0 && qty <= threshold) {
+        return { index: i, label, kind: 'low' as const, qty, threshold };
+      }
+      return null;
+    })
+    .filter((a): a is NonNullable<typeof a> => a !== null);
+
+  function scrollToVariant(index: number) {
+    document.getElementById(`variant-row-${index}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <>
+      {stockAlerts.length > 0 && (
+        <div className="mb-4 space-y-2">
+          {stockAlerts.map((a) => (
+            <div
+              key={a.index}
+              className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5 text-sm ${
+                a.kind === 'out' ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-200 bg-amber-50 text-amber-800'
+              }`}
+            >
+              <span>
+                {a.kind === 'out' ? (
+                  <>
+                    <strong>{a.label}</strong> is out of stock.
+                  </>
+                ) : (
+                  <>
+                    <strong>{a.label}</strong> is running low — only {a.qty} left (threshold: {a.threshold}).
+                  </>
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => scrollToVariant(a.index)}
+                className={`shrink-0 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                  a.kind === 'out'
+                    ? 'border-red-300 text-red-700 hover:bg-red-100'
+                    : 'border-amber-300 text-amber-700 hover:bg-amber-100'
+                }`}
+              >
+                View variant ↓
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={handleFormKeyDown}
+      className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+    >
       <div className="space-y-6 lg:col-span-2">
         <Card className="space-y-4 p-6">
           <h2 className="text-sm font-semibold text-slate-900">Basic Information</h2>
@@ -507,83 +644,140 @@ export function ProductForm({ product }: { product?: Product }) {
             <span className="text-slate-400">{seoOpen ? '−' : '+'}</span>
           </button>
           {seoOpen && (
-            <div className="mt-4 space-y-4">
-              <TextField
-                label="Focus Keyphrase"
-                value={focusKeyphrase}
-                onChange={(e) => setFocusKeyphrase(e.target.value)}
-              />
-              <TextField label="SEO Title" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
-              <TextAreaField
-                label="Meta Description"
-                rows={2}
-                value={metaDescription}
-                onChange={(e) => setMetaDescription(e.target.value)}
-              />
+            <div className="mt-4 space-y-5">
+              {/* --- Search Appearance --- */}
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Search Appearance
+                </p>
+                <div className="space-y-3">
+                  <TextField
+                    label="Focus Keyphrase"
+                    value={focusKeyphrase}
+                    onChange={(e) => setFocusKeyphrase(e.target.value)}
+                    placeholder="e.g. cetearyl alcohol wholesale"
+                  />
+                  <TextField label="SEO Title" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
+                  <TextAreaField
+                    label="Meta Description"
+                    rows={2}
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                  />
 
-              {/* Yoast-style live search preview */}
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Search Preview
-                </p>
-                <p className="truncate text-base text-blue-700 hover:underline">
-                  {seoTitle || name || 'Product title'}
-                </p>
-                <p className="text-sm text-green-700">
-                  yoursite.com/products/{slug || 'product-slug'}
-                </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  {metaDescription || shortDescription || 'A meta description will appear here as you type.'}
-                </p>
+                  {/* Yoast-style live search preview */}
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Google Preview
+                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-base text-blue-700 hover:underline">
+                          {seoTitle || name || 'Product title'}
+                        </p>
+                        <p className="text-sm text-green-700">
+                          yoursite.com/products/{slug || 'product-slug'}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {metaDescription || shortDescription || 'A meta description will appear here as you type.'}
+                        </p>
+                      </div>
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        {socialImageUrl || gallery[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={socialImageUrl || gallery[0]} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImagePlaceholderIcon className="h-8 w-8 text-slate-300" />
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[11px] text-slate-400">
+                      Uses the Social Image URL below, or falls back to this product&apos;s cover image.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <TextField
-                label="Social Title"
-                value={socialTitle}
-                onChange={(e) => setSocialTitle(e.target.value)}
-              />
-              <TextAreaField
-                label="Social Description"
-                rows={2}
-                value={socialDescription}
-                onChange={(e) => setSocialDescription(e.target.value)}
-              />
-              <TextField
-                label="Social Image URL"
-                value={socialImageUrl}
-                onChange={(e) => setSocialImageUrl(e.target.value)}
-                placeholder="https://…"
-              />
-
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Tags</label>
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-300 px-2.5 py-2">
-                  {tags.map((t) => (
-                    <span
-                      key={t}
-                      className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
-                    >
-                      {t}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(t)}
-                        aria-label={`Remove tag ${t}`}
-                        className="text-brand-500 hover:text-brand-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleTagInputKeyDown}
-                    onBlur={() => addTag(tagInput)}
-                    placeholder="Type a tag, press Enter…"
-                    className="min-w-[10rem] flex-1 border-none text-sm outline-none"
+              {/* --- Social Sharing --- */}
+              <div className="border-t border-slate-100 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Social Sharing
+                </p>
+                <div className="space-y-3">
+                  <TextField
+                    label="Social Title"
+                    value={socialTitle}
+                    onChange={(e) => setSocialTitle(e.target.value)}
+                    placeholder="Falls back to SEO Title if left blank"
+                  />
+                  <TextAreaField
+                    label="Social Description"
+                    rows={2}
+                    value={socialDescription}
+                    onChange={(e) => setSocialDescription(e.target.value)}
+                  />
+                  <TextField
+                    label="Social Image URL"
+                    value={socialImageUrl}
+                    onChange={(e) => setSocialImageUrl(e.target.value)}
+                    placeholder="https://…"
                   />
                 </div>
               </div>
+
+              <div className="border-t border-slate-100 pt-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  loading={saveMutation.isPending}
+                  onClick={handleSaveSeo}
+                >
+                  Save SEO
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Product tags — separate box, WooCommerce-style: an input + Add
+            button (in addition to Enter/comma), tags shown as removable chips
+            below. Feeds the same seo.tags array as the SEO panel used to. */}
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold text-slate-900">Product Tags</h2>
+          <div className="mt-3 flex gap-2">
+            <input
+              data-tag-input="true"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagInputKeyDown}
+              placeholder="e.g. emollient"
+              className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            />
+            <Button type="button" variant="secondary" size="sm" onClick={() => addTag(tagInput)}>
+              Add
+            </Button>
+          </div>
+          <p className="mt-1.5 text-xs text-slate-400">Separate tags with commas — improves search relevance.</p>
+
+          {tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {tags.map((t) => (
+                <span
+                  key={t}
+                  className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                >
+                  {t}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(t)}
+                    aria-label={`Remove tag ${t}`}
+                    className="text-brand-500 hover:text-brand-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
             </div>
           )}
         </Card>
@@ -600,7 +794,7 @@ export function ProductForm({ product }: { product?: Product }) {
 
         <div className="space-y-4">
           {variants.map((v, i) => (
-            <div key={i} className="rounded-lg border border-slate-200 p-4">
+            <div key={i} id={`variant-row-${i}`} className="rounded-lg border border-slate-200 p-4 scroll-mt-4">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Variant {i + 1}
@@ -668,6 +862,14 @@ export function ProductForm({ product }: { product?: Product }) {
                       value={v.moq}
                       onChange={(e) => updateVariant(i, { moq: e.target.value })}
                     />
+                    <TextField
+                      label="Low Stock Threshold"
+                      type="number"
+                      min={1}
+                      placeholder="Default: 10"
+                      value={v.lowStockThreshold}
+                      onChange={(e) => updateVariant(i, { lowStockThreshold: e.target.value })}
+                    />
                   </div>
                   <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -683,6 +885,42 @@ export function ProductForm({ product }: { product?: Product }) {
                         ? 'Will show as Out of Stock (0 qty).'
                         : 'In Stock / Out of Stock is set automatically from quantity.'}
                     </span>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:gap-4">
+                    <label className="flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={v.limitPerOrder}
+                        onChange={(e) => updateVariant(i, { limitPerOrder: e.target.checked })}
+                      />
+                      Limit purchase per order
+                    </label>
+                    {v.limitPerOrder && (
+                      <div className="w-40">
+                        <TextField
+                          label="Max quantity"
+                          type="number"
+                          min={1}
+                          required
+                          value={v.maxOrderQuantity}
+                          onChange={(e) => updateVariant(i, { maxOrderQuantity: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 border-t border-slate-100 pt-3">
+                    <div className="w-56">
+                      <TextField
+                        label="Available From (optional)"
+                        type="datetime-local"
+                        value={v.availableFrom}
+                        onChange={(e) => updateVariant(i, { availableFrom: e.target.value })}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Product stays visible now, but customers can&apos;t add it to cart until this date. Leave blank
+                      to allow purchase immediately.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -705,6 +943,7 @@ export function ProductForm({ product }: { product?: Product }) {
         </div>
       </div>
     </form>
+    </>
   );
 }
 

@@ -31,6 +31,10 @@ export interface ProductVariant {
   imageUrl: string | null;
   isOnSale?: boolean;
   effectivePrice?: string;
+  lowStockThreshold: number | null;
+  limitPerOrder: boolean;
+  maxOrderQuantity: number | null;
+  availableFrom: string | null;
 }
 
 export interface ProductFunction {

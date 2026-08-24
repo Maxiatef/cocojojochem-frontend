@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
@@ -19,6 +19,18 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
   const variant = product.variants.find((v) => v.id === variantId) || null;
   const price = variant ? Number(variant.effectivePrice ?? variant.price) : null;
+  const notYetAvailable = !!variant?.availableFrom && new Date(variant.availableFrom) > new Date();
+  const availableFromLabel =
+    variant?.availableFrom &&
+    new Date(variant.availableFrom).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // Clamp quantity down if switching to a variant with a stricter (or newly
+  // set) per-order limit than the quantity already selected.
+  useEffect(() => {
+    if (variant?.limitPerOrder && variant.maxOrderQuantity && quantity > variant.maxOrderQuantity) {
+      setQuantity(variant.maxOrderQuantity);
+    }
+  }, [variant, quantity]);
 
   function handleAddToCart() {
     if (!variant) return;
@@ -37,6 +49,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
   }
 
   return (
+    <>
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
       <div className="flex aspect-square items-center justify-center overflow-hidden bg-sand-100">
         {variant?.imageUrl || product.imageUrl ? (
@@ -129,6 +142,16 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     : variant.stockStatus === 'ON_BACKORDER'
                       ? 'On backorder'
                       : 'Out of stock'}
+                  {variant.limitPerOrder && variant.maxOrderQuantity && (
+                    <> · Limit {variant.maxOrderQuantity} per order</>
+                  )}
+                </p>
+              )}
+
+              {notYetAvailable && (
+                <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                  Available starting {availableFromLabel} — you can browse now, but it can&apos;t be added to your
+                  cart until then.
                 </p>
               )}
 
@@ -142,8 +165,19 @@ export function ProductDetailClient({ product }: { product: Product }) {
                   </button>
                   <span className="w-10 text-center text-sm font-medium text-ink">{quantity}</span>
                   <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="px-3 py-2 text-ink-soft hover:text-ink"
+                    onClick={() =>
+                      setQuantity((q) =>
+                        variant?.limitPerOrder && variant.maxOrderQuantity
+                          ? Math.min(variant.maxOrderQuantity, q + 1)
+                          : q + 1,
+                      )
+                    }
+                    disabled={
+                      !!variant?.limitPerOrder &&
+                      !!variant.maxOrderQuantity &&
+                      quantity >= variant.maxOrderQuantity
+                    }
+                    className="px-3 py-2 text-ink-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     +
                   </button>
@@ -151,11 +185,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
                 <button
                   onClick={handleAddToCart}
-                  disabled={!variant || variant.stockStatus === 'OUT_OF_STOCK'}
+                  disabled={!variant || variant.stockStatus === 'OUT_OF_STOCK' || notYetAvailable}
                   className="flex flex-1 items-center justify-center gap-1.5 bg-olive-800 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-olive-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {added && <CheckCircleIcon className="h-4 w-4" />}
-                  {added ? 'Added' : 'Add to Cart'}
+                  {added ? 'Added' : notYetAvailable ? 'Not Yet Available' : 'Add to Cart'}
                 </button>
               </div>
 
@@ -191,14 +225,16 @@ export function ProductDetailClient({ product }: { product: Product }) {
           </div>
         )}
 
-        {product.description && (
-          <div className="mt-6 border-t border-sand-200 pt-6">
-            <h2 className="mb-3 text-sm font-medium text-ink">Product Details</h2>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{product.description}</p>
-          </div>
-        )}
       </div>
     </div>
+
+    {product.description && (
+      <div className="mt-10 border-t border-sand-200 pt-8">
+        <h2 className="mb-3 text-sm font-medium text-ink">Product Details</h2>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{product.description}</p>
+      </div>
+    )}
+    </>
   );
 }
 

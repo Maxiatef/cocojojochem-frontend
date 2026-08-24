@@ -1,4 +1,79 @@
+'use client';
+
+import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { CloseIcon } from '@/components/icons';
+
+// --- Toast ------------------------------------------------------------------
+
+type ToastVariant = 'success' | 'error' | 'info';
+
+interface ToastItem {
+  id: number;
+  message: string;
+  variant: ToastVariant;
+}
+
+interface ToastContextValue {
+  show: (message: string, variant?: ToastVariant) => void;
+  success: (message: string) => void;
+  error: (message: string) => void;
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+const TOAST_VARIANT_STYLES: Record<ToastVariant, string> = {
+  success: 'border-green-200 bg-green-50 text-green-800',
+  error: 'border-red-200 bg-red-50 text-red-800',
+  info: 'border-slate-200 bg-white text-slate-800',
+};
+
+const TOAST_VARIANT_ICON: Record<ToastVariant, string> = {
+  success: '✓',
+  error: '✕',
+  info: 'ℹ',
+};
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const idRef = useRef(0);
+
+  const show = useCallback((message: string, variant: ToastVariant = 'info') => {
+    const id = ++idRef.current;
+    setToasts((list) => [...list, { id, message, variant }]);
+    setTimeout(() => {
+      setToasts((list) => list.filter((t) => t.id !== id));
+    }, 3500);
+  }, []);
+
+  const value: ToastContextValue = {
+    show,
+    success: (message) => show(message, 'success'),
+    error: (message) => show(message, 'error'),
+  };
+
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-[100] flex flex-col items-center gap-2 px-4">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`pointer-events-auto flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium shadow-lg ${TOAST_VARIANT_STYLES[t.variant]}`}
+          >
+            <span aria-hidden>{TOAST_VARIANT_ICON[t.variant]}</span>
+            {t.message}
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error('useToast must be used within a ToastProvider');
+  return ctx;
+}
 
 export function StatCard({
   label,
