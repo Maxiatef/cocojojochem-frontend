@@ -47,6 +47,24 @@ export interface Certification {
   iconUrl: string | null;
 }
 
+export type ProductVisibility = 'PUBLIC' | 'PRIVATE' | 'PASSWORD_PROTECTED';
+
+export interface ProductSpecRow {
+  id: number;
+  key: string;
+  value: string;
+}
+
+export interface ProductSeoData {
+  focusKeyphrase: string | null;
+  seoTitle: string | null;
+  metaDescription: string | null;
+  socialTitle: string | null;
+  socialDescription: string | null;
+  socialImageUrl: string | null;
+  tags: string[] | null;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -58,8 +76,15 @@ export interface Product {
   shortDescription: string | null;
   chemicalDescriptions?: string | null;
   imageUrl: string | null;
-  isActive: boolean;
+  isPublished: boolean;
   isFeatured: boolean;
+  visibility: ProductVisibility;
+  visibilityPassword: string | null;
+  scheduledPublishAt: string | null;
+  brand: string | null;
+  description: string | null;
+  specs: ProductSpecRow[];
+  seo: ProductSeoData | null;
   category?: Category;
   functions?: ProductFunction[];
   certifications?: Certification[];
