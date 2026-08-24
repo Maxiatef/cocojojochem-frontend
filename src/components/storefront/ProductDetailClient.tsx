@@ -87,6 +87,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
           </div>
         ) : null}
 
+        <div className="mt-6 border-t border-sand-200 pt-6">
+          <ProductFactsTable product={product} />
+        </div>
+
         <div className="mt-7 border-t border-sand-200 pt-7">
           {product.variants.length > 0 ? (
             <>
@@ -186,7 +190,56 @@ export function ProductDetailClient({ product }: { product: Product }) {
             )}
           </div>
         )}
+
+        {product.description && (
+          <div className="mt-6 border-t border-sand-200 pt-6">
+            <h2 className="mb-3 text-sm font-medium text-ink">Product Details</h2>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{product.description}</p>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+// Compact facts table under the buy box — brand, category, stock, and every
+// admin-entered spec row (pH, appearance, etc.), WooCommerce "Additional
+// Information" style.
+function ProductFactsTable({ product }: { product: Product }) {
+  const prices = product.variants.map((v) => Number(v.effectivePrice ?? v.price)).filter((n) => !isNaN(n));
+  const minPrice = prices.length ? Math.min(...prices) : null;
+  const maxPrice = prices.length ? Math.max(...prices) : null;
+  const stockStatuses = product.variants.map((v) => v.stockStatus);
+  const overallStock = stockStatuses.includes('OUT_OF_STOCK')
+    ? 'Out of stock'
+    : stockStatuses.includes('ON_BACKORDER')
+      ? 'On backorder'
+      : 'In stock';
+
+  const rows: { label: string; value: string }[] = [];
+  if (product.brand) rows.push({ label: 'Brand', value: product.brand });
+  if (product.category?.name) rows.push({ label: 'Category', value: product.category.name });
+  if (minPrice != null) {
+    rows.push({
+      label: 'Price range',
+      value: minPrice === maxPrice ? formatUsd(minPrice) : `${formatUsd(minPrice)} – ${formatUsd(maxPrice as number)}`,
+    });
+  }
+  rows.push({ label: 'Stock', value: overallStock });
+  for (const spec of product.specs || []) {
+    rows.push({ label: spec.key, value: spec.value });
+  }
+
+  if (rows.length === 0) return null;
+
+  return (
+    <dl className="divide-y divide-sand-200 text-sm">
+      {rows.map((r, i) => (
+        <div key={i} className="grid grid-cols-2 gap-4 py-2">
+          <dt className="text-ink-soft">{r.label}</dt>
+          <dd className="text-ink">{r.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

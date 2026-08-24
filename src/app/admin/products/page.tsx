@@ -88,7 +88,7 @@ export default function ProductsPage() {
       if (search) params.set('search', search);
       if (categoryId) params.set('categoryId', categoryId);
       if (functionSlug) params.set('functionSlug', functionSlug);
-      if (statusFilter) params.set('isActive', statusFilter);
+      if (statusFilter) params.set('isPublished', statusFilter);
       if (stockStatus) params.set('stockStatus', stockStatus);
       if (lowStock) params.set('lowStock', 'true');
       return api.get<Paginated<Product>>(`/wholesale/products/admin?${params.toString()}`);
@@ -101,21 +101,21 @@ export default function ProductsPage() {
   // filters (a product can't usefully be filtered to both "Active" and "Out
   // of stock" via these cards — clicking one is a fresh lens, not an AND).
   // Clicking the already-active card toggles it off.
-  function selectCard(kind: 'active' | 'inactive' | 'outOfStock' | 'onBackorder' | 'lowStock' | null) {
+  function selectCard(kind: 'published' | 'draft' | 'outOfStock' | 'onBackorder' | 'lowStock' | null) {
     setPage(1);
-    setStatusFilter(kind === 'active' ? 'true' : kind === 'inactive' ? 'false' : '');
+    setStatusFilter(kind === 'published' ? 'true' : kind === 'draft' ? 'false' : '');
     setStockStatus(kind === 'outOfStock' ? 'OUT_OF_STOCK' : kind === 'onBackorder' ? 'ON_BACKORDER' : '');
     setLowStock(kind === 'lowStock');
   }
 
-  function toggleCard(kind: 'active' | 'inactive' | 'outOfStock' | 'onBackorder' | 'lowStock') {
-    const isActive =
-      (kind === 'active' && statusFilter === 'true') ||
-      (kind === 'inactive' && statusFilter === 'false') ||
+  function toggleCard(kind: 'published' | 'draft' | 'outOfStock' | 'onBackorder' | 'lowStock') {
+    const isSelected =
+      (kind === 'published' && statusFilter === 'true') ||
+      (kind === 'draft' && statusFilter === 'false') ||
       (kind === 'outOfStock' && stockStatus === 'OUT_OF_STOCK') ||
       (kind === 'onBackorder' && stockStatus === 'ON_BACKORDER') ||
       (kind === 'lowStock' && lowStock);
-    selectCard(isActive ? null : kind);
+    selectCard(isSelected ? null : kind);
   }
 
   function resetPageAnd<T>(setter: (v: T) => void) {
@@ -137,9 +137,9 @@ export default function ProductsPage() {
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });
 
-  const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-      api.patch(`/wholesale/products/${id}`, { isActive }),
+  const togglePublishedMutation = useMutation({
+    mutationFn: ({ id, isPublished }: { id: number; isPublished: boolean }) =>
+      api.patch(`/wholesale/products/${id}`, { isPublished }),
     onSuccess: () => {
       invalidate();
       invalidateStats();
@@ -165,18 +165,18 @@ export default function ProductsPage() {
             onClick={() => selectCard(null)}
           />
           <StatusCard
-            label="Active"
+            label="Published"
             value={stats.active}
             tone="green"
             active={statusFilter === 'true'}
-            onClick={() => toggleCard('active')}
+            onClick={() => toggleCard('published')}
           />
           <StatusCard
-            label="Inactive"
+            label="Draft"
             value={stats.inactive}
             tone="slate"
             active={statusFilter === 'false'}
-            onClick={() => toggleCard('inactive')}
+            onClick={() => toggleCard('draft')}
           />
           <StatusCard
             label="Out of Stock"
@@ -246,8 +246,8 @@ export default function ProductsPage() {
             onChange={(e) => resetPageAnd(setStatusFilter)(e.target.value)}
           >
             <option value="">All</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
           </SelectField>
         </div>
         <div className="w-48">
@@ -292,7 +292,7 @@ export default function ProductsPage() {
                 const min = prices.length ? Math.min(...prices) : null;
                 const max = prices.length ? Math.max(...prices) : null;
                 const toggling =
-                  toggleActiveMutation.isPending && toggleActiveMutation.variables?.id === p.id;
+                  togglePublishedMutation.isPending && togglePublishedMutation.variables?.id === p.id;
                 return (
                   <Tr key={p.id}>
                     <Td>
@@ -313,17 +313,17 @@ export default function ProductsPage() {
                     <Td>
                       <button
                         onClick={() =>
-                          toggleActiveMutation.mutate({ id: p.id, isActive: !p.isActive })
+                          togglePublishedMutation.mutate({ id: p.id, isPublished: !p.isPublished })
                         }
                         disabled={toggling}
                         title="Click to toggle"
                         className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-50 ${
-                          p.isActive
+                          p.isPublished
                             ? 'bg-green-50 text-green-700 hover:bg-green-100'
                             : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                         }`}
                       >
-                        {p.isActive ? 'Active' : 'Inactive'}
+                        {p.isPublished ? 'Published' : 'Draft'}
                       </button>
                     </Td>
                     <Td align="right">
