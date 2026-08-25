@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -12,6 +13,7 @@ import {
   Card,
   EmptyState,
   ErrorState,
+  IconButton,
   LoadingState,
   PageHeader,
   Table,
@@ -20,7 +22,7 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { PlusIcon } from '@/components/icons';
+import { EditIcon, PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
 
 export default function UsersAdminPage() {
@@ -119,6 +121,7 @@ export default function UsersAdminPage() {
                 <Th>Company</Th>
                 <Th>Orders</Th>
                 <Th>Joined</Th>
+                <Th align="right">Actions</Th>
               </TableHead>
               <tbody>
                 {users.map((u) => (
@@ -147,6 +150,11 @@ export default function UsersAdminPage() {
                       <span className="block text-xs text-slate-400">${u.totalSpent.toFixed(2)} spent</span>
                     </Td>
                     <Td className="text-slate-500">{new Date(u.createdAt).toLocaleDateString()}</Td>
+                    <Td align="right">
+                      <Link href={`/admin/users/${u.id}/edit`}>
+                        <IconButton icon={EditIcon} label={`Edit ${u.fullName}`} />
+                      </Link>
+                    </Td>
                   </Tr>
                 ))}
               </tbody>

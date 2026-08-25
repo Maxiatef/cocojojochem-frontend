@@ -6,12 +6,16 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
 import { getCustomerToken } from '@/lib/customerAuth';
+import { ApiError } from '@/lib/api';
 import { Order } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
+import { useToast } from '@/components/ui';
 
 export default function CustomerOrdersPage() {
   const router = useRouter();
+  const toast = useToast();
   const [ready, setReady] = useState(false);
+  const [reorderingId, setReorderingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!getCustomerToken()) {
@@ -26,6 +30,43 @@ export default function CustomerOrdersPage() {
     queryFn: () => customerApi.get<Order[]>('/orders'),
     enabled: ready,
   });
+
+  async function handleReorder(order: Order) {
+    setReorderingId(order.id);
+    const added: string[] = [];
+    const skipped: string[] = [];
+
+    for (const item of order.items) {
+      if (!item.productVariantId) {
+        skipped.push(`${item.productName} (${item.sku}) is no longer available`);
+        continue;
+      }
+      try {
+        await customerApi.post('/cart/items', {
+          productVariantId: item.productVariantId,
+          quantity: item.quantity,
+        });
+        added.push(item.productName);
+      } catch (err) {
+        const message = err instanceof ApiError ? err.message : 'could not be added';
+        skipped.push(`${item.productName} (${item.sku}) — ${message}`);
+      }
+    }
+
+    setReorderingId(null);
+
+    if (added.length > 0) {
+      toast.success(
+        `${added.length} item${added.length === 1 ? '' : 's'} added to cart${skipped.length ? '' : '.'}`,
+      );
+    }
+    if (skipped.length > 0) {
+      toast.error(`Skipped: ${skipped.join('; ')}`);
+    }
+    if (added.length === 0 && skipped.length === 0) {
+      toast.error('This order has no items to reorder.');
+    }
+  }
 
   if (!ready) return null;
 
@@ -61,7 +102,31 @@ export default function CustomerOrdersPage() {
               <p className="mt-1 text-xs text-slate-500">
                 {new Date(order.createdAt).toLocaleDateString()} · {order.items.length} item(s)
               </p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{formatUsd(order.total)}</p>
+
+              <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3">
+                {order.items.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between text-sm">
+                    <div className="text-slate-700">
+                      {item.productName}
+                      <span className="ml-2 text-xs text-slate-400">
+                        {item.variantLabel} · SKU {item.sku} · ×{item.quantity}
+                      </span>
+                    </div>
+                    <div className="text-slate-600">{formatUsd(Number(item.price) * item.quantity)}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                <button
+                  onClick={() => handleReorder(order)}
+                  disabled={reorderingId === order.id}
+                  className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100 disabled:opacity-60"
+                >
+                  {reorderingId === order.id ? 'Adding to cart…' : 'Reorder'}
+                </button>
+                <p className="text-sm font-semibold text-slate-900">{formatUsd(order.total)}</p>
+              </div>
             </div>
           ))}
         </div>

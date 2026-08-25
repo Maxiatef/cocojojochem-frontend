@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -37,7 +37,7 @@ import {
 } from '@/components/ui';
 import { EditIcon, PlusIcon, TrashIcon, ChartIcon, DollarIcon, TicketIcon } from '@/components/icons';
 
-type Tab = 'coupons' | 'analytics' | 'bulk-sales' | 'advanced';
+type Tab = 'coupons' | 'analytics' | 'bulk-sales';
 
 // --- helpers ------------------------------------------------------------
 
@@ -58,16 +58,6 @@ function idsToArray(json: string | null | undefined): number[] {
     return Array.isArray(arr) ? arr.filter((n) => typeof n === 'number') : [];
   } catch {
     return [];
-  }
-}
-
-function hasIds(json: string | null | undefined): boolean {
-  if (!json) return false;
-  try {
-    const arr = JSON.parse(json);
-    return Array.isArray(arr) && arr.length > 0;
-  } catch {
-    return false;
   }
 }
 
@@ -94,6 +84,7 @@ interface CouponFormState {
   type: CouponType;
   value: string;
   minOrderAmount: string;
+  maxOrderAmount: string;
   maxDiscount: string;
   startDate: string;
   endDate: string;
@@ -108,15 +99,23 @@ interface CouponFormState {
   includedCategoryIds: number[];
   includedProductIds: number[];
   includedVariantIds: number[];
+  allowFreeShipping: boolean;
+  individualUseOnly: boolean;
+  excludeSaleItems: boolean;
+  allowedEmails: string[];
+  limitUsageToXItems: string;
+  includedBrands: string[];
+  excludedBrands: string[];
 }
 
 const EMPTY_COUPON_FORM: CouponFormState = {
   id: null,
   code: '',
   description: '',
-  type: 'PERCENTAGE',
+  type: 'PERCENTAGE_CART',
   value: '',
   minOrderAmount: '',
+  maxOrderAmount: '',
   maxDiscount: '',
   startDate: '',
   endDate: '',
@@ -131,6 +130,13 @@ const EMPTY_COUPON_FORM: CouponFormState = {
   includedCategoryIds: [],
   includedProductIds: [],
   includedVariantIds: [],
+  allowFreeShipping: false,
+  individualUseOnly: false,
+  excludeSaleItems: false,
+  allowedEmails: [],
+  limitUsageToXItems: '',
+  includedBrands: [],
+  excludedBrands: [],
 };
 
 function couponToForm(c: Coupon): CouponFormState {
@@ -141,6 +147,7 @@ function couponToForm(c: Coupon): CouponFormState {
     type: c.type,
     value: c.value,
     minOrderAmount: c.minOrderAmount || '',
+    maxOrderAmount: c.maxOrderAmount || '',
     maxDiscount: c.maxDiscount || '',
     startDate: c.startDate ? c.startDate.slice(0, 10) : '',
     endDate: c.endDate ? c.endDate.slice(0, 10) : '',
@@ -155,6 +162,13 @@ function couponToForm(c: Coupon): CouponFormState {
     includedCategoryIds: idsToArray(c.includedCategoryIds),
     includedProductIds: idsToArray(c.includedProductIds),
     includedVariantIds: idsToArray(c.includedVariantIds),
+    allowFreeShipping: c.allowFreeShipping,
+    individualUseOnly: c.individualUseOnly,
+    excludeSaleItems: c.excludeSaleItems,
+    allowedEmails: c.allowedEmails || [],
+    limitUsageToXItems: c.limitUsageToXItems != null ? String(c.limitUsageToXItems) : '',
+    includedBrands: c.includedBrands || [],
+    excludedBrands: c.excludedBrands || [],
   };
 }
 
@@ -169,6 +183,7 @@ function formToBody(f: CouponFormState): Record<string, unknown> {
     type: f.type,
     value: nonNegative(Number(f.value) || 0),
     minOrderAmount: f.minOrderAmount ? nonNegative(Number(f.minOrderAmount)) : undefined,
+    maxOrderAmount: f.maxOrderAmount ? nonNegative(Number(f.maxOrderAmount)) : undefined,
     maxDiscount: f.maxDiscount ? nonNegative(Number(f.maxDiscount)) : undefined,
     startDate: f.startDate ? new Date(f.startDate).toISOString() : undefined,
     endDate: f.endDate ? new Date(f.endDate).toISOString() : undefined,
@@ -183,7 +198,116 @@ function formToBody(f: CouponFormState): Record<string, unknown> {
     includedCategoryIds: f.includedCategoryIds.length ? f.includedCategoryIds : undefined,
     includedProductIds: f.includedProductIds.length ? f.includedProductIds : undefined,
     includedVariantIds: f.includedVariantIds.length ? f.includedVariantIds : undefined,
+    allowFreeShipping: f.allowFreeShipping,
+    individualUseOnly: f.individualUseOnly,
+    excludeSaleItems: f.excludeSaleItems,
+    allowedEmails: f.allowedEmails.length ? f.allowedEmails : undefined,
+    limitUsageToXItems: f.limitUsageToXItems ? nonNegative(Number(f.limitUsageToXItems)) : undefined,
+    includedBrands: f.includedBrands.length ? f.includedBrands : undefined,
+    excludedBrands: f.excludedBrands.length ? f.excludedBrands : undefined,
   };
+}
+
+// --- Chip/token input — mirrors ProductForm.tsx's Tags input pattern
+// exactly (type + Enter/comma to add, backspace on empty input removes the
+// last chip, × button removes any chip). data-tag-input marks it so any
+// future form-wide Enter interceptor knows to leave it alone (the coupons
+// form has no such interceptor today).
+function ChipInput({
+  values,
+  onChange,
+  placeholder,
+}: {
+  values: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+}) {
+  const [input, setInput] = useState('');
+
+  function add(raw: string) {
+    const t = raw.trim();
+    if (!t) return;
+    onChange(values.includes(t) ? values : [...values, t]);
+    setInput('');
+  }
+
+  function remove(t: string) {
+    onChange(values.filter((x) => x !== t));
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      add(input);
+    } else if (e.key === 'Backspace' && !input && values.length > 0) {
+      remove(values[values.length - 1]);
+    }
+  }
+
+  return (
+    <div>
+      <input
+        data-tag-input="true"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      />
+      {values.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {values.map((t) => (
+            <span
+              key={t}
+              className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+            >
+              {t}
+              <button type="button" onClick={() => remove(t)} className="text-brand-400 hover:text-brand-700">
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Card-style checkbox: label + short helper description, whole card is
+// clickable, and the checked state gets a brand-tinted border/background so
+// active toggles are scannable at a glance instead of a flat list of plain
+// checkboxes.
+function CouponToggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label
+      className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-3.5 py-2.5 transition ${
+        checked ? 'border-brand-300 bg-brand-50/60' : 'border-slate-200 hover:border-slate-300'
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+      />
+      <span>
+        <span className={`block text-sm font-medium ${checked ? 'text-brand-800' : 'text-slate-700'}`}>
+          {label}
+        </span>
+        {description && <span className="mt-0.5 block text-xs text-slate-400">{description}</span>}
+      </span>
+    </label>
+  );
 }
 
 // --- Bulk sale form state -----------------------------------------------
@@ -318,6 +442,77 @@ function IdCheckboxPicker({
   );
 }
 
+// Distinct, sorted brand names pulled straight from the same admin products
+// fetch used for the Products/Variants pickers above (shares its query cache
+// via the same queryKey — no extra network round trip), rather than hitting
+// a separate endpoint.
+function useBrandOptions() {
+  const { data } = useQuery({
+    queryKey: ['admin-coupon-products'],
+    queryFn: () => api.get<Paginated<Product>>('/wholesale/products/admin?page=1&limit=1000'),
+  });
+  return useMemo(() => {
+    const brands = new Set<string>();
+    for (const p of data?.data || []) {
+      if (p.brand) brands.add(p.brand);
+    }
+    return Array.from(brands).sort((a, b) => a.localeCompare(b));
+  }, [data]);
+}
+
+function StringCheckboxPicker({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  selected: string[];
+  onChange: (values: string[]) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const filtered = useMemo(
+    () => options.filter((o) => o.toLowerCase().includes(search.toLowerCase())),
+    [options, search],
+  );
+
+  function toggle(value: string) {
+    onChange(selected.includes(value) ? selected.filter((x) => x !== value) : [...selected, value]);
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-1.5">
+        <span className="text-xs font-medium text-slate-600">{label}</span>
+        {selected.length > 0 && <span className="text-[11px] text-brand-600">{selected.length} selected</span>}
+      </div>
+      <div className="p-2">
+        {options.length > 4 && (
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search…"
+            className="mb-1.5 w-full rounded-md border border-slate-200 px-2 py-1 text-xs outline-none focus:border-brand-500"
+          />
+        )}
+        <div className="max-h-36 space-y-1 overflow-y-auto pr-1">
+          {options.length === 0 && <p className="py-1 text-xs text-slate-400">No brands set on any product yet.</p>}
+          {options.length > 0 && filtered.length === 0 && (
+            <p className="py-1 text-xs text-slate-400">No matches.</p>
+          )}
+          {filtered.map((o) => (
+            <label key={o} className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
+              <input type="checkbox" checked={selected.includes(o)} onChange={() => toggle(o)} />
+              <span className="truncate">{o}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Page -----------------------------------------------------------------
 
 export default function CouponsAdminPage() {
@@ -334,7 +529,6 @@ export default function CouponsAdminPage() {
               ['coupons', 'Coupons'],
               ['analytics', 'Analytics'],
               ['bulk-sales', 'Bulk Sales'],
-              ['advanced', 'Advanced Coupons'],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
@@ -354,7 +548,6 @@ export default function CouponsAdminPage() {
         {tab === 'coupons' && <CouponsTab />}
         {tab === 'analytics' && <AnalyticsTab />}
         {tab === 'bulk-sales' && <BulkSalesTab />}
-        {tab === 'advanced' && <AdvancedCouponsTab />}
       </div>
     </RequireAdmin>
   );
@@ -406,8 +599,10 @@ function CouponsTab() {
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
           >
             <option value="">All types</option>
-            <option value="PERCENTAGE">Percentage</option>
-            <option value="FIXED_AMOUNT">Fixed amount</option>
+            <option value="PERCENTAGE_CART">Percentage (Cart)</option>
+            <option value="PERCENTAGE_PRODUCT">Percentage (Product)</option>
+            <option value="FIXED_CART">Fixed Amount (Cart)</option>
+            <option value="FIXED_PRODUCT">Fixed Amount (Product)</option>
           </select>
           <select
             value={statusFilter}
@@ -423,23 +618,6 @@ function CouponsTab() {
           </select>
         </>
       }
-    />
-  );
-}
-
-function AdvancedCouponsTab() {
-  const { data, isLoading, isError } = useCouponsQuery();
-  const coupons = (data?.data || []).filter(
-    (c) => hasIds(c.includedCategoryIds) || hasIds(c.includedProductIds) || hasIds(c.includedVariantIds)
-  );
-
-  return (
-    <CouponListSection
-      title="Advanced Coupons"
-      description="Coupons restricted to specific categories, products, or variants."
-      coupons={coupons}
-      isLoading={isLoading}
-      isError={isError}
     />
   );
 }
@@ -466,6 +644,7 @@ function CouponListSection({
   const [pendingDelete, setPendingDelete] = useState<Coupon | null>(null);
   const categoryOptions = useCategoryOptions();
   const { productOptions, variantOptions } = useProductAndVariantOptions();
+  const brandOptions = useBrandOptions();
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
 
@@ -565,7 +744,7 @@ function CouponListSection({
                       {c.description && <span className="block text-xs font-normal text-slate-500">{c.description}</span>}
                     </Td>
                     <Td className="text-slate-600">
-                      {c.type === 'PERCENTAGE' ? `${c.value}%` : `$${c.value}`}
+                      {c.type.startsWith('PERCENTAGE') ? `${c.value}%` : `$${c.value}`}
                     </Td>
                     <Td className="text-slate-600">
                       {c.usageCount}/{c.usageLimit ?? '∞'}
@@ -615,15 +794,17 @@ function CouponListSection({
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value as CouponType })}
             >
-              <option value="PERCENTAGE">Percentage</option>
-              <option value="FIXED_AMOUNT">Fixed amount</option>
+              <option value="PERCENTAGE_CART">Percentage (Cart)</option>
+              <option value="PERCENTAGE_PRODUCT">Percentage (Product)</option>
+              <option value="FIXED_CART">Fixed Amount (Cart)</option>
+              <option value="FIXED_PRODUCT">Fixed Amount (Product)</option>
             </SelectField>
             <TextField
-              label={form.type === 'PERCENTAGE' ? 'Value (%)' : 'Value ($)'}
+              label={form.type.startsWith('PERCENTAGE') ? 'Value (%)' : 'Value ($)'}
               type="number"
               step="0.01"
               min={0}
-              max={form.type === 'PERCENTAGE' ? 100 : undefined}
+              max={form.type.startsWith('PERCENTAGE') ? 100 : undefined}
               required
               value={form.value}
               onChange={(e) => setForm({ ...form, value: e.target.value })}
@@ -639,12 +820,29 @@ function CouponListSection({
               onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
             />
             <TextField
+              label="Maximum Spend"
+              type="number"
+              step="0.01"
+              min={0}
+              value={form.maxOrderAmount}
+              onChange={(e) => setForm({ ...form, maxOrderAmount: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <TextField
               label="Max Discount"
               type="number"
               step="0.01"
               min={0}
               value={form.maxDiscount}
               onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })}
+            />
+            <TextField
+              label="Limit Usage to X Items"
+              type="number"
+              min={0}
+              value={form.limitUsageToXItems}
+              onChange={(e) => setForm({ ...form, limitUsageToXItems: e.target.value })}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -678,31 +876,54 @@ function CouponListSection({
             />
           </div>
 
-          <div className="flex flex-wrap gap-4 pt-1">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              />
-              Active
-            </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
+          <div className="space-y-3 pt-1">
+            <CouponToggle
+              label="Active"
+              description="Inactive coupons can never be applied, regardless of any other setting."
+              checked={form.isActive}
+              onChange={(v) => setForm({ ...form, isActive: v })}
+            />
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <CouponToggle
+                label="Applies to all categories"
+                description="Uncheck to restrict using the category fields below."
                 checked={form.applicableToAllCategories}
-                onChange={(e) => setForm({ ...form, applicableToAllCategories: e.target.checked })}
+                onChange={(v) => setForm({ ...form, applicableToAllCategories: v })}
               />
-              Applies to all categories
-            </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
+              <CouponToggle
+                label="Applies to all products"
+                description="Uncheck to restrict using the product fields below."
                 checked={form.applicableToAllProducts}
-                onChange={(e) => setForm({ ...form, applicableToAllProducts: e.target.checked })}
+                onChange={(v) => setForm({ ...form, applicableToAllProducts: v })}
               />
-              Applies to all products
-            </label>
+              <CouponToggle
+                label="Allow free shipping"
+                description="Waives the shipping cost when this coupon is applied."
+                checked={form.allowFreeShipping}
+                onChange={(v) => setForm({ ...form, allowFreeShipping: v })}
+              />
+              <CouponToggle
+                label="Individual use only"
+                description="This coupon can't be combined with other coupons."
+                checked={form.individualUseOnly}
+                onChange={(v) => setForm({ ...form, individualUseOnly: v })}
+              />
+              <CouponToggle
+                label="Exclude sale items"
+                description="Items already on sale won't be discounted further."
+                checked={form.excludeSaleItems}
+                onChange={(v) => setForm({ ...form, excludeSaleItems: v })}
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-3">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Allowed Emails</p>
+            <ChipInput
+              values={form.allowedEmails}
+              onChange={(vals) => setForm({ ...form, allowedEmails: vals })}
+              placeholder="user@example.com or *@company.com"
+            />
           </div>
 
           <div className="border-t border-slate-100 pt-3">
@@ -731,6 +952,12 @@ function CouponListSection({
                     selected={form.includedVariantIds}
                     onChange={(ids) => setForm({ ...form, includedVariantIds: ids })}
                   />
+                  <StringCheckboxPicker
+                    label="Brands"
+                    options={brandOptions}
+                    selected={form.includedBrands}
+                    onChange={(vals) => setForm({ ...form, includedBrands: vals })}
+                  />
                 </div>
               </div>
               <div>
@@ -753,6 +980,12 @@ function CouponListSection({
                     options={variantOptions}
                     selected={form.excludedVariantIds}
                     onChange={(ids) => setForm({ ...form, excludedVariantIds: ids })}
+                  />
+                  <StringCheckboxPicker
+                    label="Brands"
+                    options={brandOptions}
+                    selected={form.excludedBrands}
+                    onChange={(vals) => setForm({ ...form, excludedBrands: vals })}
                   />
                 </div>
               </div>

@@ -194,6 +194,7 @@ export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | '
 
 export interface OrderItem {
   id: number;
+  productVariantId: number | null;
   productName: string;
   variantLabel: string;
   sku: string;
@@ -291,7 +292,7 @@ export interface QuoteRequestStats {
 
 // --- Coupons ----------------------------------------------------------------
 
-export type CouponType = 'PERCENTAGE' | 'FIXED_AMOUNT';
+export type CouponType = 'PERCENTAGE_CART' | 'PERCENTAGE_PRODUCT' | 'FIXED_CART' | 'FIXED_PRODUCT';
 
 export interface Coupon {
   id: number;
@@ -300,6 +301,7 @@ export interface Coupon {
   type: CouponType;
   value: string;
   minOrderAmount: string | null;
+  maxOrderAmount: string | null;
   maxDiscount: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -315,6 +317,13 @@ export interface Coupon {
   includedProductIds: string | null;
   includedVariantIds: string | null;
   maxUsagePerUser: number | null;
+  allowFreeShipping: boolean;
+  individualUseOnly: boolean;
+  excludeSaleItems: boolean;
+  allowedEmails: string[] | null;
+  limitUsageToXItems: number | null;
+  includedBrands: string[] | null;
+  excludedBrands: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -458,4 +467,44 @@ export interface UserListItem {
 
 export interface UserDetail extends UserListItem {
   recentOrders: Order[];
+  lastOrderDate?: string | null;
+}
+
+// --- Analytics --------------------------------------------------------------
+
+export interface SalesProductsAnalytics {
+  range: { days: number; from: string; to: string };
+  revenue: {
+    series: { day: string; revenue: number; orderCount: number }[];
+    totalRevenue: number;
+    totalOrders: number;
+    avgOrderValue: number;
+  };
+  products: {
+    productId: number;
+    name: string;
+    categoryName: string | null;
+    unitsSold: number;
+    revenue: number;
+    orderCount: number;
+    stockStatus: string;
+  }[];
+  categories: {
+    categoryId: number;
+    name: string;
+    revenue: number;
+    unitsSold: number;
+  }[];
+  topCompanies: {
+    companyId: number;
+    name: string;
+    revenue: number;
+    orderCount: number;
+  }[];
+  slowMovers: {
+    productId: number;
+    name: string;
+    categoryName: string | null;
+    createdAt: string;
+  }[];
 }
