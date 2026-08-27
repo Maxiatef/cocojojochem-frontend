@@ -361,6 +361,17 @@ export function ReceiptIcon({ className = base }: IconProps) {
   );
 }
 
+export function ShippingIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path d="M3 7h11v10H3z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 10h4l3 3v4h-7z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7" cy="18.5" r="1.5" />
+      <circle cx="17.5" cy="18.5" r="1.5" />
+    </svg>
+  );
+}
+
 export function PhoneIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>

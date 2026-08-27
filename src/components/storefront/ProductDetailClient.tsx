@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Product } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { addToCart } from '@/lib/cartStore';
+import { customerApi } from '@/lib/customerApi';
+import { getCustomerToken } from '@/lib/customerAuth';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { useToast } from '@/components/ui';
+import { addToQuoteList } from '@/lib/quoteListStore';
 import { CheckCircleIcon, ImagePlaceholderIcon } from '@/components/icons';
 
 export function ProductDetailClient({ product }: { product: Product }) {
@@ -16,6 +21,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const toast = useToast();
 
   const variant = product.variants.find((v) => v.id === variantId) || null;
   const price = variant ? Number(variant.effectivePrice ?? variant.price) : null;
@@ -32,8 +39,27 @@ export function ProductDetailClient({ product }: { product: Product }) {
     }
   }, [variant, quantity]);
 
-  function handleAddToCart() {
+  async function handleAddToCart() {
     if (!variant) return;
+
+    // Logged-in customers get a server-persisted cart (survives across
+    // devices/sessions as a draft); guests fall back to the localStorage cart.
+    const token = getCustomerToken();
+    if (token) {
+      setAddingToCart(true);
+      try {
+        await customerApi.post('/cart/items', { productVariantId: variant.id, quantity });
+        window.dispatchEvent(new Event('cocojojochem-server-cart-changed'));
+        setAdded(true);
+        setTimeout(() => setAdded(false), 2000);
+      } catch (err) {
+        toast.show(getFriendlyErrorMessage(err), 'error');
+      } finally {
+        setAddingToCart(false);
+      }
+      return;
+    }
+
     addToCart({
       variantId: variant.id,
       productSlug: product.slug,
@@ -185,11 +211,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
                 <button
                   onClick={handleAddToCart}
-                  disabled={!variant || variant.stockStatus === 'OUT_OF_STOCK' || notYetAvailable}
+                  disabled={!variant || variant.stockStatus === 'OUT_OF_STOCK' || notYetAvailable || addingToCart}
                   className="flex flex-1 items-center justify-center gap-1.5 bg-olive-800 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-olive-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {added && <CheckCircleIcon className="h-4 w-4" />}
-                  {added ? 'Added' : notYetAvailable ? 'Not Yet Available' : 'Add to Cart'}
+                  {addingToCart ? 'Adding…' : added ? 'Added' : notYetAvailable ? 'Not Yet Available' : 'Add to Cart'}
                 </button>
               </div>
 
@@ -205,6 +231,25 @@ export function ProductDetailClient({ product }: { product: Product }) {
           ) : (
             <p className="text-sm text-ink-soft">This product has no purchasable sizes yet.</p>
           )}
+
+          <button
+            onClick={() => {
+              addToQuoteList({
+                productId: product.id,
+                productSlug: product.slug,
+                productName: product.name,
+                variantLabel: variant?.label || null,
+                imageUrl: variant?.imageUrl || product.imageUrl,
+                quantity,
+              });
+              toast.success(
+                `Added to your quote list — visit "Quote List" to review and submit it.`,
+              );
+            }}
+            className="mt-3 w-full border border-sand-300 px-6 py-2.5 text-sm font-medium text-ink transition hover:border-olive-600 hover:text-olive-700"
+          >
+            Add to Quote List
+          </button>
         </div>
 
         {(product.chemicalDescriptions || product.botanicalName) && (

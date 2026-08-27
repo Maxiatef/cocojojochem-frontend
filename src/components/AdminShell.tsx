@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { clearToken, decodeToken, getToken } from '@/lib/auth';
+import { clearToken, decodeToken, getRefreshToken, getToken } from '@/lib/auth';
 import { api } from '@/lib/api';
 import {
   BoxIcon,
@@ -111,12 +111,6 @@ function SidebarContent({
     refetchInterval: 30_000,
   });
 
-  const { data: companyStats } = useQuery({
-    queryKey: ['companies-stats'],
-    queryFn: () => api.get<{ total: number; pending: number }>('/companies/stats'),
-    refetchInterval: 30_000,
-  });
-
   return (
     <>
       <div className="flex items-center gap-2.5 border-b border-slate-200 px-6 py-5">
@@ -138,12 +132,9 @@ function SidebarContent({
           const Icon = item.icon;
 
           let badgeCount = 0;
-          let badgeColor = 'bg-brand-600';
+          const badgeColor = 'bg-brand-600';
           if (item.href === '/admin/messages') {
             badgeCount = messageStats?.unread ?? 0;
-          } else if (item.href === '/admin/companies') {
-            badgeCount = companyStats?.pending ?? 0;
-            badgeColor = 'bg-amber-500'; // pending approval — distinct from "unread" blue/brand
           }
 
           return (
@@ -165,7 +156,6 @@ function SidebarContent({
               {badgeCount > 0 && (
                 <span
                   className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold text-white ${badgeColor}`}
-                  title={item.href === '/admin/companies' ? `${badgeCount} pending approval` : undefined}
                 >
                   {badgeCount}
                 </span>
@@ -228,6 +218,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   function handleLogout() {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      // Fire-and-forget — revoke the refresh token server-side, but don't
+      // block sign-out on the network round trip.
+      api.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     clearToken();
     router.replace('/admin/login');
   }

@@ -3,9 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCart } from '@/lib/cartStore';
-import { clearCustomerToken, decodeCustomerToken, getCustomerToken } from '@/lib/customerAuth';
-import { CartIcon, MenuIcon, CloseIcon, ReceiptIcon, LogoutIcon, LeafLogoIcon } from '@/components/icons';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCart, clearCart } from '@/lib/cartStore';
+import { useQuoteList } from '@/lib/quoteListStore';
+import { customerApi } from '@/lib/customerApi';
+import {
+  clearCustomerToken,
+  decodeCustomerToken,
+  getCustomerRefreshToken,
+  getCustomerToken,
+} from '@/lib/customerAuth';
+import { CartIcon, MenuIcon, CloseIcon, ReceiptIcon, LogoutIcon, LeafLogoIcon, QuoteIcon } from '@/components/icons';
 import { AccountMenu } from '@/components/storefront/AccountMenu';
 
 const NAV = [
@@ -25,7 +33,9 @@ function isNavItemActive(pathname: string, href: string) {
 export function StorefrontHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const { itemCount } = useCart();
+  const queryClient = useQueryClient();
+  const { itemCount: localItemCount } = useCart();
+  const { count: quoteListCount } = useQuoteList();
   const [search, setSearch] = useState('');
   const [customerEmail, setCustomerEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -41,13 +51,43 @@ export function StorefrontHeader() {
     return () => window.removeEventListener('customer-auth-changed', syncAuth);
   }, []);
 
+  // Logged-in customers have a server-persisted cart — reflect that count
+  // here instead of the guest localStorage cart, and refresh whenever any
+  // page adds/updates/removes a server cart item.
+  const { data: serverCartSummary } = useQuery({
+    queryKey: ['customer-cart-summary'],
+    queryFn: () => customerApi.get<{ itemCount: number }>('/cart/summary'),
+    enabled: !!customerEmail,
+  });
+
+  useEffect(() => {
+    if (!customerEmail) return;
+    function onServerCartChanged() {
+      queryClient.invalidateQueries({ queryKey: ['customer-cart-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-cart'] });
+    }
+    window.addEventListener('cocojojochem-server-cart-changed', onServerCartChanged);
+    return () => window.removeEventListener('cocojojochem-server-cart-changed', onServerCartChanged);
+  }, [customerEmail, queryClient]);
+
+  const itemCount = customerEmail ? serverCartSummary?.itemCount || 0 : localItemCount;
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     router.push(`/products${search ? `?search=${encodeURIComponent(search)}` : ''}`);
   }
 
   function handleLogout() {
+    const refreshToken = getCustomerRefreshToken();
+    if (refreshToken) {
+      // Fire-and-forget — revoke the refresh token server-side, but don't
+      // block sign-out on the network round trip.
+      customerApi.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     clearCustomerToken();
+    // Clear any leftover local (guest) cart so the next person on this device
+    // doesn't see this customer's items after they've signed out.
+    clearCart();
     router.push('/');
   }
 
@@ -118,6 +158,19 @@ export function StorefrontHeader() {
               Sign in
             </Link>
           )}
+
+          <Link
+            href="/quote-request"
+            className="relative flex h-9 w-9 items-center justify-center text-ink"
+            title="Quote List"
+          >
+            <QuoteIcon className="h-5 w-5" />
+            {quoteListCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-olive-700 px-1 text-[10px] font-semibold text-white">
+                {quoteListCount}
+              </span>
+            )}
+          </Link>
 
           <Link href="/cart" className="relative flex h-9 w-9 items-center justify-center text-ink">
             <CartIcon className="h-5 w-5" />

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { customerApi } from '@/lib/customerApi';
-import { clearCustomerToken } from '@/lib/customerAuth';
+import { clearCustomerToken, getCustomerRefreshToken } from '@/lib/customerAuth';
+import { clearCart } from '@/lib/cartStore';
 import { CustomerProfile } from '@/lib/types';
 import { UserCircleIcon, ChevronDownIcon, ReceiptIcon, LogoutIcon } from '@/components/icons';
 
@@ -38,7 +39,16 @@ export function AccountMenu({ email }: { email: string }) {
   }, [open]);
 
   function handleLogout() {
+    const refreshToken = getCustomerRefreshToken();
+    if (refreshToken) {
+      // Fire-and-forget — revoke the refresh token server-side, but don't
+      // block sign-out on the network round trip.
+      customerApi.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     clearCustomerToken();
+    // Clear any leftover local (guest) cart so the next person on this device
+    // doesn't see this customer's items after they've signed out.
+    clearCart();
     setOpen(false);
     router.push('/');
   }

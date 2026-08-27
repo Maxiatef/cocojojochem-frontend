@@ -9,14 +9,9 @@ import { clearCustomerToken, getCustomerToken } from '@/lib/customerAuth';
 import { CustomerProfile, Order } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
-
-const STATUS_INK: Record<string, string> = {
-  APPROVED: 'border-emerald-700 text-emerald-700',
-  PENDING: 'border-amber-700 text-amber-700',
-  REJECTED: 'border-red-700 text-red-700',
-  SUSPENDED: 'border-red-700 text-red-700',
-};
+import { OrderShippingModal } from '@/components/storefront/OrderShippingModal';
+import { IconButton } from '@/components/ui';
+import { ShippingIcon, ImagePlaceholderIcon } from '@/components/icons';
 
 const ORDER_STATUS_INK: Record<string, string> = {
   PENDING: 'text-amber-700',
@@ -42,7 +37,7 @@ export default function AccountPage() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [expandedTracking, setExpandedTracking] = useState<number | null>(null);
+  const [shippingModalOrder, setShippingModalOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (!getCustomerToken()) {
@@ -126,19 +121,6 @@ export default function AccountPage() {
                 </p>
               )}
             </div>
-
-            {profile?.company && (
-              <div
-                style={fontMono}
-                className={`hidden shrink-0 rotate-[-6deg] items-center justify-center border-2 px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.15em] sm:flex ${
-                  STATUS_INK[profile.company.status] || 'border-[#16241c]/30 text-[#16241c]/60'
-                }`}
-              >
-                {profile.company.status}
-                <br />
-                Account
-              </div>
-            )}
 
             <button
               onClick={handleLogout}
@@ -273,58 +255,52 @@ export default function AccountPage() {
                           {new Date(order.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <span
-                        style={fontMono}
-                        className={`text-xs font-semibold uppercase tracking-wide ${
-                          ORDER_STATUS_INK[order.status] || 'text-[#16241c]/50'
-                        }`}
-                      >
-                        [{order.status}]
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          style={fontMono}
+                          className={`text-xs font-semibold uppercase tracking-wide ${
+                            ORDER_STATUS_INK[order.status] || 'text-[#16241c]/50'
+                          }`}
+                        >
+                          [{order.status}]
+                        </span>
+                        {order.status !== 'CANCELLED' && (
+                          <IconButton
+                            icon={ShippingIcon}
+                            label="Shipping"
+                            onClick={() => setShippingModalOrder(order)}
+                          />
+                        )}
+                      </div>
                     </div>
-                    <div className="space-y-1 border-t border-dashed border-[#16241c]/10 px-5 py-3">
+                    <div className="space-y-2 border-t border-dashed border-[#16241c]/10 px-5 py-3">
                       {order.items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-[#16241c]/70">
+                        <div key={item.id} className="flex items-center gap-3 text-sm">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden bg-[#16241c]/5">
+                            {item.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
+                            ) : (
+                              <ImagePlaceholderIcon className="h-4 w-4 text-[#16241c]/30" />
+                            )}
+                          </div>
+                          <span className="min-w-0 flex-1 text-[#16241c]/70">
                             {item.productName}
                             <span style={fontMono} className="ml-2 text-xs text-[#16241c]/35">
                               ×{item.quantity} · {item.variantLabel}
                             </span>
                           </span>
-                          <span style={fontMono} className="text-[#16241c]/70">
+                          <span style={fontMono} className="shrink-0 text-[#16241c]/70">
                             {formatUsd(Number(item.price) * item.quantity)}
                           </span>
                         </div>
                       ))}
                     </div>
-                    <div className="flex items-center justify-between border-t border-[#16241c]/10 px-5 py-2.5">
-                      {order.trackingNumber ? (
-                        <button
-                          onClick={() =>
-                            setExpandedTracking(expandedTracking === order.id ? null : order.id)
-                          }
-                          style={fontMono}
-                          className="text-xs font-semibold uppercase tracking-wide text-brand-700 hover:underline"
-                        >
-                          {expandedTracking === order.id ? 'Hide tracking' : 'Track package'}
-                        </button>
-                      ) : (
-                        <span />
-                      )}
+                    <div className="flex items-center justify-end border-t border-[#16241c]/10 px-5 py-2.5">
                       <span style={fontMono} className="text-sm font-semibold text-[#16241c]">
                         Total {formatUsd(order.total)}
                       </span>
                     </div>
-                    {order.trackingNumber && expandedTracking === order.id && (
-                      <div className="border-t border-dashed border-[#16241c]/10 px-5">
-                        <TrackingTimeline
-                          orderId={order.id}
-                          enabled={expandedTracking === order.id}
-                          client={customerApi}
-                          theme="shop"
-                        />
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -332,6 +308,10 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
+
+      {shippingModalOrder && (
+        <OrderShippingModal order={shippingModalOrder} onClose={() => setShippingModalOrder(null)} />
+      )}
     </div>
   );
 }
@@ -417,6 +397,12 @@ function ChangePasswordCard({ fontMono }: { fontMono: React.CSSProperties }) {
               onChange={(e) => setCurrentPassword(e.target.value)}
               className="w-full border border-[#16241c]/20 bg-transparent px-2.5 py-1.5 outline-none focus:border-brand-600"
             />
+            <Link
+              href="/account/forgot-password"
+              className="mt-1.5 inline-block font-sans text-[12px] font-medium text-brand-700 hover:underline"
+            >
+              Forgot your current password?
+            </Link>
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-wide text-[#16241c]/40">

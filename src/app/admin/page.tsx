@@ -73,12 +73,8 @@ export default function AdminOverviewPage() {
         <StatCard
           label="Wholesale Accounts"
           value={d.accounts.companyCount}
-          sublabel={
-            d.accounts.pendingCompanyCount > 0
-              ? `${d.accounts.pendingCompanyCount} pending approval`
-              : 'All approved'
-          }
-          accent={d.accounts.pendingCompanyCount > 0 ? 'red' : 'slate'}
+          sublabel="Total registered"
+          accent="slate"
           icon={BuildingIcon}
         />
         <StatCard

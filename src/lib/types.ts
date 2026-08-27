@@ -35,6 +35,7 @@ export interface ProductVariant {
   limitPerOrder: boolean;
   maxOrderQuantity: number | null;
   availableFrom: string | null;
+  weightLb: string | null;
 }
 
 export interface ProductFunction {
@@ -198,8 +199,14 @@ export interface OrderItem {
   productName: string;
   variantLabel: string;
   sku: string;
+  imageUrl: string | null;
   quantity: number;
   price: string;
+}
+
+export interface CheckoutResponse {
+  order: Order;
+  checkoutUrl: string | null;
 }
 
 export interface Order {
@@ -208,13 +215,46 @@ export interface Order {
   subtotal: string;
   total: string;
   createdAt: string;
+  updatedAt?: string;
   items: OrderItem[];
-  user?: { id: number; fullName: string; email: string; company?: Company | null };
+  user?: { id: number; fullName: string; email: string; phone?: string | null; company?: Company | null };
+  guestEmail?: string | null;
+  guestName?: string | null;
+  guestPhone?: string | null;
+  shippingAddress?: string | null;
+  notes?: string | null;
+  couponAmount?: string;
+  shippingCost?: string;
   // Present only when a guest checkout created a new account — lets the frontend auto-log-in.
   accessToken?: string;
   trackingNumber: string | null;
   carrierCode: string | null;
 }
+
+// Response shape from POST /orders/shipping-estimate. Deterministic
+// rate-table logic (ported from the real cocojojo.com site) — `available` is
+// always true once the request succeeds; `canShip` is false for a
+// non-shippable destination (unmapped US territory or a country outside the
+// supported international rate groups), which never fabricates a cost.
+export type ShippingEstimate = {
+  available: boolean;
+  canShip: boolean;
+  isDomestic: boolean;
+  shippingCost?: number;
+  zone?: number;
+  zoneName?: string;
+  regionLabel?: string;
+  shippingMethod?: string;
+  weightLb?: number;
+  subtotal: number;
+  wholesaleMinimum: number;
+  meetsMinimum: boolean;
+  minimumRemaining: number;
+  isFreeShipping?: boolean;
+  freeShippingThreshold?: number;
+  amountAwayFromFreeShipping?: number;
+  errorMessage?: string;
+};
 
 // Shape returned by GET /orders/:id/tracking (and /orders/:id/tracking/admin).
 export interface TrackingCheckpoint {
@@ -254,7 +294,7 @@ export interface DashboardRecentOrder {
 
 export interface DashboardOverview {
   catalog: { productCount: number; categoryCount: number };
-  accounts: { companyCount: number; pendingCompanyCount: number };
+  accounts: { companyCount: number };
   leads: { newQuoteRequestCount: number; totalQuoteRequestCount: number };
   orders: {
     pendingOrderCount: number;

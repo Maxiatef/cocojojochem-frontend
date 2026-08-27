@@ -19,16 +19,9 @@ import {
   TextField,
 } from '@/components/ui';
 import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
-
-const STEPS: OrderStatus[] = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
-
-const STEP_LABEL: Record<OrderStatus, string> = {
-  PENDING: 'Pending',
-  PROCESSING: 'Processing',
-  SHIPPED: 'Shipped',
-  DELIVERED: 'Delivered',
-  CANCELLED: 'Cancelled',
-};
+import { EyeIcon, ShippingIcon } from '@/components/icons';
+import { OrderStatusStepper } from '@/components/OrderStatusStepper';
+import { formatUsd } from '@/lib/pricing';
 
 const CARRIERS: { value: string; label: string }[] = [
   { value: 'usps', label: 'USPS' },
@@ -38,73 +31,11 @@ const CARRIERS: { value: string; label: string }[] = [
   { value: 'other', label: 'Other' },
 ];
 
-function ShippingIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
-      <path d="M3 7h11v10H3z" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 10h4l3 3v4h-7z" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="7" cy="18.5" r="1.5" />
-      <circle cx="17.5" cy="18.5" r="1.5" />
-    </svg>
-  );
-}
-
-function StatusStepper({
-  currentStatus,
-  onSelect,
-  disabled,
-}: {
-  currentStatus: OrderStatus;
-  onSelect: (status: OrderStatus) => void;
-  disabled?: boolean;
-}) {
-  const isCancelled = currentStatus === 'CANCELLED';
-  const currentIdx = isCancelled ? -1 : STEPS.indexOf(currentStatus);
-
-  return (
-    <div className="flex items-center">
-      {STEPS.map((step, idx) => {
-        const filled = !isCancelled && idx <= currentIdx;
-        const isCurrent = !isCancelled && idx === currentIdx;
-        return (
-          <div key={step} className="flex flex-1 items-center last:flex-none">
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => onSelect(step)}
-              className="flex flex-col items-center gap-1.5 disabled:cursor-not-allowed"
-            >
-              <span
-                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition ${
-                  filled
-                    ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-slate-300 bg-white text-slate-400'
-                } ${isCurrent ? 'ring-2 ring-brand-200' : ''}`}
-              >
-                {filled ? (idx < currentIdx ? '✓' : idx + 1) : idx + 1}
-              </span>
-              <span
-                className={`whitespace-nowrap text-[11px] font-medium ${
-                  filled ? 'text-slate-900' : 'text-slate-400'
-                }`}
-              >
-                {STEP_LABEL[step]}
-              </span>
-            </button>
-            {idx < STEPS.length - 1 && (
-              <div className={`mx-1 h-0.5 flex-1 ${idx < currentIdx ? 'bg-brand-600' : 'bg-slate-200'}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function OrdersPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['orders-admin'],
@@ -124,6 +55,7 @@ export default function OrdersPage() {
   // Keep the modal's order in sync once the order list refetches.
   const orders = data?.data || [];
   const modalOrder = activeOrder ? orders.find((o) => o.id === activeOrder.id) || activeOrder : null;
+  const viewedOrder = viewOrder ? orders.find((o) => o.id === viewOrder.id) || viewOrder : null;
 
   return (
     <div>
@@ -171,11 +103,14 @@ export default function OrdersPage() {
                     <Badge status={o.status} />
                   </td>
                   <td className="px-5 py-3.5 text-right">
-                    <IconButton
-                      icon={ShippingIcon}
-                      label="Manage Shipping"
-                      onClick={() => setActiveOrder(o)}
-                    />
+                    <div className="flex items-center justify-end gap-1">
+                      <IconButton icon={EyeIcon} label="View Order" onClick={() => setViewOrder(o)} />
+                      <IconButton
+                        icon={ShippingIcon}
+                        label="Manage Shipping"
+                        onClick={() => setActiveOrder(o)}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -193,7 +128,132 @@ export default function OrdersPage() {
           statusPending={updateStatus.isPending}
         />
       )}
+
+      {viewedOrder && <ViewOrderModal order={viewedOrder} onClose={() => setViewOrder(null)} />}
     </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-4 py-1 text-sm">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-medium text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+function ViewOrderModal({ order, onClose }: { order: Order; onClose: () => void }) {
+  const isGuest = !order.user;
+  const customerName = order.user?.fullName || order.guestName || null;
+  const customerEmail = order.user?.email || order.guestEmail || null;
+  const customerPhone = order.user?.phone || order.guestPhone || null;
+  const company = order.user?.company || null;
+
+  return (
+    <Modal open onClose={onClose} title={`Order #${order.id}`} size="lg">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Badge status={order.status} />
+          <p className="text-xs text-slate-500">
+            Placed {new Date(order.createdAt).toLocaleString()}
+            {order.updatedAt && order.updatedAt !== order.createdAt && (
+              <> · Updated {new Date(order.updatedAt).toLocaleString()}</>
+            )}
+          </p>
+        </div>
+
+        <div className="border-t border-slate-100 pt-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Customer</p>
+          {customerName || customerEmail ? (
+            <div className="rounded-lg bg-slate-50 px-4 py-3">
+              <DetailRow label="Name" value={customerName || '—'} />
+              <DetailRow label="Email" value={customerEmail || '—'} />
+              <DetailRow label="Phone" value={customerPhone || '—'} />
+              <DetailRow label="Account" value={isGuest ? 'Guest checkout (no account)' : 'Registered customer'} />
+              {company && (
+                <>
+                  <DetailRow label="Company" value={company.name} />
+                  <DetailRow label="Company Status" value={company.status} />
+                </>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">No customer information on this order.</p>
+          )}
+        </div>
+
+        {order.shippingAddress && (
+          <div className="border-t border-slate-100 pt-5">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Shipping Address</p>
+            <p className="whitespace-pre-line text-sm text-slate-700">{order.shippingAddress}</p>
+          </div>
+        )}
+
+        <div className="border-t border-slate-100 pt-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Items ({order.items.length})
+          </p>
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2 font-medium">Product</th>
+                  <th className="px-3 py-2 font-medium">SKU</th>
+                  <th className="px-3 py-2 text-right font-medium">Qty</th>
+                  <th className="px-3 py-2 text-right font-medium">Price</th>
+                  <th className="px-3 py-2 text-right font-medium">Line Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order.items.map((item) => (
+                  <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                    <td className="px-3 py-2 text-slate-900">
+                      {item.productName}
+                      {item.variantLabel && <span className="text-slate-500"> · {item.variantLabel}</span>}
+                      {!item.productVariantId && (
+                        <span className="ml-1.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                          removed
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-slate-500">{item.sku}</td>
+                    <td className="px-3 py-2 text-right text-slate-700">{item.quantity}</td>
+                    <td className="px-3 py-2 text-right text-slate-700">{formatUsd(item.price)}</td>
+                    <td className="px-3 py-2 text-right font-medium text-slate-900">
+                      {formatUsd(Number(item.price) * item.quantity)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-3 space-y-1 rounded-lg bg-slate-50 px-4 py-3">
+            <DetailRow label="Subtotal" value={formatUsd(order.subtotal)} />
+            {Number(order.couponAmount || 0) > 0 && (
+              <DetailRow label="Coupon Discount" value={`-${formatUsd(order.couponAmount!)}`} />
+            )}
+            <DetailRow label="Total" value={<span className="text-base">{formatUsd(order.total)}</span>} />
+          </div>
+        </div>
+
+        {(order.trackingNumber || order.carrierCode) && (
+          <div className="border-t border-slate-100 pt-5">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Shipping</p>
+            <DetailRow label="Carrier" value={order.carrierCode || '—'} />
+            <DetailRow label="Tracking Number" value={order.trackingNumber || '—'} />
+          </div>
+        )}
+
+        {order.notes && (
+          <div className="border-t border-slate-100 pt-5">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Notes</p>
+            <p className="whitespace-pre-line text-sm text-slate-700">{order.notes}</p>
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 }
 
@@ -256,7 +316,7 @@ function ManageShippingModal({
               This order has been cancelled.
             </div>
           ) : (
-            <StatusStepper
+            <OrderStatusStepper
               currentStatus={order.status}
               onSelect={onStatusSelect}
               disabled={statusPending}

@@ -4,7 +4,7 @@ import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
-import { setCustomerToken } from '@/lib/customerAuth';
+import { setCustomerTokens } from '@/lib/customerAuth';
 import { getCartAsMergePayload, clearCart, getCart } from '@/lib/cartStore';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
@@ -25,8 +25,8 @@ function LoginForm() {
     setError(null);
     setLoading(true);
     try {
-      const res = await customerApi.post<{ accessToken: string }>('/auth/login', { email, password });
-      setCustomerToken(res.accessToken);
+      const res = await customerApi.post<{ accessToken: string; refreshToken: string }>('/auth/login', { email, password });
+      setCustomerTokens(res.accessToken, res.refreshToken);
 
       // Merge any guest cart items into the server cart, then clear local storage.
       const localItems = getCart();
@@ -35,6 +35,7 @@ function LoginForm() {
           .post('/cart/merge', { items: getCartAsMergePayload() })
           .catch(() => {});
         clearCart();
+        window.dispatchEvent(new Event('cocojojochem-server-cart-changed'));
       }
 
       router.push(redirectTo);
@@ -63,7 +64,12 @@ function LoginForm() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft">Password</label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-ink-soft">Password</label>
+            <Link href="/account/forgot-password" className="text-xs font-medium text-olive-700 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}

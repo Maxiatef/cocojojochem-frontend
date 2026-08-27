@@ -5,13 +5,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { QuoteRequest, RequestStatus } from '@/lib/types';
-import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/ui';
+import { Badge, Card, EmptyState, ErrorState, IconButton, LoadingState, Modal, PageHeader } from '@/components/ui';
+import { EyeIcon } from '@/components/icons';
 
 const STATUSES: RequestStatus[] = ['NEW', 'IN_PROGRESS', 'QUOTED', 'WON', 'LOST'];
 
 export default function QuoteRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'ALL'>('ALL');
   const [error, setError] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<QuoteRequest | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useQuery({
@@ -72,6 +74,7 @@ export default function QuoteRequestsPage() {
                 <th className="px-5 py-3 font-medium">Items</th>
                 <th className="px-5 py-3 font-medium">Received</th>
                 <th className="px-5 py-3 font-medium">Status</th>
+                <th className="px-5 py-3 font-medium text-right">View</th>
               </tr>
             </thead>
             <tbody>
@@ -107,6 +110,9 @@ export default function QuoteRequestsPage() {
                       <Badge status={qr.status} />
                     </div>
                   </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <IconButton icon={EyeIcon} label="View" onClick={() => setViewing(qr)} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -114,6 +120,84 @@ export default function QuoteRequestsPage() {
           </div>
         </Card>
       )}
+
+      {viewing && <QuoteRequestDetailModal quoteRequest={viewing} onClose={() => setViewing(null)} />}
     </div>
+  );
+}
+
+function QuoteRequestDetailModal({ quoteRequest, onClose }: { quoteRequest: QuoteRequest; onClose: () => void }) {
+  return (
+    <Modal open onClose={onClose} title={`Quote Request — ${quoteRequest.fullName}`} size="lg">
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4 rounded-lg bg-slate-50 px-4 py-3 text-sm">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Email</p>
+            <p className="text-slate-900">{quoteRequest.email}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Phone</p>
+            <p className="text-slate-900">{quoteRequest.phone || '—'}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Company</p>
+            <p className="text-slate-900">{quoteRequest.companyName || '—'}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Type</p>
+            <p className="text-slate-900">{quoteRequest.type.replace(/_/g, ' ')}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Received</p>
+            <p className="text-slate-900">{new Date(quoteRequest.createdAt).toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</p>
+            <Badge status={quoteRequest.status} />
+          </div>
+        </div>
+
+        {quoteRequest.items.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Product(s) requested
+            </p>
+            <div className="overflow-hidden rounded-lg border border-slate-200">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-2 font-medium">Product</th>
+                    <th className="px-3 py-2 font-medium">Quantity</th>
+                    <th className="px-3 py-2 font-medium">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quoteRequest.items.map((item) => (
+                    <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                      <td className="px-3 py-2 text-slate-900">{item.productName}</td>
+                      <td className="px-3 py-2 text-slate-700">
+                        {item.quantity != null ? `${item.quantity}${item.unit ? ` ${item.unit}` : ''}` : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-slate-600">{item.notes || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Message</p>
+          {quoteRequest.message ? (
+            <p className="whitespace-pre-line rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+              {quoteRequest.message}
+            </p>
+          ) : (
+            <p className="text-sm text-slate-400">No message provided.</p>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 }

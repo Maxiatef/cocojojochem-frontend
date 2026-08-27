@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { decodeToken, getToken, setToken } from '@/lib/auth';
+import { decodeToken, getToken, setTokens } from '@/lib/auth';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 export default function LoginPage() {
@@ -23,14 +23,14 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await api.post<{ accessToken: string }>('/auth/login', { email, password });
+      const res = await api.post<{ accessToken: string; refreshToken: string }>('/auth/login', { email, password });
       const payload = decodeToken(res.accessToken);
       if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'SALES')) {
         setError('This account does not have dashboard access.');
         setLoading(false);
         return;
       }
-      setToken(res.accessToken);
+      setTokens(res.accessToken, res.refreshToken);
       router.replace('/admin');
     } catch (err) {
       setError(getFriendlyErrorMessage(err, 'login'));

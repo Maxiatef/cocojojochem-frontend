@@ -37,6 +37,7 @@ interface VariantFormRow {
   limitPerOrder: boolean;
   maxOrderQuantity: string;
   availableFrom: string;
+  weightLb: string;
 }
 
 const EMPTY_VARIANT: VariantFormRow = {
@@ -52,6 +53,7 @@ const EMPTY_VARIANT: VariantFormRow = {
   limitPerOrder: false,
   maxOrderQuantity: '',
   availableFrom: '',
+  weightLb: '',
 };
 
 function toVariantRow(v: Product['variants'][number]): VariantFormRow {
@@ -68,6 +70,7 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     limitPerOrder: v.limitPerOrder ?? false,
     maxOrderQuantity: v.maxOrderQuantity != null ? String(v.maxOrderQuantity) : '',
     availableFrom: v.availableFrom ? v.availableFrom.slice(0, 16) : '',
+    weightLb: v.weightLb != null ? String(v.weightLb) : '',
   };
 }
 
@@ -285,6 +288,7 @@ export function ProductForm({ product }: { product?: Product }) {
         limitPerOrder: v.limitPerOrder,
         maxOrderQuantity: v.limitPerOrder && v.maxOrderQuantity ? Number(v.maxOrderQuantity) : undefined,
         availableFrom: v.availableFrom ? new Date(v.availableFrom).toISOString() : undefined,
+        weightLb: v.weightLb ? Number(v.weightLb) : undefined,
       })),
       gallery: gallery.map((url, i) => ({ url, sortOrder: i })),
     };
@@ -869,6 +873,15 @@ export function ProductForm({ product }: { product?: Product }) {
                       placeholder="Default: 10"
                       value={v.lowStockThreshold}
                       onChange={(e) => updateVariant(i, { lowStockThreshold: e.target.value })}
+                    />
+                    <TextField
+                      label="Weight (lb)"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="For shipping calc"
+                      value={v.weightLb}
+                      onChange={(e) => updateVariant(i, { weightLb: e.target.value })}
                     />
                   </div>
                   <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
