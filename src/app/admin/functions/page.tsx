@@ -4,8 +4,9 @@ import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { Paginated, ProductFunction } from '@/lib/types';
+import { Paginated, Product, ProductFunction } from '@/lib/types';
 import {
+  Badge,
   Button,
   Card,
   ConfirmDialog,
@@ -25,7 +26,7 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { EditIcon, EyeIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
 
 type FunctionSort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
@@ -44,6 +45,7 @@ export default function FunctionsAdminPage() {
   const [form, setForm] = useState<FunctionFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ProductFunction | null>(null);
+  const [viewingFunction, setViewingFunction] = useState<ProductFunction | null>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<FunctionSort>('name_asc');
   const [page, setPage] = useState(1);
@@ -183,6 +185,7 @@ export default function FunctionsAdminPage() {
                   <Td className="text-slate-600">{f.productCount ?? 0}</Td>
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
+                      <IconButton icon={EyeIcon} label="View Products" onClick={() => setViewingFunction(f)} />
                       <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(f)} />
                       <IconButton
                         icon={TrashIcon}
@@ -252,6 +255,76 @@ export default function FunctionsAdminPage() {
         onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
         onCancel={() => setPendingDelete(null)}
       />
+
+      {viewingFunction && (
+        <FunctionProductsModal fn={viewingFunction} onClose={() => setViewingFunction(null)} />
+      )}
     </div>
+  );
+}
+
+function FunctionProductsModal({ fn, onClose }: { fn: ProductFunction; onClose: () => void }) {
+  // Uses the admin product listing (not the public /functions/:slug/products
+  // endpoint) so unpublished/draft products tagged with this function still
+  // show up here — an admin view of "all products" shouldn't silently hide
+  // drafts the way the public storefront panel does.
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['function-products-admin', fn.slug],
+    queryFn: () =>
+      api.get<{ data: Product[]; pagination: { total: number } }>(
+        `/wholesale/products/admin?functionSlug=${encodeURIComponent(fn.slug)}&page=1&limit=200`,
+      ),
+  });
+
+  const products = data?.data || [];
+
+  return (
+    <Modal open onClose={onClose} title={`Products — ${fn.name}`} size="lg">
+      {isLoading && <LoadingState />}
+      {isError && <ErrorState message="Couldn't load products for this function." />}
+      {data && products.length === 0 && <EmptyState message="No products are tagged with this function yet." />}
+
+      {products.length > 0 && (
+        <div className="space-y-2">
+          {products.map((p) => {
+            const prices = p.variants.map((v) => Number(v.effectivePrice ?? v.price)).filter((n) => !isNaN(n));
+            const minPrice = prices.length ? Math.min(...prices) : null;
+            const maxPrice = prices.length ? Math.max(...prices) : null;
+            return (
+              <div key={p.id} className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                  {p.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <ImagePlaceholderIcon className="h-5 w-5 text-slate-400" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-900">{p.name}</p>
+                  <p className="text-xs text-slate-500">
+                    SKU: {p.sku}
+                    {p.category && <> · {p.category.name}</>}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-medium text-slate-900">
+                    {minPrice != null
+                      ? minPrice === maxPrice
+                        ? `$${minPrice.toFixed(2)}`
+                        : `$${minPrice.toFixed(2)} – $${(maxPrice as number).toFixed(2)}`
+                      : '—'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {p.variants.length} variant{p.variants.length === 1 ? '' : 's'}
+                  </p>
+                </div>
+                {!p.isPublished && <Badge status="UNPUBLISHED" />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
   );
 }

@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireAdmin } from '@/components/AdminShell';
-import { Paginated, UserListItem, UserRole } from '@/lib/types';
+import { Paginated, UserDetail, UserListItem, UserRole } from '@/lib/types';
 import {
   Badge,
   Button,
@@ -15,6 +15,7 @@ import {
   ErrorState,
   IconButton,
   LoadingState,
+  Modal,
   PageHeader,
   Table,
   TableHead,
@@ -22,8 +23,17 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, PlusIcon } from '@/components/icons';
+import { EditIcon, EyeIcon, PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
+import { OrderDetailCard } from '@/components/admin/OrderDetailCard';
+import { StatusCard } from '@/components/admin/StatusCard';
+
+interface UserAdminStats {
+  total: number;
+  customers: number;
+  sales: number;
+  admins: number;
+}
 
 export default function UsersAdminPage() {
   const queryClient = useQueryClient();
@@ -32,6 +42,7 @@ export default function UsersAdminPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<StaffFormState>(EMPTY_STAFF_FORM);
   const [error, setError] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<number | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-users', search, roleFilter],
@@ -42,6 +53,15 @@ export default function UsersAdminPage() {
       return api.get<Paginated<UserListItem>>(`/users?${params.toString()}`);
     },
   });
+
+  const { data: stats } = useQuery({
+    queryKey: ['admin-users-stats'],
+    queryFn: () => api.get<UserAdminStats>('/users/admin/stats'),
+  });
+
+  function toggleRoleFilter(role: UserRole) {
+    setRoleFilter((prev) => (prev === role ? '' : role));
+  }
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-users'] });
 
@@ -88,6 +108,33 @@ export default function UsersAdminPage() {
             Add Staff Account
           </Button>
         </div>
+
+        {stats && (
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatusCard label="Total" value={stats.total} active={!roleFilter} onClick={() => setRoleFilter('')} />
+            <StatusCard
+              label="Customers"
+              value={stats.customers}
+              tone="green"
+              active={roleFilter === 'CUSTOMER'}
+              onClick={() => toggleRoleFilter('CUSTOMER')}
+            />
+            <StatusCard
+              label="Sales"
+              value={stats.sales}
+              tone="amber"
+              active={roleFilter === 'SALES'}
+              onClick={() => toggleRoleFilter('SALES')}
+            />
+            <StatusCard
+              label="Admins"
+              value={stats.admins}
+              tone="brand"
+              active={roleFilter === 'ADMIN'}
+              onClick={() => toggleRoleFilter('ADMIN')}
+            />
+          </div>
+        )}
 
         <div className="mb-4 flex flex-wrap gap-2">
           <input
@@ -151,9 +198,12 @@ export default function UsersAdminPage() {
                     </Td>
                     <Td className="text-slate-500">{new Date(u.createdAt).toLocaleDateString()}</Td>
                     <Td align="right">
-                      <Link href={`/admin/users/${u.id}/edit`}>
-                        <IconButton icon={EditIcon} label={`Edit ${u.fullName}`} />
-                      </Link>
+                      <div className="flex justify-end gap-1">
+                        <IconButton icon={EyeIcon} label={`View ${u.fullName}`} onClick={() => setViewingId(u.id)} />
+                        <Link href={`/admin/users/${u.id}/edit`}>
+                          <IconButton icon={EditIcon} label={`Edit ${u.fullName}`} />
+                        </Link>
+                      </div>
                     </Td>
                   </Tr>
                 ))}
@@ -171,8 +221,131 @@ export default function UsersAdminPage() {
           onSubmit={handleSubmit}
           onClose={closeModal}
         />
+
+        {viewingId != null && <UserDetailModal userId={viewingId} onClose={() => setViewingId(null)} />}
       </div>
     </RequireAdmin>
   );
 }
 
+function UserDetailModal({ userId, onClose }: { userId: number; onClose: () => void }) {
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ['admin-user-detail', userId],
+    queryFn: () => api.get<UserDetail>(`/users/${userId}/detail`),
+  });
+
+  return (
+    <Modal open onClose={onClose} title={user ? user.fullName : 'User'} size="xl">
+      {isLoading && <LoadingState />}
+      {isError && <ErrorState message="Couldn't load this user." />}
+
+      {user && (
+        <div className="space-y-6">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Account</p>
+            <div className="grid grid-cols-2 gap-4 rounded-lg bg-slate-50 px-4 py-3 text-sm">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Name</p>
+                <p className="text-slate-900">{user.fullName}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Email</p>
+                <p className="text-slate-900">{user.email}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Phone</p>
+                <p className="text-slate-900">{user.phone || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Role</p>
+                <Badge status={user.role} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Company</p>
+                <p className="text-slate-900">{user.company?.name || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Joined</p>
+                <p className="text-slate-900">{new Date(user.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Summary</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg border border-slate-200 px-4 py-3 text-center">
+                <p className="text-lg font-semibold text-slate-900">{user.orderCount}</p>
+                <p className="text-xs text-slate-500">Orders</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 px-4 py-3 text-center">
+                <p className="text-lg font-semibold text-slate-900">${user.totalSpent.toFixed(2)}</p>
+                <p className="text-xs text-slate-500">Total Spent</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 px-4 py-3 text-center">
+                <p className="text-lg font-semibold text-slate-900">
+                  {user.lastOrderDate ? new Date(user.lastOrderDate).toLocaleDateString() : '—'}
+                </p>
+                <p className="text-xs text-slate-500">Last Order</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Orders ({user.orders.length})
+            </p>
+            {user.orders.length === 0 ? (
+              <p className="text-sm text-slate-400">No orders placed by this user yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {user.orders.map((o) => (
+                  <OrderDetailCard key={o.id} order={o} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* No card at all when there are zero quote requests. */}
+          {user.quoteRequests.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Quote Requests ({user.quoteRequests.length})
+              </p>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-3 py-2 font-medium">Type</th>
+                      <th className="px-3 py-2 font-medium">Status</th>
+                      <th className="px-3 py-2 font-medium">Items</th>
+                      <th className="px-3 py-2 font-medium">Message</th>
+                      <th className="px-3 py-2 font-medium">Received</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {user.quoteRequests.map((qr) => (
+                      <tr key={qr.id} className="border-b border-slate-100 last:border-0">
+                        <td className="px-3 py-2 text-slate-900">{qr.type.replace(/_/g, ' ')}</td>
+                        <td className="px-3 py-2">
+                          <Badge status={qr.status} />
+                        </td>
+                        <td className="px-3 py-2 text-slate-600">
+                          {qr.items.length > 0 ? qr.items.map((i) => i.productName).join(', ') : '—'}
+                        </td>
+                        <td className="px-3 py-2 max-w-xs truncate text-slate-600">{qr.message || '—'}</td>
+                        <td className="px-3 py-2 text-slate-500">
+                          {new Date(qr.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+}

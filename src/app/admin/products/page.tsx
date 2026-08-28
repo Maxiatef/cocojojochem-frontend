@@ -25,7 +25,8 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { EditIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { StatusCard } from '@/components/admin/StatusCard';
 
 type ProductAdminSort = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'newest';
 
@@ -275,8 +276,9 @@ export default function ProductsPage() {
 
       {data && data.data.length > 0 && (
         <Card>
-          <Table minWidth={900}>
+          <Table minWidth={960}>
             <TableHead>
+              <Th>Image</Th>
               <Th>Product</Th>
               <Th>SKU</Th>
               <Th>Category</Th>
@@ -293,8 +295,19 @@ export default function ProductsPage() {
                 const max = prices.length ? Math.max(...prices) : null;
                 const toggling =
                   togglePublishedMutation.isPending && togglePublishedMutation.variables?.id === p.id;
+                const thumbUrl = p.imageUrl || p.variants.find((v) => v.imageUrl)?.imageUrl || null;
                 return (
                   <Tr key={p.id}>
+                    <Td>
+                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                        {thumbUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={thumbUrl} alt={p.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <ImagePlaceholderIcon className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
+                    </Td>
                     <Td>
                       <p className="font-medium text-slate-900">{p.name}</p>
                       {p.inciName && (
@@ -365,46 +378,6 @@ export default function ProductsPage() {
         onCancel={() => setPendingDelete(null)}
       />
     </div>
-  );
-}
-
-const STATUS_CARD_TONES: Record<string, { ring: string; value: string }> = {
-  brand: { ring: 'border-brand-500 ring-brand-100', value: 'text-brand-700' },
-  green: { ring: 'border-green-500 ring-green-100', value: 'text-green-700' },
-  red: { ring: 'border-red-500 ring-red-100', value: 'text-red-700' },
-  amber: { ring: 'border-amber-500 ring-amber-100', value: 'text-amber-700' },
-  slate: { ring: 'border-slate-400 ring-slate-100', value: 'text-slate-700' },
-};
-
-// A stat tile that doubles as a filter toggle — clicking it filters the table
-// below to that status, clicking it again clears the filter. The hover
-// lift/border and cursor-pointer are the only signal it's clickable, so make
-// them obvious rather than subtle.
-function StatusCard({
-  label,
-  value,
-  onClick,
-  active = false,
-  tone = 'brand',
-}: {
-  label: string;
-  value: number;
-  onClick: () => void;
-  active?: boolean;
-  tone?: keyof typeof STATUS_CARD_TONES;
-}) {
-  const t = STATUS_CARD_TONES[tone];
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-        active ? `${t.ring} ring-2` : 'border-slate-200 hover:border-slate-300'
-      }`}
-    >
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className={`mt-1 text-xl font-semibold ${active ? t.value : 'text-slate-900'}`}>{value}</p>
-    </button>
   );
 }
 

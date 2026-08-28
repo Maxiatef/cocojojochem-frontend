@@ -15,7 +15,7 @@ import {
   YAxis,
 } from 'recharts';
 import { api } from '@/lib/api';
-import { SalesProductsAnalytics } from '@/lib/types';
+import { SalesProductsAnalytics, VisitorsAnalytics } from '@/lib/types';
 import { RequireAdmin } from '@/components/AdminShell';
 import {
   Badge,
@@ -31,12 +31,12 @@ import {
   Tr,
 } from '@/components/ui';
 import { formatUsd } from '@/lib/pricing';
-import { DollarIcon, BoxIcon, ChartIcon } from '@/components/icons';
+import { DollarIcon, BoxIcon, ChartIcon, EyeIcon, UsersIcon } from '@/components/icons';
 
 // This is the first of several planned Analytics tabs — keep the union open
 // for the next ones (e.g. 'customers', 'marketing') so adding a tab later is
 // just: extend this type, add a button, add a conditional render below.
-type Tab = 'sales-products';
+type Tab = 'sales-products' | 'visitors';
 
 const DAY_OPTIONS: { value: number; label: string }[] = [
   { value: 7, label: 'Last 7 days' },
@@ -55,7 +55,10 @@ export default function AnalyticsAdminPage() {
 
         <div className="mb-6 flex gap-1 border-b border-slate-200">
           {(
-            [['sales-products', 'Sales & Products']] as [Tab, string][]
+            [
+              ['sales-products', 'Sales & Products'],
+              ['visitors', 'Visitors'],
+            ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
               key={key}
@@ -72,6 +75,7 @@ export default function AnalyticsAdminPage() {
         </div>
 
         {tab === 'sales-products' && <SalesProductsTab />}
+        {tab === 'visitors' && <VisitorsTab />}
       </div>
     </RequireAdmin>
   );
@@ -261,6 +265,119 @@ function SalesProductsTab() {
                       </Td>
                       <Td className="text-slate-600">{p.categoryName || '—'}</Td>
                       <Td className="text-slate-500">{new Date(p.createdAt).toLocaleDateString()}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+// --- Visitors tab ------------------------------------------------------------
+
+function VisitorsTab() {
+  const [days, setDays] = useState(30);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['analytics-visitors', days],
+    queryFn: () => api.get<VisitorsAnalytics>(`/admin/analytics/visitors?days=${days}`),
+  });
+
+  const seriesData = (data?.series || []).map((row) => ({
+    day: new Date(row.day).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    views: row.views,
+    uniqueVisitors: row.uniqueVisitors,
+  }));
+
+  const avgViewsPerVisitor =
+    data && data.totalUniqueVisitors > 0 ? data.totalViews / data.totalUniqueVisitors : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Visitors</h2>
+          <p className="text-xs text-slate-500">
+            Storefront traffic from in-house page-view tracking (admin pages aren&apos;t counted).
+          </p>
+        </div>
+        <select
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+        >
+          {DAY_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {isLoading && <LoadingState />}
+      {isError && <ErrorState message="Couldn't load visitor analytics." />}
+
+      {!isLoading && !isError && data && (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Unique Visitors" value={data.totalUniqueVisitors} accent="brand" icon={UsersIcon} />
+            <StatCard label="Page Views" value={data.totalViews} icon={EyeIcon} />
+            <StatCard label="Avg Views / Visitor" value={avgViewsPerVisitor.toFixed(1)} accent="amber" icon={ChartIcon} />
+          </div>
+
+          <Card className="p-6">
+            <h3 className="mb-4 text-sm font-semibold text-slate-900">
+              Traffic — {DAY_OPTIONS.find((o) => o.value === days)?.label.toLowerCase()}
+            </h3>
+            {seriesData.length === 0 ? (
+              <p className="py-16 text-center text-sm text-slate-400">No visits recorded in this range.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={seriesData}>
+                  <defs>
+                    <linearGradient id="analyticsVisitorsFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3a9640" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="#3a9640" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ stroke: '#3a9640', strokeWidth: 1 }} />
+                  <Area
+                    type="monotone"
+                    dataKey="uniqueVisitors"
+                    name="Unique Visitors"
+                    stroke="#2b7a30"
+                    strokeWidth={2}
+                    fill="url(#analyticsVisitorsFill)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </Card>
+
+          <Card>
+            <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">Top Pages</div>
+            {data.topPages.length === 0 ? (
+              <div className="p-5 text-sm text-slate-500">No page views in this range.</div>
+            ) : (
+              <Table minWidth={480}>
+                <TableHead>
+                  <Th>Path</Th>
+                  <Th align="right">Views</Th>
+                  <Th align="right">Unique Visitors</Th>
+                </TableHead>
+                <tbody>
+                  {data.topPages.map((p) => (
+                    <Tr key={p.path}>
+                      <Td className="font-medium text-slate-900">{p.path}</Td>
+                      <Td align="right" className="text-slate-600">{p.views}</Td>
+                      <Td align="right" className="text-slate-600">{p.uniqueVisitors}</Td>
                     </Tr>
                   ))}
                 </tbody>

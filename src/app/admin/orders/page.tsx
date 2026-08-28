@@ -90,8 +90,22 @@ export default function OrdersPage() {
                 <tr key={o.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-5 py-3.5 font-medium text-slate-900">#{o.id}</td>
                   <td className="px-5 py-3.5">
-                    <p className="text-slate-900">{o.user?.fullName || '—'}</p>
-                    <p className="text-xs text-slate-500">{o.user?.email}</p>
+                    {o.user ? (
+                      <>
+                        <p className="text-slate-900">{o.user.fullName}</p>
+                        <p className="text-xs text-slate-500">{o.user.email}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-slate-900">
+                          {o.guestName || 'Guest'}
+                          <span className="ml-1.5 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                            Guest
+                          </span>
+                        </p>
+                        {o.guestEmail && <p className="text-xs text-slate-500">{o.guestEmail}</p>}
+                      </>
+                    )}
                   </td>
                   <td className="px-5 py-3.5 text-slate-600">{o.user?.company?.name || '—'}</td>
                   <td className="px-5 py-3.5 text-slate-600">{o.items.length}</td>

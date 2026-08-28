@@ -132,6 +132,19 @@ export interface Company {
   quoteRequestCount?: number;
 }
 
+export interface CompanyUser {
+  id: number;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  role: UserRole;
+  createdAt: string;
+}
+
+export interface CompanyDetail extends Company {
+  users: CompanyUser[];
+}
+
 export type RequestType = 'QUOTE' | 'SAMPLE' | 'WHITE_LABEL' | 'CONTACT';
 export type RequestStatus = 'NEW' | 'IN_PROGRESS' | 'QUOTED' | 'WON' | 'LOST';
 
@@ -189,6 +202,7 @@ export interface QuoteRequest {
   status: RequestStatus;
   items: QuoteRequestItem[];
   createdAt: string;
+  user?: { id: number; fullName: string; email: string } | null;
 }
 
 export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
@@ -506,7 +520,8 @@ export interface UserListItem {
 }
 
 export interface UserDetail extends UserListItem {
-  recentOrders: Order[];
+  orders: Order[];
+  quoteRequests: QuoteRequest[];
   lastOrderDate?: string | null;
 }
 
@@ -547,4 +562,12 @@ export interface SalesProductsAnalytics {
     categoryName: string | null;
     createdAt: string;
   }[];
+}
+
+export interface VisitorsAnalytics {
+  range: { days: number; from: string; to: string };
+  totalViews: number;
+  totalUniqueVisitors: number;
+  series: { day: string; views: number; uniqueVisitors: number }[];
+  topPages: { path: string; views: number; uniqueVisitors: number }[];
 }

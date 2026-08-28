@@ -1,6 +1,7 @@
 import localFont from 'next/font/local';
 import { StorefrontHeader } from '@/components/storefront/Header';
 import { StorefrontFooter } from '@/components/storefront/Footer';
+import { VisitorTracker } from '@/components/storefront/VisitorTracker';
 
 const display = localFont({
   src: [
@@ -28,6 +29,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
     <div
       className={`${display.variable} ${storefront.variable} flex min-h-screen flex-col bg-sand-50 font-storefront text-ink`}
     >
+      <VisitorTracker />
       <StorefrontHeader />
       <main className="flex-1">{children}</main>
       <StorefrontFooter />

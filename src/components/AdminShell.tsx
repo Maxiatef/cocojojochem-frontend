@@ -124,9 +124,6 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-          Main
-        </p>
         {nav.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;

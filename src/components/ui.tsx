@@ -209,18 +209,20 @@ export function Modal({
   if (!open) return null;
   const maxWidth = size === 'xl' ? 'max-w-4xl' : size === 'lg' ? 'max-w-2xl' : 'max-w-md';
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className={`relative z-10 w-full ${maxWidth} rounded-xl bg-white p-6 shadow-xl`}>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-        >
-          <CloseIcon className="h-4 w-4" />
-        </button>
-        <h2 className="mb-4 pr-8 text-sm font-semibold text-slate-900">{title}</h2>
-        {children}
+      <div className={`relative z-10 flex max-h-full w-full ${maxWidth} flex-col rounded-xl bg-white shadow-xl`}>
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
+          <h2 className="pr-8 text-sm font-semibold text-slate-900">{title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <CloseIcon className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="overflow-y-auto px-6 py-4">{children}</div>
       </div>
     </div>
   );

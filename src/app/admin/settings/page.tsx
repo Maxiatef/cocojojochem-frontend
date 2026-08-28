@@ -23,7 +23,7 @@ import {
 import { PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
 
-type Tab = 'general' | 'company' | 'shipping' | 'tax' | 'emails' | 'integrations' | 'staff';
+type Tab = 'general' | 'company' | 'shipping' | 'tax' | 'notifications' | 'integrations' | 'staff';
 
 // Site-settings is a generic key/value store on the backend — these are the
 // keys this admin UI has adopted for the fields the plan calls for.
@@ -35,7 +35,12 @@ const KEYS = {
   taxValue: 'tax.value',
   wholesaleMinimum: 'WHOLESALE_MINIMUM',
   freeShippingThreshold: 'FREE_SHIPPING_THRESHOLD',
+  quoteNotificationEnabled: 'quoteNotificationEnabled',
   quoteNotificationEmail: 'quoteNotificationEmail',
+  newOrderNotificationEnabled: 'newOrderNotificationEnabled',
+  newOrderNotificationEmail: 'newOrderNotificationEmail',
+  contactMessageNotificationEnabled: 'contactMessageNotificationEnabled',
+  contactMessageNotificationEmail: 'contactMessageNotificationEmail',
   senderName: 'senderName',
   senderEmail: 'senderEmail',
   warehouseName: 'warehouseName',
@@ -52,7 +57,7 @@ const TABS: [Tab, string][] = [
   ['company', 'Company & Warehouse'],
   ['shipping', 'Wholesale & Shipping'],
   ['tax', 'Tax'],
-  ['emails', 'Emails'],
+  ['notifications', 'Notifications'],
   ['integrations', 'Integrations'],
   ['staff', 'Staff'],
 ];
@@ -65,7 +70,7 @@ export default function SettingsAdminPage() {
       <div>
         <PageHeader
           title="Settings"
-          description="Site configuration, company details, shipping, tax, emails, integrations, and staff."
+          description="Site configuration, company details, shipping, tax, notifications, integrations, and staff."
         />
 
         <div className="mb-6 flex flex-wrap gap-x-1 gap-y-2 border-b border-slate-200">
@@ -88,11 +93,46 @@ export default function SettingsAdminPage() {
         {tab === 'company' && <CompanyTab />}
         {tab === 'shipping' && <ShippingTab />}
         {tab === 'tax' && <TaxTab />}
-        {tab === 'emails' && <EmailsTab />}
+        {tab === 'notifications' && <NotificationsTab />}
         {tab === 'integrations' && <IntegrationsTab />}
         {tab === 'staff' && <StaffTab />}
       </div>
     </RequireAdmin>
+  );
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-4">
+      <span>
+        <span className="block text-sm font-medium text-slate-900">{label}</span>
+        {description && <span className="mt-0.5 block text-xs text-slate-500">{description}</span>}
+      </span>
+      <span
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+          checked ? 'bg-brand-600' : 'bg-slate-300'
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+            checked ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
+      </span>
+    </label>
   );
 }
 
@@ -391,10 +431,49 @@ function ShippingTab() {
   );
 }
 
-function EmailsTab() {
+// One row per internal notification email — every one of these follows the
+// same shape on the backend: an `<x>Enabled` toggle (unset = enabled, only
+// an explicit "false" turns it off) and an `<x>Email` recipient with no
+// hardcoded fallback, so nothing sends until an admin sets an address here.
+const NOTIFICATIONS: {
+  key: string;
+  enabledKey: string;
+  emailKey: string;
+  label: string;
+  description: string;
+  placeholder: string;
+}[] = [
+  {
+    key: 'newOrder',
+    enabledKey: KEYS.newOrderNotificationEnabled,
+    emailKey: KEYS.newOrderNotificationEmail,
+    label: 'New Order Notifications',
+    description: 'Sent every time a new order is paid for.',
+    placeholder: 'e.g. sales@yourcompany.com',
+  },
+  {
+    key: 'quoteRequest',
+    enabledKey: KEYS.quoteNotificationEnabled,
+    emailKey: KEYS.quoteNotificationEmail,
+    label: 'Quote & Sample Request Notifications',
+    description: 'Sent when a customer submits a quote, sample, or white-label request.',
+    placeholder: 'e.g. sales@yourcompany.com',
+  },
+  {
+    key: 'contactMessage',
+    enabledKey: KEYS.contactMessageNotificationEnabled,
+    emailKey: KEYS.contactMessageNotificationEmail,
+    label: 'Contact Us Message Notifications',
+    description: 'Sent when a customer submits the Contact Us form.',
+    placeholder: 'e.g. support@yourcompany.com',
+  },
+];
+
+function NotificationsTab() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useSiteSettings();
-  const [quoteNotificationEmail, setQuoteNotificationEmail] = useState('');
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [emails, setEmails] = useState<Record<string, string>>({});
   const [senderName, setSenderName] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
   const [saved, setSaved] = useState(false);
@@ -402,7 +481,14 @@ function EmailsTab() {
 
   useEffect(() => {
     if (!data) return;
-    setQuoteNotificationEmail(data.settings[KEYS.quoteNotificationEmail] || '');
+    const nextEnabled: Record<string, boolean> = {};
+    const nextEmails: Record<string, string> = {};
+    for (const n of NOTIFICATIONS) {
+      nextEnabled[n.key] = data.settings[n.enabledKey] !== 'false';
+      nextEmails[n.key] = data.settings[n.emailKey] || '';
+    }
+    setEnabled(nextEnabled);
+    setEmails(nextEmails);
     setSenderName(data.settings[KEYS.senderName] || '');
     setSenderEmail(data.settings[KEYS.senderEmail] || '');
   }, [data]);
@@ -420,11 +506,21 @@ function EmailsTab() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    mutation.mutate({
-      [KEYS.quoteNotificationEmail]: quoteNotificationEmail,
+    for (const n of NOTIFICATIONS) {
+      if (enabled[n.key] && !emails[n.key]?.trim()) {
+        setError(`Set a recipient email before enabling "${n.label}".`);
+        return;
+      }
+    }
+    const body: Record<string, string> = {
       [KEYS.senderName]: senderName,
       [KEYS.senderEmail]: senderEmail,
-    });
+    };
+    for (const n of NOTIFICATIONS) {
+      body[n.enabledKey] = String(enabled[n.key]);
+      body[n.emailKey] = emails[n.key] || '';
+    }
+    mutation.mutate(body);
   }
 
   if (isLoading) return <LoadingState />;
@@ -433,17 +529,34 @@ function EmailsTab() {
   return (
     <Card className="max-w-lg p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <TextField
-          label="Quote Request Notification Email"
-          type="email"
-          placeholder="sales@cocojojochem.com"
-          value={quoteNotificationEmail}
-          onChange={(e) => setQuoteNotificationEmail(e.target.value)}
-        />
-        <p className="-mt-2.5 text-xs text-slate-500">
-          Where new quote, sample, white-label, and contact requests are sent. Defaults to
-          sales@cocojojochem.com if left blank.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Internal Notifications</p>
+        {NOTIFICATIONS.map((n) => (
+          <div key={n.key} className="rounded-lg border border-slate-200 p-4">
+            <ToggleSwitch
+              checked={!!enabled[n.key]}
+              onChange={(checked) => setEnabled((prev) => ({ ...prev, [n.key]: checked }))}
+              label={n.label}
+              description={`${n.description} Turn off to stop these emails at any time.`}
+            />
+            {enabled[n.key] && (
+              <div className="mt-4">
+                <TextField
+                  label="Notification Email"
+                  type="email"
+                  placeholder={n.placeholder}
+                  value={emails[n.key] || ''}
+                  onChange={(e) => setEmails((prev) => ({ ...prev, [n.key]: e.target.value }))}
+                />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Required while this is enabled — no default is built in, so nothing is sent until you set an
+                  address here.
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
+
+        <p className="pt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Sender Identity</p>
         <TextField
           label="Sender Name"
           placeholder="CocoJojoChem"
@@ -458,7 +571,7 @@ function EmailsTab() {
           onChange={(e) => setSenderEmail(e.target.value)}
         />
         <p className="-mt-2.5 text-xs text-slate-500">
-          The &quot;from&quot; identity on outgoing transactional emails. Must be a sender verified in your
+          The &quot;from&quot; identity on all outgoing transactional emails. Must be a sender verified in your
           Brevo account, or delivery will fail.
         </p>
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}

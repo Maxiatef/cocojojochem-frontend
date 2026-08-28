@@ -61,6 +61,7 @@ function RegisterForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [companyWebsite, setCompanyWebsite] = useState('');
   const [countryIso2, setCountryIso2] = useState('us');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -103,6 +104,7 @@ function RegisterForm() {
         email,
         password,
         companyName: companyName || undefined,
+        companyWebsite: companyName ? companyWebsite || undefined : undefined,
         phone: `+${dialCode} ${phone}`,
       });
       setCustomerTokens(res.accessToken, res.refreshToken);
@@ -148,6 +150,21 @@ function RegisterForm() {
             className="w-full border border-sand-300 px-3.5 py-2.5 text-sm text-ink outline-none focus:border-olive-600"
           />
         </div>
+
+        {companyName && (
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft">
+              Company website (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="yourcompany.com"
+              value={companyWebsite}
+              onChange={(e) => setCompanyWebsite(e.target.value)}
+              className="w-full border border-sand-300 px-3.5 py-2.5 text-sm text-ink outline-none focus:border-olive-600"
+            />
+          </div>
+        )}
 
         <div>
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft">Phone</label>
