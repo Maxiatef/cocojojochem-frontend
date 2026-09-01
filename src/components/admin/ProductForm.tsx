@@ -38,6 +38,7 @@ interface VariantFormRow {
   maxOrderQuantity: string;
   availableFrom: string;
   weightLb: string;
+  isSoldByDrum: boolean;
 }
 
 const EMPTY_VARIANT: VariantFormRow = {
@@ -54,6 +55,7 @@ const EMPTY_VARIANT: VariantFormRow = {
   maxOrderQuantity: '',
   availableFrom: '',
   weightLb: '',
+  isSoldByDrum: false,
 };
 
 function toVariantRow(v: Product['variants'][number]): VariantFormRow {
@@ -71,6 +73,7 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     maxOrderQuantity: v.maxOrderQuantity != null ? String(v.maxOrderQuantity) : '',
     availableFrom: v.availableFrom ? v.availableFrom.slice(0, 16) : '',
     weightLb: v.weightLb != null ? String(v.weightLb) : '',
+    isSoldByDrum: v.isSoldByDrum ?? false,
   };
 }
 
@@ -289,6 +292,7 @@ export function ProductForm({ product }: { product?: Product }) {
         maxOrderQuantity: v.limitPerOrder && v.maxOrderQuantity ? Number(v.maxOrderQuantity) : undefined,
         availableFrom: v.availableFrom ? new Date(v.availableFrom).toISOString() : undefined,
         weightLb: v.weightLb ? Number(v.weightLb) : undefined,
+        isSoldByDrum: v.isSoldByDrum,
       })),
       gallery: gallery.map((url, i) => ({ url, sortOrder: i })),
     };
@@ -883,6 +887,16 @@ export function ProductForm({ product }: { product?: Product }) {
                       value={v.weightLb}
                       onChange={(e) => updateVariant(i, { weightLb: e.target.value })}
                     />
+                  </div>
+                  <div className="mt-3 border-t border-slate-100 pt-3">
+                    <label className="flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={v.isSoldByDrum}
+                        onChange={(e) => updateVariant(i, { isSoldByDrum: e.target.checked })}
+                      />
+                      Sold by drum (prices shipping from the drum rate table, not by weight)
+                    </label>
                   </div>
                   <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <label className="flex items-center gap-2 text-sm text-slate-700">

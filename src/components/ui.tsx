@@ -423,10 +423,41 @@ export function TableHead({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
+export function Th({
+  children,
+  align = 'left',
+  sortDirection,
+  onSort,
+}: {
+  children: React.ReactNode;
+  align?: 'left' | 'right';
+  // When provided, renders this header as a clickable sort toggle.
+  // 'asc' | 'desc' shows the active arrow; null/undefined means this column
+  // isn't the current sort key.
+  sortDirection?: 'asc' | 'desc' | null;
+  onSort?: () => void;
+}) {
+  if (!onSort) {
+    return (
+      <th className={`px-5 py-3 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
+        {children}
+      </th>
+    );
+  }
   return (
     <th className={`px-5 py-3 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
-      {children}
+      <button
+        type="button"
+        onClick={onSort}
+        className={`inline-flex items-center gap-1 hover:text-slate-800 ${
+          sortDirection ? 'text-slate-800' : 'text-slate-500'
+        } ${align === 'right' ? 'flex-row-reverse' : ''}`}
+      >
+        {children}
+        <span className="text-[10px] leading-none">
+          {sortDirection === 'asc' ? '▲' : sortDirection === 'desc' ? '▼' : '⇅'}
+        </span>
+      </button>
     </th>
   );
 }

@@ -27,7 +27,8 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { EditIcon, EyeIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import Link from 'next/link';
 
 type CategorySort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
@@ -205,6 +206,9 @@ export default function CategoriesAdminPage() {
                   <Td className="text-slate-600">{c.sortOrder}</Td>
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
+                      <Link href={`/admin/categories/${c.id}`}>
+                        <IconButton icon={EyeIcon} label="View" onClick={() => {}} />
+                      </Link>
                       <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
                       <IconButton
                         icon={TrashIcon}

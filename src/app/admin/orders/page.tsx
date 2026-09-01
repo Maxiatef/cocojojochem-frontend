@@ -9,6 +9,7 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmDialog,
   EmptyState,
   ErrorState,
   IconButton,
@@ -22,6 +23,13 @@ import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
 import { EyeIcon, ShippingIcon } from '@/components/icons';
 import { OrderStatusStepper } from '@/components/OrderStatusStepper';
 import { formatUsd } from '@/lib/pricing';
+import { StatusCard } from '@/components/admin/StatusCard';
+
+interface OrderAdminStats {
+  total: number;
+  customerOrders: number;
+  guestOrders: number;
+}
 
 const CARRIERS: { value: string; label: string }[] = [
   { value: 'usps', label: 'USPS' },
@@ -37,9 +45,16 @@ export default function OrdersPage() {
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
 
+  const [customerTypeFilter, setCustomerTypeFilter] = useState<'all' | 'customer' | 'guest'>('all');
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['orders-admin'],
     queryFn: () => api.get<Paginated<Order>>('/orders/admin?page=1&limit=50'),
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ['orders-admin-stats'],
+    queryFn: () => api.get<OrderAdminStats>('/orders/admin/stats'),
   });
 
   const updateStatus = useMutation({
@@ -53,13 +68,43 @@ export default function OrdersPage() {
   });
 
   // Keep the modal's order in sync once the order list refetches.
-  const orders = data?.data || [];
-  const modalOrder = activeOrder ? orders.find((o) => o.id === activeOrder.id) || activeOrder : null;
-  const viewedOrder = viewOrder ? orders.find((o) => o.id === viewOrder.id) || viewOrder : null;
+  const allOrders = data?.data || [];
+  const orders = allOrders.filter((o) => {
+    if (customerTypeFilter === 'customer') return !!o.user;
+    if (customerTypeFilter === 'guest') return !o.user;
+    return true;
+  });
+  const modalOrder = activeOrder ? allOrders.find((o) => o.id === activeOrder.id) || activeOrder : null;
+  const viewedOrder = viewOrder ? allOrders.find((o) => o.id === viewOrder.id) || viewOrder : null;
 
   return (
     <div>
       <PageHeader title="Orders" description="All wholesale orders placed through the storefront." />
+
+      {stats && (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <StatusCard
+            label="Total Orders"
+            value={stats.total}
+            active={customerTypeFilter === 'all'}
+            onClick={() => setCustomerTypeFilter('all')}
+          />
+          <StatusCard
+            label="By Customers"
+            value={stats.customerOrders}
+            tone="green"
+            active={customerTypeFilter === 'customer'}
+            onClick={() => setCustomerTypeFilter((v) => (v === 'customer' ? 'all' : 'customer'))}
+          />
+          <StatusCard
+            label="By Guests"
+            value={stats.guestOrders}
+            tone="amber"
+            active={customerTypeFilter === 'guest'}
+            onClick={() => setCustomerTypeFilter((v) => (v === 'guest' ? 'all' : 'guest'))}
+          />
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>
@@ -67,9 +112,12 @@ export default function OrdersPage() {
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Couldn't load orders." />}
-      {data && data.data.length === 0 && <EmptyState message="No orders yet." />}
+      {data && allOrders.length === 0 && <EmptyState message="No orders yet." />}
+      {data && allOrders.length > 0 && orders.length === 0 && (
+        <EmptyState message="No orders match this filter." />
+      )}
 
-      {data && data.data.length > 0 && (
+      {data && orders.length > 0 && (
         <Card>
           <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
@@ -86,7 +134,7 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {data.data.map((o) => (
+              {orders.map((o) => (
                 <tr key={o.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-5 py-3.5 font-medium text-slate-900">#{o.id}</td>
                   <td className="px-5 py-3.5">
@@ -287,6 +335,7 @@ function ManageShippingModal({
   const [carrierCode, setCarrierCode] = useState(order.carrierCode || 'usps');
   const [trackingError, setTrackingError] = useState<string | null>(null);
   const [trackingSaved, setTrackingSaved] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   const saveTracking = useMutation({
     mutationFn: () =>
@@ -304,7 +353,10 @@ function ManageShippingModal({
 
   const cancelOrder = useMutation({
     mutationFn: () => api.patch(`/orders/${order.id}/status`, { status: 'CANCELLED' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders-admin'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders-admin'] });
+      setConfirmingCancel(false);
+    },
   });
 
   return (
@@ -318,8 +370,7 @@ function ManageShippingModal({
                 type="button"
                 variant="danger"
                 size="sm"
-                loading={cancelOrder.isPending}
-                onClick={() => cancelOrder.mutate()}
+                onClick={() => setConfirmingCancel(true)}
               >
                 Cancel Order
               </Button>
@@ -396,6 +447,16 @@ function ManageShippingModal({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmingCancel}
+        title="Cancel order"
+        message={`Cancel order #${order.id}? The customer will not be automatically notified, and this cannot be undone from here.`}
+        confirmLabel="Cancel Order"
+        loading={cancelOrder.isPending}
+        onConfirm={() => cancelOrder.mutate()}
+        onCancel={() => setConfirmingCancel(false)}
+      />
     </Modal>
   );
 }

@@ -36,6 +36,7 @@ export interface ProductVariant {
   maxOrderQuantity: number | null;
   availableFrom: string | null;
   weightLb: string | null;
+  isSoldByDrum?: boolean;
 }
 
 export interface ProductFunction {
@@ -570,4 +571,18 @@ export interface VisitorsAnalytics {
   totalUniqueVisitors: number;
   series: { day: string; views: number; uniqueVisitors: number }[];
   topPages: { path: string; views: number; uniqueVisitors: number }[];
+}
+
+// --- Shipping zones & rate tiers -----------------------------------------------
+
+// Zone assignments (read-only, GET /orders/admin/shipping-reference)
+export interface ShippingZoneGroup {
+  zone: number;
+  states: { code: string; name: string }[];
+}
+
+// Editable Zone 1-7 rate table row (GET/PUT /admin/shipping-rate-tiers)
+export interface ShippingRateTierRow {
+  breakpoint: number; // weight in lb, or drum count, depending on `kind`
+  rates: (number | null)[]; // index 0 = Zone 1 ... index 6 = Zone 7
 }

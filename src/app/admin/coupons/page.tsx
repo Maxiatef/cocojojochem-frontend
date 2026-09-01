@@ -35,7 +35,7 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, PlusIcon, TrashIcon, ChartIcon, DollarIcon, TicketIcon } from '@/components/icons';
+import { EditIcon, EyeIcon, PlusIcon, TrashIcon, ChartIcon, DollarIcon, TicketIcon } from '@/components/icons';
 
 type Tab = 'coupons' | 'analytics' | 'bulk-sales';
 
@@ -642,6 +642,7 @@ function CouponListSection({
   const [form, setForm] = useState<CouponFormState>(EMPTY_COUPON_FORM);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Coupon | null>(null);
+  const [viewingCoupon, setViewingCoupon] = useState<Coupon | null>(null);
   const categoryOptions = useCategoryOptions();
   const { productOptions, variantOptions } = useProductAndVariantOptions();
   const brandOptions = useBrandOptions();
@@ -757,6 +758,7 @@ function CouponListSection({
                     </Td>
                     <Td align="right">
                       <div className="flex justify-end gap-1.5">
+                        <IconButton icon={EyeIcon} label="View" onClick={() => setViewingCoupon(c)} />
                         <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
                         <IconButton
                           icon={TrashIcon}
@@ -772,6 +774,16 @@ function CouponListSection({
             </tbody>
           </Table>
         </Card>
+      )}
+
+      {viewingCoupon && (
+        <CouponDetailModal
+          coupon={viewingCoupon}
+          categoryOptions={categoryOptions}
+          productOptions={productOptions}
+          variantOptions={variantOptions}
+          onClose={() => setViewingCoupon(null)}
+        />
       )}
 
       <Modal open={modalOpen} onClose={closeModal} title={form.id ? 'Edit Coupon' : 'Add Coupon'} size="xl">
@@ -1015,6 +1027,194 @@ function CouponListSection({
         onCancel={() => setPendingDelete(null)}
       />
     </div>
+  );
+}
+
+function CouponDetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-4 py-1.5 text-sm">
+      <span className="text-slate-500">{label}</span>
+      <span className="max-w-[65%] text-right font-medium text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+function CouponDetailModal({
+  coupon,
+  categoryOptions,
+  productOptions,
+  variantOptions,
+  onClose,
+}: {
+  coupon: Coupon;
+  categoryOptions: { id: number; label: string }[];
+  productOptions: { id: number; label: string }[];
+  variantOptions: { id: number; label: string }[];
+  onClose: () => void;
+}) {
+  const status = couponStatus(coupon);
+
+  function namesFor(ids: string | null, options: { id: number; label: string }[]): string {
+    const idList = idsToArray(ids);
+    if (idList.length === 0) return '—';
+    const byId = new Map(options.map((o) => [o.id, o.label]));
+    return idList.map((id) => byId.get(id) || `#${id}`).join(', ');
+  }
+
+  const hasExclusions =
+    idsToArray(coupon.excludedCategoryIds).length > 0 ||
+    idsToArray(coupon.excludedProductIds).length > 0 ||
+    idsToArray(coupon.excludedVariantIds).length > 0 ||
+    (coupon.excludedBrands?.length || 0) > 0 ||
+    coupon.excludeSaleItems;
+
+  const hasInclusionRestrictions =
+    !coupon.applicableToAllCategories ||
+    !coupon.applicableToAllProducts ||
+    idsToArray(coupon.includedCategoryIds).length > 0 ||
+    idsToArray(coupon.includedProductIds).length > 0 ||
+    idsToArray(coupon.includedVariantIds).length > 0 ||
+    (coupon.includedBrands?.length || 0) > 0;
+
+  return (
+    <Modal open onClose={onClose} title={`Coupon — ${coupon.code}`} size="lg">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Badge status={status.tone} />
+          <p className="text-xs text-slate-500">
+            Created {fmtDate(coupon.createdAt)}
+            {coupon.updatedAt && coupon.updatedAt !== coupon.createdAt && <> · Updated {fmtDate(coupon.updatedAt)}</>}
+          </p>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Discount</p>
+          <div className="rounded-lg bg-slate-50 px-4 py-1">
+            <CouponDetailRow label="Code" value={coupon.code} />
+            {coupon.description && <CouponDetailRow label="Description" value={coupon.description} />}
+            <CouponDetailRow
+              label="Type"
+              value={coupon.type.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())}
+            />
+            <CouponDetailRow
+              label="Value"
+              value={coupon.type.startsWith('PERCENTAGE') ? `${coupon.value}%` : `$${coupon.value}`}
+            />
+            {coupon.maxDiscount && <CouponDetailRow label="Max Discount" value={`$${coupon.maxDiscount}`} />}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Shipping &amp; Order Conditions
+          </p>
+          <div className="rounded-lg bg-slate-50 px-4 py-1">
+            <CouponDetailRow
+              label="Provides Free Shipping"
+              value={coupon.allowFreeShipping ? 'Yes' : 'No'}
+            />
+            <CouponDetailRow
+              label="Minimum Order Amount"
+              value={coupon.minOrderAmount ? `$${coupon.minOrderAmount}` : 'None'}
+            />
+            <CouponDetailRow
+              label="Maximum Order Amount"
+              value={coupon.maxOrderAmount ? `$${coupon.maxOrderAmount}` : 'None'}
+            />
+            <CouponDetailRow
+              label="Individual Use Only"
+              value={coupon.individualUseOnly ? 'Yes — can’t combine with other coupons' : 'No'}
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Usage Limits</p>
+          <div className="rounded-lg bg-slate-50 px-4 py-1">
+            <CouponDetailRow label="Times Used" value={`${coupon.usageCount} / ${coupon.usageLimit ?? '∞'}`} />
+            <CouponDetailRow label="Limit Per User" value={coupon.maxUsagePerUser ?? 'Unlimited'} />
+            <CouponDetailRow
+              label="Limit To X Cart Items"
+              value={coupon.limitUsageToXItems ?? 'No limit'}
+            />
+            <CouponDetailRow
+              label="Valid From"
+              value={coupon.startDate ? new Date(coupon.startDate).toLocaleString() : 'Immediately'}
+            />
+            <CouponDetailRow
+              label="Valid Until"
+              value={coupon.endDate ? new Date(coupon.endDate).toLocaleString() : 'No expiry'}
+            />
+            <CouponDetailRow
+              label="Restricted to Emails"
+              value={coupon.allowedEmails?.length ? coupon.allowedEmails.join(', ') : 'Anyone'}
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            What It Applies To
+          </p>
+          {!hasInclusionRestrictions ? (
+            <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              All products and categories (no restrictions).
+            </p>
+          ) : (
+            <div className="rounded-lg bg-slate-50 px-4 py-1">
+              <CouponDetailRow
+                label="Categories"
+                value={
+                  coupon.applicableToAllCategories
+                    ? 'All categories'
+                    : namesFor(coupon.includedCategoryIds, categoryOptions)
+                }
+              />
+              <CouponDetailRow
+                label="Products"
+                value={
+                  coupon.applicableToAllProducts
+                    ? 'All products'
+                    : namesFor(coupon.includedProductIds, productOptions)
+                }
+              />
+              {idsToArray(coupon.includedVariantIds).length > 0 && (
+                <CouponDetailRow label="Variants" value={namesFor(coupon.includedVariantIds, variantOptions)} />
+              )}
+              {coupon.includedBrands?.length ? (
+                <CouponDetailRow label="Brands" value={coupon.includedBrands.join(', ')} />
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Exclusions {!hasExclusions && <span className="normal-case text-slate-400">(none)</span>}
+          </p>
+          {hasExclusions && (
+            <div className="rounded-lg bg-slate-50 px-4 py-1">
+              {idsToArray(coupon.excludedCategoryIds).length > 0 && (
+                <CouponDetailRow label="Excluded Categories" value={namesFor(coupon.excludedCategoryIds, categoryOptions)} />
+              )}
+              {idsToArray(coupon.excludedProductIds).length > 0 && (
+                <CouponDetailRow label="Excluded Products" value={namesFor(coupon.excludedProductIds, productOptions)} />
+              )}
+              {idsToArray(coupon.excludedVariantIds).length > 0 && (
+                <CouponDetailRow label="Excluded Variants" value={namesFor(coupon.excludedVariantIds, variantOptions)} />
+              )}
+              {coupon.excludedBrands?.length ? (
+                <CouponDetailRow label="Excluded Brands" value={coupon.excludedBrands.join(', ')} />
+              ) : null}
+              <CouponDetailRow
+                label="Excludes Sale Items"
+                value={coupon.excludeSaleItems ? 'Yes — sale items are not eligible' : 'No'}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 }
 

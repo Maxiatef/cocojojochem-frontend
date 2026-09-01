@@ -1,11 +1,11 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { Fragment, FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireAdmin } from '@/components/AdminShell';
-import { Paginated, SiteSettingsResponse, UserListItem } from '@/lib/types';
+import { Paginated, ShippingRateTierRow, SiteSettingsResponse, UserListItem } from '@/lib/types';
 import {
   Badge,
   Button,
@@ -19,22 +19,22 @@ import {
   TextField,
   Th,
   Tr,
+  useToast,
 } from '@/components/ui';
 import { PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
 
-type Tab = 'general' | 'company' | 'shipping' | 'tax' | 'notifications' | 'integrations' | 'staff';
+type Tab = 'shipping' | 'tax' | 'notifications' | 'staff';
 
 // Site-settings is a generic key/value store on the backend — these are the
 // keys this admin UI has adopted for the fields the plan calls for.
 const KEYS = {
-  siteName: 'siteName',
-  contactEmail: 'contactEmail',
-  supportPhone: 'supportPhone',
   taxName: 'tax.name',
   taxValue: 'tax.value',
   wholesaleMinimum: 'WHOLESALE_MINIMUM',
   freeShippingThreshold: 'FREE_SHIPPING_THRESHOLD',
+  defaultShippingAmount: 'DEFAULT_SHIPPING_AMOUNT',
+  internationalShippingAmount: 'INTERNATIONAL_SHIPPING_AMOUNT',
   quoteNotificationEnabled: 'quoteNotificationEnabled',
   quoteNotificationEmail: 'quoteNotificationEmail',
   newOrderNotificationEnabled: 'newOrderNotificationEnabled',
@@ -43,34 +43,24 @@ const KEYS = {
   contactMessageNotificationEmail: 'contactMessageNotificationEmail',
   senderName: 'senderName',
   senderEmail: 'senderEmail',
-  warehouseName: 'warehouseName',
-  warehousePhone: 'warehousePhone',
-  warehouseStreet: 'warehouseStreet',
-  warehouseCity: 'warehouseCity',
-  warehouseState: 'warehouseState',
-  warehouseZip: 'warehouseZip',
-  warehouseCountry: 'warehouseCountry',
 };
 
 const TABS: [Tab, string][] = [
-  ['general', 'General'],
-  ['company', 'Company & Warehouse'],
   ['shipping', 'Wholesale & Shipping'],
   ['tax', 'Tax'],
   ['notifications', 'Notifications'],
-  ['integrations', 'Integrations'],
   ['staff', 'Staff'],
 ];
 
 export default function SettingsAdminPage() {
-  const [tab, setTab] = useState<Tab>('general');
+  const [tab, setTab] = useState<Tab>('shipping');
 
   return (
     <RequireAdmin>
       <div>
         <PageHeader
           title="Settings"
-          description="Site configuration, company details, shipping, tax, notifications, integrations, and staff."
+          description="Wholesale, shipping, tax, notifications, and staff."
         />
 
         <div className="mb-6 flex flex-wrap gap-x-1 gap-y-2 border-b border-slate-200">
@@ -89,12 +79,26 @@ export default function SettingsAdminPage() {
           ))}
         </div>
 
-        {tab === 'general' && <GeneralTab />}
-        {tab === 'company' && <CompanyTab />}
-        {tab === 'shipping' && <ShippingTab />}
+        {tab === 'shipping' && (
+          <div className="space-y-6">
+            <ShippingTab />
+            <ZoneAssignmentsCard />
+            <ShippingZoneRateTable
+              kind="WEIGHT"
+              title="Shipping Rates — Weight Table"
+              description="Editable. Domestic shipping for regular (non-drum) items is priced from this Zone 1-7 x weight table. Click a cell to edit — it saves automatically when you click away. A cart weight between two rows uses the next row up."
+              rowLabel={(lb) => `${lb} lb`}
+            />
+            <ShippingZoneRateTable
+              kind="DRUM"
+              title="Shipping Rates — Drum Table"
+              description={'Editable. Used instead of the weight table for any product variant marked "Sold by drum" in the product editor — cart quantity of that variant is treated as a drum count.'}
+              rowLabel={(n) => `${n} drum${n === 1 ? '' : 's'}`}
+            />
+          </div>
+        )}
         {tab === 'tax' && <TaxTab />}
         {tab === 'notifications' && <NotificationsTab />}
-        {tab === 'integrations' && <IntegrationsTab />}
         {tab === 'staff' && <StaffTab />}
       </div>
     </RequireAdmin>
@@ -141,153 +145,6 @@ function useSiteSettings() {
     queryKey: ['site-settings'],
     queryFn: () => api.get<SiteSettingsResponse>('/site-settings'),
   });
-}
-
-function GeneralTab() {
-  const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useSiteSettings();
-  const [siteName, setSiteName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [supportPhone, setSupportPhone] = useState('');
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!data) return;
-    setSiteName(data.settings[KEYS.siteName] || '');
-    setContactEmail(data.settings[KEYS.contactEmail] || '');
-    setSupportPhone(data.settings[KEYS.supportPhone] || '');
-  }, [data]);
-
-  const mutation = useMutation({
-    mutationFn: (body: Record<string, string>) => api.patch<SiteSettingsResponse>('/site-settings', body),
-    onSuccess: (res) => {
-      queryClient.setQueryData(['site-settings'], res);
-      setSaved(true);
-      setError(null);
-      setTimeout(() => setSaved(false), 2000);
-    },
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    mutation.mutate({
-      [KEYS.siteName]: siteName,
-      [KEYS.contactEmail]: contactEmail,
-      [KEYS.supportPhone]: supportPhone,
-    });
-  }
-
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState message="Couldn't load site settings." />;
-
-  return (
-    <Card className="max-w-lg p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <TextField label="Site Name" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
-        <TextField
-          label="Contact Email"
-          type="email"
-          value={contactEmail}
-          onChange={(e) => setContactEmail(e.target.value)}
-        />
-        <TextField
-          label="Support Phone"
-          value={supportPhone}
-          onChange={(e) => setSupportPhone(e.target.value)}
-        />
-        {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
-        {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
-        <div className="flex justify-end pt-2">
-          <Button type="submit" loading={mutation.isPending}>
-            Save Changes
-          </Button>
-        </div>
-      </form>
-    </Card>
-  );
-}
-
-function CompanyTab() {
-  const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useSiteSettings();
-  const [warehouseName, setWarehouseName] = useState('');
-  const [warehousePhone, setWarehousePhone] = useState('');
-  const [warehouseStreet, setWarehouseStreet] = useState('');
-  const [warehouseCity, setWarehouseCity] = useState('');
-  const [warehouseState, setWarehouseState] = useState('');
-  const [warehouseZip, setWarehouseZip] = useState('');
-  const [warehouseCountry, setWarehouseCountry] = useState('');
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!data) return;
-    setWarehouseName(data.settings[KEYS.warehouseName] || '');
-    setWarehousePhone(data.settings[KEYS.warehousePhone] || '');
-    setWarehouseStreet(data.settings[KEYS.warehouseStreet] || '');
-    setWarehouseCity(data.settings[KEYS.warehouseCity] || '');
-    setWarehouseState(data.settings[KEYS.warehouseState] || '');
-    setWarehouseZip(data.settings[KEYS.warehouseZip] || '');
-    setWarehouseCountry(data.settings[KEYS.warehouseCountry] || '');
-  }, [data]);
-
-  const mutation = useMutation({
-    mutationFn: (body: Record<string, string>) => api.patch<SiteSettingsResponse>('/site-settings', body),
-    onSuccess: (res) => {
-      queryClient.setQueryData(['site-settings'], res);
-      setSaved(true);
-      setError(null);
-      setTimeout(() => setSaved(false), 2000);
-    },
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    mutation.mutate({
-      [KEYS.warehouseName]: warehouseName,
-      [KEYS.warehousePhone]: warehousePhone,
-      [KEYS.warehouseStreet]: warehouseStreet,
-      [KEYS.warehouseCity]: warehouseCity,
-      [KEYS.warehouseState]: warehouseState,
-      [KEYS.warehouseZip]: warehouseZip,
-      [KEYS.warehouseCountry]: warehouseCountry,
-    });
-  }
-
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState message="Couldn't load company settings." />;
-
-  return (
-    <Card className="max-w-lg p-6">
-      <p className="mb-4 text-xs text-slate-500">
-        The warehouse/ship-from address used on every ShipStation shipment. Leave a field blank to fall back
-        to the server default.
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <TextField label="Warehouse Name" placeholder="CocoJojo Warehouse" value={warehouseName} onChange={(e) => setWarehouseName(e.target.value)} />
-        <TextField label="Phone" placeholder="555-123-4567" value={warehousePhone} onChange={(e) => setWarehousePhone(e.target.value)} />
-        <TextField label="Street Address" placeholder="123 Warehouse St" value={warehouseStreet} onChange={(e) => setWarehouseStreet(e.target.value)} />
-        <div className="grid grid-cols-2 gap-3">
-          <TextField label="City" placeholder="Los Angeles" value={warehouseCity} onChange={(e) => setWarehouseCity(e.target.value)} />
-          <TextField label="State" placeholder="CA" value={warehouseState} onChange={(e) => setWarehouseState(e.target.value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <TextField label="ZIP Code" placeholder="90001" value={warehouseZip} onChange={(e) => setWarehouseZip(e.target.value)} />
-          <TextField label="Country" placeholder="US" value={warehouseCountry} onChange={(e) => setWarehouseCountry(e.target.value)} />
-        </div>
-        {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
-        {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
-        <div className="flex justify-end pt-2">
-          <Button type="submit" loading={mutation.isPending}>
-            Save Changes
-          </Button>
-        </div>
-      </form>
-    </Card>
-  );
 }
 
 function TaxTab() {
@@ -363,6 +220,8 @@ function ShippingTab() {
   const { data, isLoading, isError } = useSiteSettings();
   const [wholesaleMinimum, setWholesaleMinimum] = useState('');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('');
+  const [defaultShippingAmount, setDefaultShippingAmount] = useState('');
+  const [internationalShippingAmount, setInternationalShippingAmount] = useState('');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -370,6 +229,8 @@ function ShippingTab() {
     if (!data) return;
     setWholesaleMinimum(data.settings[KEYS.wholesaleMinimum] || '');
     setFreeShippingThreshold(data.settings[KEYS.freeShippingThreshold] || '');
+    setDefaultShippingAmount(data.settings[KEYS.defaultShippingAmount] || '');
+    setInternationalShippingAmount(data.settings[KEYS.internationalShippingAmount] || '');
   }, [data]);
 
   const mutation = useMutation({
@@ -388,6 +249,8 @@ function ShippingTab() {
     mutation.mutate({
       [KEYS.wholesaleMinimum]: wholesaleMinimum,
       [KEYS.freeShippingThreshold]: freeShippingThreshold,
+      [KEYS.defaultShippingAmount]: defaultShippingAmount,
+      [KEYS.internationalShippingAmount]: internationalShippingAmount,
     });
   }
 
@@ -417,7 +280,33 @@ function ShippingTab() {
           onChange={(e) => setFreeShippingThreshold(e.target.value)}
         />
         <p className="-mt-2.5 text-xs text-slate-500">
-          Domestic (US) order subtotal that qualifies for free shipping. Defaults to $85 if left blank.
+          Order subtotal that qualifies for free shipping — domestic or international. Defaults to $85 if
+          left blank.
+        </p>
+        <TextField
+          label="Default Shipping Amount ($)"
+          type="number"
+          step="0.01"
+          placeholder="0"
+          value={defaultShippingAmount}
+          onChange={(e) => setDefaultShippingAmount(e.target.value)}
+        />
+        <p className="-mt-2.5 text-xs text-slate-500">
+          Domestic shipping is priced automatically from the Zone 1-7 rate table based on cart weight and
+          destination state. This amount is only a last-resort fallback — used only for a US territory/code
+          with no zone mapping and no explicit rate set below. Defaults to $0 if left blank.
+        </p>
+        <TextField
+          label="International Shipping Amount ($)"
+          type="number"
+          step="0.01"
+          placeholder="0"
+          value={internationalShippingAmount}
+          onChange={(e) => setInternationalShippingAmount(e.target.value)}
+        />
+        <p className="-mt-2.5 text-xs text-slate-500">
+          Flat rate charged on every non-US order, regardless of country or weight. Defaults to $0 if left
+          blank.
         </p>
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
@@ -586,51 +475,6 @@ function NotificationsTab() {
   );
 }
 
-function IntegrationsTab() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['site-settings-integrations-status'],
-    queryFn: () => api.get<{ stripe: boolean; shipstation: boolean; brevo: boolean; shippo: boolean }>(
-      '/site-settings/integrations-status',
-    ),
-  });
-
-  if (isLoading) return <LoadingState />;
-  if (isError || !data) return <ErrorState message="Couldn't load integration status." />;
-
-  const rows: { key: keyof typeof data; label: string; description: string }[] = [
-    { key: 'stripe', label: 'Stripe', description: 'Checkout payments and webhooks.' },
-    { key: 'shipstation', label: 'ShipStation', description: 'Shipment creation and tracking.' },
-    { key: 'brevo', label: 'Brevo', description: 'Transactional emails (orders, quotes, password reset).' },
-    { key: 'shippo', label: 'Shippo', description: 'International shipping rate estimates.' },
-  ];
-
-  return (
-    <Card className="max-w-lg p-6">
-      <p className="mb-4 text-xs text-slate-500">
-        API keys are managed via server environment variables, not this page, for security — this just shows
-        whether each one is currently set.
-      </p>
-      <div className="divide-y divide-slate-100">
-        {rows.map((row) => (
-          <div key={row.key} className="flex items-center justify-between py-3">
-            <div>
-              <p className="text-sm font-medium text-slate-900">{row.label}</p>
-              <p className="text-xs text-slate-500">{row.description}</p>
-            </div>
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                data[row.key] ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              {data[row.key] ? 'Configured' : 'Not configured'}
-            </span>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
 function StaffTab() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
@@ -724,3 +568,177 @@ function StaffTab() {
     </div>
   );
 }
+
+// --- Shipping Zone Rate Tables --------------------------------------------------
+//
+// One editable table per rate kind (WEIGHT, DRUM) — Zone 1-7 columns x
+// breakpoint rows, each cell a dollar input that auto-saves on blur. This
+// IS the admin override: there's no separate per-state list anymore, since
+// every state's zone assignment is fixed (see the zone assignments card
+// below) and only the $ amounts are meant to change. Editing a cell changes
+// the rate for every state in that zone at once.
+
+function ZoneAssignmentsCard() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['shipping-zone-assignments'],
+    queryFn: () => api.get<{ zones: { zone: number; states: { code: string; name: string }[] }[] }>(
+      '/orders/admin/shipping-reference',
+    ),
+  });
+
+  return (
+    <div>
+      <div className="mb-3">
+        <h2 className="text-sm font-semibold text-slate-900">Zone Assignments</h2>
+        <p className="text-xs text-slate-500">
+          Fixed — which states fall in each zone isn&apos;t editable here. Edit the $ amounts in the tables
+          below instead; every state in a zone shares that zone&apos;s rate.
+        </p>
+      </div>
+      {isLoading && <LoadingState />}
+      {isError && <ErrorState message="Couldn't load zone assignments." />}
+      {data && (
+        <Card className="divide-y divide-slate-100">
+          {data.zones.map((group) => (
+            <div key={group.zone} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-start sm:gap-4">
+              <div className="w-16 shrink-0 text-sm font-semibold text-slate-900">Zone {group.zone}</div>
+              <div className="text-xs leading-relaxed text-slate-600">
+                {group.states.map((s) => s.code).join(', ')}
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function ShippingZoneRateTable({
+  kind,
+  title,
+  description,
+  rowLabel,
+}: {
+  kind: 'WEIGHT' | 'DRUM';
+  title: string;
+  description: string;
+  rowLabel: (breakpoint: number) => string;
+}) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const queryKey = ['shipping-rate-tiers', kind];
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey,
+    queryFn: () => api.get<ShippingRateTierRow[]>(`/admin/shipping-rate-tiers?kind=${kind}`),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: ({ zone, breakpoint, amount }: { zone: number; breakpoint: number; amount: number }) =>
+      api.put(`/admin/shipping-rate-tiers/${kind}/${zone}/${breakpoint}`, { amount }),
+    onSuccess: (_res, vars) => {
+      queryClient.invalidateQueries({ queryKey });
+      setSavingKey(null);
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[`${vars.breakpoint}-${vars.zone}`];
+        return next;
+      });
+      toast.success(`${rowLabel(vars.breakpoint)} / Zone ${vars.zone} updated to $${vars.amount.toFixed(2)}.`);
+    },
+    onError: (err) => {
+      setSavingKey(null);
+      setError(getFriendlyErrorMessage(err));
+      toast.error("Couldn't save that rate — try again.");
+    },
+  });
+
+  function handleBlur(breakpoint: number, zone: number, currentValue: number | null) {
+    const key = `${breakpoint}-${zone}`;
+    const draft = drafts[key];
+    if (draft === undefined) return; // untouched — nothing to save
+    const amount = Number(draft);
+    if (draft === '' || !Number.isFinite(amount) || amount < 0) {
+      setError(`Enter a valid non-negative amount for ${rowLabel(breakpoint)} / Zone ${zone}.`);
+      return;
+    }
+    if (currentValue != null && amount === currentValue) {
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      return;
+    }
+    setError(null);
+    setSavingKey(key);
+    saveMutation.mutate({ zone, breakpoint, amount });
+  }
+
+  return (
+    <div>
+      <div className="mb-3">
+        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        <p className="text-xs text-slate-500">{description}</p>
+      </div>
+
+      {error && <div className="mb-3 rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
+
+      {isLoading && <LoadingState />}
+      {isError && <ErrorState message="Couldn't load the rate table." />}
+
+      {data && (
+        <Card>
+          <div className="max-h-[520px] overflow-auto">
+            <Table minWidth={680}>
+              <TableHead>
+                <Th>{kind === 'WEIGHT' ? 'Weight' : 'Drums'}</Th>
+                <Th>Zone 1</Th>
+                <Th>Zone 2</Th>
+                <Th>Zone 3</Th>
+                <Th>Zone 4</Th>
+                <Th>Zone 5</Th>
+                <Th>Zone 6</Th>
+                <Th>Zone 7</Th>
+              </TableHead>
+              <tbody>
+                {data.map((row) => (
+                  <Tr key={row.breakpoint}>
+                    <Td className="font-medium text-slate-900">{rowLabel(row.breakpoint)}</Td>
+                    {row.rates.map((rate, i) => {
+                      const zone = i + 1;
+                      const key = `${row.breakpoint}-${zone}`;
+                      const draftValue = drafts[key] ?? (rate != null ? String(rate) : '');
+                      const cellSaving = savingKey === key && saveMutation.isPending;
+                      return (
+                        <Td key={zone}>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={draftValue}
+                            disabled={cellSaving}
+                            onChange={(e) => setDrafts((prev) => ({ ...prev, [key]: e.target.value }))}
+                            onBlur={() => handleBlur(row.breakpoint, zone, rate)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.currentTarget.blur();
+                            }}
+                            className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none focus:border-brand-500 disabled:opacity-50"
+                          />
+                        </Td>
+                      );
+                    })}
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
