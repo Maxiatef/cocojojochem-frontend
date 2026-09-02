@@ -737,7 +737,7 @@ function ShippingSummaryPanel({
         <>
           <div className="flex justify-between text-sm text-ink">
             <span>{estimate.regionLabel || estimate.zoneName || estimate.shippingMethod || 'Shipping'}</span>
-            <span>{formatUsd(estimate.shippingCost ?? 0)}</span>
+            <span>{estimate.carrierNotice ? 'Contact us' : formatUsd(estimate.shippingCost ?? 0)}</span>
           </div>
           {estimate.isFreeShipping && (
             <p className="mt-1 text-xs text-green-700">You&apos;ve unlocked free shipping.</p>
@@ -752,6 +752,9 @@ function ShippingSummaryPanel({
             )}
           {estimate.weightLb != null && (
             <p className="mt-1 text-xs text-ink-soft">Combined shipment weight: {estimate.weightLb} lb</p>
+          )}
+          {estimate.carrierNotice && (
+            <p className="mt-2 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">{estimate.carrierNotice}</p>
           )}
           {!isUs && (
             <div className="mt-3">

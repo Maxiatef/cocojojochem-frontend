@@ -86,13 +86,13 @@ export default function SettingsAdminPage() {
             <ShippingZoneRateTable
               kind="WEIGHT"
               title="Shipping Rates — Weight Table"
-              description="Editable. Domestic shipping for regular (non-drum) items is priced from this Zone 1-7 x weight table. Click a cell to edit — it saves automatically when you click away. A cart weight between two rows uses the next row up."
+              description="Editable. Domestic shipping for regular (non-drum) items is priced from this Zone 1-8 x weight table. Click a cell to edit — it saves automatically when you click away. A cart weight between two rows uses the next row up."
               rowLabel={(lb) => `${lb} lb`}
             />
             <ShippingZoneRateTable
               kind="DRUM"
               title="Shipping Rates — Drum Table"
-              description={'Editable. Used instead of the weight table for any product variant marked "Sold by drum" in the product editor — cart quantity of that variant is treated as a drum count.'}
+              description={'Editable. Used instead of the weight table for any product variant marked "Sold by drum" in the product editor — cart quantity of that variant is treated as a drum count. Zone 8 (Hawaii, American Samoa, Guam, Northern Mariana Islands, Armed Forces Pacific): a rate still shows here for reference, but at checkout the customer is told to arrange their own carrier for drum freight to these destinations.'}
               rowLabel={(n) => `${n} drum${n === 1 ? '' : 's'}`}
             />
           </div>
@@ -292,7 +292,7 @@ function ShippingTab() {
           onChange={(e) => setDefaultShippingAmount(e.target.value)}
         />
         <p className="-mt-2.5 text-xs text-slate-500">
-          Domestic shipping is priced automatically from the Zone 1-7 rate table based on cart weight and
+          Domestic shipping is priced automatically from the Zone 1-8 rate table based on cart weight and
           destination state. This amount is only a last-resort fallback — used only for a US territory/code
           with no zone mapping and no explicit rate set below. Defaults to $0 if left blank.
         </p>
@@ -696,13 +696,9 @@ function ShippingZoneRateTable({
             <Table minWidth={680}>
               <TableHead>
                 <Th>{kind === 'WEIGHT' ? 'Weight' : 'Drums'}</Th>
-                <Th>Zone 1</Th>
-                <Th>Zone 2</Th>
-                <Th>Zone 3</Th>
-                <Th>Zone 4</Th>
-                <Th>Zone 5</Th>
-                <Th>Zone 6</Th>
-                <Th>Zone 7</Th>
+                {(data[0]?.rates || []).map((_, i) => (
+                  <Th key={i}>Zone {i + 1}</Th>
+                ))}
               </TableHead>
               <tbody>
                 {data.map((row) => (

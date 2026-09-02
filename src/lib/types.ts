@@ -269,6 +269,7 @@ export type ShippingEstimate = {
   freeShippingThreshold?: number;
   amountAwayFromFreeShipping?: number;
   errorMessage?: string;
+  carrierNotice?: string;
 };
 
 // Shape returned by GET /orders/:id/tracking (and /orders/:id/tracking/admin).
