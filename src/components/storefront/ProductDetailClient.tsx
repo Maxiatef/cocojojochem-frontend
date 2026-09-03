@@ -22,6 +22,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [addingToQuoteList, setAddingToQuoteList] = useState(false);
   const toast = useToast();
 
   const variant = product.variants.find((v) => v.id === variantId) || null;
@@ -72,6 +73,43 @@ export function ProductDetailClient({ product }: { product: Product }) {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  async function handleAddToQuoteList() {
+    // Same split as handleAddToCart above: logged-in customers get a
+    // server-persisted quote list (scoped to their account), guests fall
+    // back to the localStorage one.
+    const token = getCustomerToken();
+    if (token) {
+      setAddingToQuoteList(true);
+      try {
+        await customerApi.post('/quote-list/items', {
+          productId: product.id,
+          productSlug: product.slug,
+          productName: product.name,
+          variantLabel: variant?.label || null,
+          imageUrl: variant?.imageUrl || product.imageUrl,
+          quantity,
+        });
+        window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
+        toast.success(`Added to your quote list — visit "Quote List" to review and submit it.`);
+      } catch (err) {
+        toast.show(getFriendlyErrorMessage(err), 'error');
+      } finally {
+        setAddingToQuoteList(false);
+      }
+      return;
+    }
+
+    addToQuoteList({
+      productId: product.id,
+      productSlug: product.slug,
+      productName: product.name,
+      variantLabel: variant?.label || null,
+      imageUrl: variant?.imageUrl || product.imageUrl,
+      quantity,
+    });
+    toast.success(`Added to your quote list — visit "Quote List" to review and submit it.`);
   }
 
   return (
@@ -233,22 +271,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
           )}
 
           <button
-            onClick={() => {
-              addToQuoteList({
-                productId: product.id,
-                productSlug: product.slug,
-                productName: product.name,
-                variantLabel: variant?.label || null,
-                imageUrl: variant?.imageUrl || product.imageUrl,
-                quantity,
-              });
-              toast.success(
-                `Added to your quote list — visit "Quote List" to review and submit it.`,
-              );
-            }}
-            className="mt-3 w-full border border-sand-300 px-6 py-2.5 text-sm font-medium text-ink transition hover:border-olive-600 hover:text-olive-700"
+            onClick={handleAddToQuoteList}
+            disabled={addingToQuoteList}
+            className="mt-3 w-full border border-sand-300 px-6 py-2.5 text-sm font-medium text-ink transition hover:border-olive-600 hover:text-olive-700 disabled:opacity-60"
           >
-            Add to Quote List
+            {addingToQuoteList ? 'Adding…' : 'Add to Quote List'}
           </button>
         </div>
 

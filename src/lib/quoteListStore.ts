@@ -86,3 +86,8 @@ export function useQuoteList() {
     clear: clearQuoteList,
   };
 }
+
+// Shape expected by the backend's POST /quote-list/merge (AddQuoteListItemDto[]).
+export function getQuoteListAsMergePayload() {
+  return readQuoteList();
+}

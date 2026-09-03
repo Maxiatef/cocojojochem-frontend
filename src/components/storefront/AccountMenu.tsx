@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { customerApi } from '@/lib/customerApi';
 import { clearCustomerToken, getCustomerRefreshToken } from '@/lib/customerAuth';
 import { clearCart } from '@/lib/cartStore';
+import { clearQuoteList } from '@/lib/quoteListStore';
 import { CustomerProfile } from '@/lib/types';
 import { UserCircleIcon, ChevronDownIcon, ReceiptIcon, LogoutIcon } from '@/components/icons';
 
@@ -46,9 +47,10 @@ export function AccountMenu({ email }: { email: string }) {
       customerApi.post('/auth/logout', { refreshToken }).catch(() => {});
     }
     clearCustomerToken();
-    // Clear any leftover local (guest) cart so the next person on this device
-    // doesn't see this customer's items after they've signed out.
+    // Clear any leftover local (guest) cart/quote list so the next person on
+    // this device doesn't see this customer's items after they've signed out.
     clearCart();
+    clearQuoteList();
     setOpen(false);
     router.push('/');
   }

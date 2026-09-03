@@ -207,7 +207,12 @@ export default function CheckoutPage() {
   const discount = appliedCoupon?.discountAmount ?? 0;
   const shippingCost =
     shippingEstimate?.available && shippingEstimate.canShip ? shippingEstimate.shippingCost ?? 0 : 0;
-  const total = Math.max(0, subtotal - discount + shippingCost);
+  // Preview only — the server recomputes this from the real subtotal at
+  // checkout and never trusts a client-sent value (unlike shippingCost).
+  const taxAmount =
+    shippingEstimate?.available && shippingEstimate.canShip ? shippingEstimate.taxAmount ?? 0 : 0;
+  const taxLabel = shippingEstimate?.taxName || 'Tax';
+  const total = Math.max(0, subtotal - discount + shippingCost + taxAmount);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -256,10 +261,10 @@ export default function CheckoutPage() {
         }));
       }
 
-      const { order, checkoutUrl } = await customerApi.post<CheckoutResponse>('/orders/checkout', payload);
+      const { checkoutUrl, accessToken } = await customerApi.post<CheckoutResponse>('/orders/checkout', payload);
 
       if (!isAuthed) {
-        if (order.accessToken) setCustomerToken(order.accessToken);
+        if (accessToken) setCustomerToken(accessToken);
         clearCart();
       }
 
@@ -268,7 +273,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      router.push(`/checkout/success?order=${order.id}`);
+      // No order id to reference yet — the order isn't created until Stripe
+      // confirms payment via webhook. Only reachable if checkoutUrl is ever
+      // null (Stripe session creation failed), which the success page
+      // already handles gracefully with generic copy.
+      router.push('/checkout/success');
     } catch (err) {
       setError(getFriendlyErrorMessage(err));
     } finally {
@@ -370,7 +379,11 @@ export default function CheckoutPage() {
                 <label className={labelClass}>Company name (optional)</label>
                 <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
               </div>
-              <div className="sm:col-span-2">
+              {/* International shipping disabled for now — US only. Country is
+                  fixed to 'US' (see countryIso2 initial state above) instead of
+                  offering a picker here. Re-enable by uncommenting this block
+                  and the InternationalShippingNotice usage below. */}
+              {/* <div className="sm:col-span-2">
                 <label className={labelClass}>Country</label>
                 <select
                   required
@@ -387,6 +400,22 @@ export default function CheckoutPage() {
                     </option>
                   ))}
                 </select>
+              </div> */}
+              <div className="sm:col-span-2">
+                <label className={labelClass}>State</label>
+                <select
+                  required
+                  value={stateCode}
+                  onChange={(e) => setStateCode(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Select…</option>
+                  {US_STATES.map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <label className={labelClass}>Street address</label>
@@ -396,29 +425,9 @@ export default function CheckoutPage() {
                 <label className={labelClass}>City</label>
                 <input required value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {countryIso2 === 'US' && (
-                  <div>
-                    <label className={labelClass}>State</label>
-                    <select
-                      required
-                      value={stateCode}
-                      onChange={(e) => setStateCode(e.target.value)}
-                      className={inputClass}
-                    >
-                      <option value="">Select…</option>
-                      {US_STATES.map((s) => (
-                        <option key={s.code} value={s.code}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                <div className={countryIso2 === 'US' ? '' : 'col-span-2'}>
-                  <label className={labelClass}>ZIP / Postal code</label>
-                  <input required value={zip} onChange={(e) => setZip(e.target.value)} className={inputClass} />
-                </div>
+              <div>
+                <label className={labelClass}>ZIP / Postal code</label>
+                <input required value={zip} onChange={(e) => setZip(e.target.value)} className={inputClass} />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelClass}>Phone</label>
@@ -459,11 +468,13 @@ export default function CheckoutPage() {
               </p>
             </div>
 
-            {countryIso2 !== 'US' && (
+            {/* International shipping disabled for now — US only, see the
+                commented-out Country field above. */}
+            {/* {countryIso2 !== 'US' && (
               <div className="mt-4 border-t border-sand-200 pt-4">
                 <InternationalShippingNotice />
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="border border-sand-200 bg-white p-6">
@@ -639,8 +650,8 @@ export default function CheckoutPage() {
               <span>{formatUsd(shippingCost)}</span>
             </div>
             <div className="mt-2 flex justify-between text-sm text-ink-soft">
-              <span>Tax</span>
-              <span>{formatUsd(0)}</span>
+              <span>{taxLabel}</span>
+              <span>{formatUsd(taxAmount)}</span>
             </div>
             <div className="mt-2 flex justify-between border-t border-sand-200 pt-3 text-sm font-semibold text-ink">
               <span>Total</span>
@@ -737,7 +748,15 @@ function ShippingSummaryPanel({
         <>
           <div className="flex justify-between text-sm text-ink">
             <span>{estimate.regionLabel || estimate.zoneName || estimate.shippingMethod || 'Shipping'}</span>
-            <span>{estimate.carrierNotice ? 'Contact us' : formatUsd(estimate.shippingCost ?? 0)}</span>
+            <span>
+              {estimate.carrierNotice ? (
+                <Link href="/contact" className="font-medium text-olive-700 underline hover:text-olive-800">
+                  Contact us
+                </Link>
+              ) : (
+                formatUsd(estimate.shippingCost ?? 0)
+              )}
+            </span>
           </div>
           {estimate.isFreeShipping && (
             <p className="mt-1 text-xs text-green-700">You&apos;ve unlocked free shipping.</p>
@@ -754,7 +773,12 @@ function ShippingSummaryPanel({
             <p className="mt-1 text-xs text-ink-soft">Combined shipment weight: {estimate.weightLb} lb</p>
           )}
           {estimate.carrierNotice && (
-            <p className="mt-2 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">{estimate.carrierNotice}</p>
+            <div className="mt-2 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <p>{estimate.carrierNotice}</p>
+              <Link href="/contact" className="mt-1 inline-block font-semibold underline hover:text-amber-900">
+                Contact Us →
+              </Link>
+            </div>
           )}
           {!isUs && (
             <div className="mt-3">

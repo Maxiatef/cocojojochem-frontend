@@ -185,10 +185,6 @@ function TaxTab() {
 
   return (
     <Card className="max-w-lg p-6">
-      <div className="mb-4 rounded-lg bg-amber-50 px-3.5 py-2.5 text-xs text-amber-800">
-        Informational only for now — this rate isn&apos;t applied to order totals yet, so changing it won&apos;t
-        affect checkout calculations.
-      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField
           label="Tax Name"
@@ -196,6 +192,7 @@ function TaxTab() {
           value={taxName}
           onChange={(e) => setTaxName(e.target.value)}
         />
+        <p className="-mt-2.5 text-xs text-slate-500">Shown as the line-item label at checkout (e.g. "Sales Tax").</p>
         <TextField
           label="Tax Rate (%)"
           type="number"
@@ -203,6 +200,10 @@ function TaxTab() {
           value={taxValue}
           onChange={(e) => setTaxValue(e.target.value)}
         />
+        <p className="-mt-2.5 text-xs text-slate-500">
+          Applied as a single flat percentage of the order subtotal at checkout — the same rate for every state
+          and country. Defaults to 0% (no tax charged) if left blank.
+        </p>
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
         <div className="flex justify-end pt-2">

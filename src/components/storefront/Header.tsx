@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCart, clearCart } from '@/lib/cartStore';
-import { useQuoteList } from '@/lib/quoteListStore';
+import { useQuoteList, clearQuoteList } from '@/lib/quoteListStore';
 import { customerApi } from '@/lib/customerApi';
 import {
   clearCustomerToken,
@@ -35,7 +35,7 @@ export function StorefrontHeader() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const { itemCount: localItemCount } = useCart();
-  const { count: quoteListCount } = useQuoteList();
+  const { count: localQuoteListCount } = useQuoteList();
   const [search, setSearch] = useState('');
   const [customerEmail, setCustomerEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -72,6 +72,26 @@ export function StorefrontHeader() {
 
   const itemCount = customerEmail ? serverCartSummary?.itemCount || 0 : localItemCount;
 
+  // Same pattern as the cart above — logged-in customers get a server-
+  // persisted quote list instead of the guest localStorage one.
+  const { data: serverQuoteListSummary } = useQuery({
+    queryKey: ['customer-quote-list-summary'],
+    queryFn: () => customerApi.get<{ count: number }>('/quote-list/summary'),
+    enabled: !!customerEmail,
+  });
+
+  useEffect(() => {
+    if (!customerEmail) return;
+    function onServerQuoteListChanged() {
+      queryClient.invalidateQueries({ queryKey: ['customer-quote-list-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-quote-list'] });
+    }
+    window.addEventListener('cocojojochem-server-quote-list-changed', onServerQuoteListChanged);
+    return () => window.removeEventListener('cocojojochem-server-quote-list-changed', onServerQuoteListChanged);
+  }, [customerEmail, queryClient]);
+
+  const quoteListCount = customerEmail ? serverQuoteListSummary?.count || 0 : localQuoteListCount;
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     router.push(`/products${search ? `?search=${encodeURIComponent(search)}` : ''}`);
@@ -85,9 +105,10 @@ export function StorefrontHeader() {
       customerApi.post('/auth/logout', { refreshToken }).catch(() => {});
     }
     clearCustomerToken();
-    // Clear any leftover local (guest) cart so the next person on this device
-    // doesn't see this customer's items after they've signed out.
+    // Clear any leftover local (guest) cart/quote list so the next person on
+    // this device doesn't see this customer's items after they've signed out.
     clearCart();
+    clearQuoteList();
     router.push('/');
   }
 

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
 import { setCustomerTokens } from '@/lib/customerAuth';
 import { getCartAsMergePayload, clearCart, getCart } from '@/lib/cartStore';
+import { getQuoteListAsMergePayload, clearQuoteList, getQuoteList } from '@/lib/quoteListStore';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { PhoneCountrySelect } from '@/components/PhoneCountrySelect';
 import { COUNTRY_CODES } from '@/lib/countryCodes';
@@ -114,6 +115,13 @@ function RegisterForm() {
         await customerApi.post('/cart/merge', { items: getCartAsMergePayload() }).catch(() => {});
         clearCart();
         window.dispatchEvent(new Event('cocojojochem-server-cart-changed'));
+      }
+
+      const localQuoteItems = getQuoteList();
+      if (localQuoteItems.length > 0) {
+        await customerApi.post('/quote-list/merge', { items: getQuoteListAsMergePayload() }).catch(() => {});
+        clearQuoteList();
+        window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
       }
 
       router.push(redirectTo);

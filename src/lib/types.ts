@@ -119,6 +119,16 @@ export interface ServerCart {
   items: ServerCartItem[];
 }
 
+export interface ServerQuoteListItem {
+  id: number;
+  productId: number;
+  productSlug: string;
+  productName: string;
+  variantLabel: string | null;
+  imageUrl: string | null;
+  quantity: number;
+}
+
 export type AccountStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
 
 export interface Company {
@@ -219,9 +229,12 @@ export interface OrderItem {
   price: string;
 }
 
+// No `order` here — the order isn't created until Stripe confirms payment
+// via webhook, so at checkout-response time there's nothing to return but
+// the Stripe redirect (and, for a new-account guest checkout, the token).
 export interface CheckoutResponse {
-  order: Order;
   checkoutUrl: string | null;
+  accessToken?: string;
 }
 
 export interface Order {
@@ -240,6 +253,7 @@ export interface Order {
   notes?: string | null;
   couponAmount?: string;
   shippingCost?: string;
+  taxAmount?: string;
   // Present only when a guest checkout created a new account — lets the frontend auto-log-in.
   accessToken?: string;
   trackingNumber: string | null;
@@ -270,6 +284,8 @@ export type ShippingEstimate = {
   amountAwayFromFreeShipping?: number;
   errorMessage?: string;
   carrierNotice?: string;
+  taxAmount?: number;
+  taxName?: string;
 };
 
 // Shape returned by GET /orders/:id/tracking (and /orders/:id/tracking/admin).

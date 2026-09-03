@@ -64,6 +64,9 @@ export function OrderDetailCard({ order }: { order: Order }) {
         {Number(order.shippingCost || 0) > 0 && (
           <DetailRow label="Shipping" value={formatUsd(order.shippingCost!)} />
         )}
+        {Number(order.taxAmount || 0) > 0 && (
+          <DetailRow label="Tax" value={formatUsd(order.taxAmount!)} />
+        )}
         <DetailRow label="Total" value={<span className="text-base">{formatUsd(order.total)}</span>} />
       </div>
 
