@@ -21,7 +21,7 @@ import {
   Tr,
   useToast,
 } from '@/components/ui';
-import { PlusIcon } from '@/components/icons';
+import { ChevronDownIcon, PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
 
 type Tab = 'shipping' | 'tax' | 'notifications' | 'staff';
@@ -51,6 +51,72 @@ const TABS: [Tab, string][] = [
   ['notifications', 'Notifications'],
   ['staff', 'Staff'],
 ];
+
+// Zone 8 is quoted manually — OrdersService.getShippingEstimate short-circuits
+// on `zone === 8` and never reads the rate tables for it, so a rate stored
+// against Zone 8 has no effect on any checkout. The UI reflects that by
+// rendering the Zone 8 column read-only rather than offering inputs that are
+// silently ignored.
+const UNPRICED_ZONE = 8;
+
+// A tint per zone, reused by both the assignments card and the rate-table
+// column headers so a zone is recognisable by colour rather than by reading
+// the number. Written out in full (not built by interpolation) because
+// Tailwind only emits classes it can see literally in the source.
+const ZONE_ACCENT: Record<number, string> = {
+  1: 'bg-sky-50 text-sky-700 ring-sky-200',
+  2: 'bg-cyan-50 text-cyan-700 ring-cyan-200',
+  3: 'bg-teal-50 text-teal-700 ring-teal-200',
+  4: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  5: 'bg-lime-50 text-lime-700 ring-lime-200',
+  6: 'bg-amber-50 text-amber-700 ring-amber-200',
+  7: 'bg-orange-50 text-orange-700 ring-orange-200',
+  8: 'bg-slate-100 text-slate-500 ring-slate-300',
+};
+
+function ZoneChip({ zone }: { zone: number }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${
+        ZONE_ACCENT[zone] || ZONE_ACCENT[8]
+      }`}
+    >
+      Zone {zone}
+    </span>
+  );
+}
+
+// Long-form explanation, folded away by default. The numeric fields used to
+// carry 40+ word grey paragraphs each, which buried the controls they were
+// meant to describe.
+function Collapsible({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50/70">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left"
+      >
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">{title}</span>
+        <ChevronDownIcon className={`h-4 w-4 shrink-0 text-slate-400 transition ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="space-y-2 border-t border-slate-200 px-4 py-3 text-xs leading-relaxed text-slate-600">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SettingsAdminPage() {
   const [tab, setTab] = useState<Tab>('shipping');
@@ -85,14 +151,14 @@ export default function SettingsAdminPage() {
             <ZoneAssignmentsCard />
             <ShippingZoneRateTable
               kind="WEIGHT"
-              title="Shipping Rates — Weight Table"
-              description="Editable. Domestic shipping for regular (non-drum) items is priced from this Zone 1-8 x weight table. Click a cell to edit — it saves automatically when you click away. A cart weight between two rows uses the next row up."
+              title="Weight Rates"
+              description="Priced by cart weight and destination zone for regular (non-drum) items. A cart weight between two rows uses the next row up."
               rowLabel={(lb) => `${lb} lb`}
             />
             <ShippingZoneRateTable
               kind="DRUM"
-              title="Shipping Rates — Drum Table"
-              description={'Editable. Used instead of the weight table for any product variant marked "Sold by drum" in the product editor — cart quantity of that variant is treated as a drum count. Zone 8 (Hawaii, American Samoa, Guam, Northern Mariana Islands, Armed Forces Pacific): a rate still shows here for reference, but at checkout the customer is told to arrange their own carrier for drum freight to these destinations.'}
+              title="Drum Rates"
+              description={'Used instead of the weight table for any variant marked "Sold by drum" in the product editor — cart quantity is treated as a drum count.'}
               rowLabel={(n) => `${n} drum${n === 1 ? '' : 's'}`}
             />
           </div>
@@ -192,7 +258,9 @@ function TaxTab() {
           value={taxName}
           onChange={(e) => setTaxName(e.target.value)}
         />
-        <p className="-mt-2.5 text-xs text-slate-500">Shown as the line-item label at checkout (e.g. "Sales Tax").</p>
+        <p className="-mt-2.5 text-xs text-slate-500">
+          Shown as the line-item label at checkout (e.g. &quot;Sales Tax&quot;).
+        </p>
         <TextField
           label="Tax Rate (%)"
           type="number"
@@ -201,8 +269,8 @@ function TaxTab() {
           onChange={(e) => setTaxValue(e.target.value)}
         />
         <p className="-mt-2.5 text-xs text-slate-500">
-          Applied as a single flat percentage of the order subtotal at checkout — the same rate for every state
-          and country. Defaults to 0% (no tax charged) if left blank.
+          Applied as a single flat percentage of the order subtotal at checkout — the same rate for every
+          state and country. Defaults to 0% (no tax charged) if left blank.
         </p>
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
@@ -259,65 +327,111 @@ function ShippingTab() {
   if (isError) return <ErrorState message="Couldn't load shipping settings." />;
 
   return (
-    <Card className="max-w-lg p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <TextField
-          label="Wholesale Minimum ($)"
-          type="number"
-          step="0.01"
-          placeholder="250"
-          value={wholesaleMinimum}
-          onChange={(e) => setWholesaleMinimum(e.target.value)}
-        />
-        <p className="-mt-2.5 text-xs text-slate-500">
-          Minimum order subtotal required to check out. Defaults to $250 if left blank.
-        </p>
-        <TextField
-          label="Free Shipping Threshold ($)"
-          type="number"
-          step="0.01"
-          placeholder="85"
-          value={freeShippingThreshold}
-          onChange={(e) => setFreeShippingThreshold(e.target.value)}
-        />
-        <p className="-mt-2.5 text-xs text-slate-500">
-          Order subtotal that qualifies for free shipping — domestic or international. Defaults to $85 if
-          left blank.
-        </p>
-        <TextField
-          label="Default Shipping Amount ($)"
-          type="number"
-          step="0.01"
-          placeholder="0"
-          value={defaultShippingAmount}
-          onChange={(e) => setDefaultShippingAmount(e.target.value)}
-        />
-        <p className="-mt-2.5 text-xs text-slate-500">
-          Domestic shipping is priced automatically from the Zone 1-8 rate table based on cart weight and
-          destination state. This amount is only a last-resort fallback — used only for a US territory/code
-          with no zone mapping and no explicit rate set below. Defaults to $0 if left blank.
-        </p>
-        <TextField
-          label="International Shipping Amount ($)"
-          type="number"
-          step="0.01"
-          placeholder="0"
-          value={internationalShippingAmount}
-          onChange={(e) => setInternationalShippingAmount(e.target.value)}
-        />
-        <p className="-mt-2.5 text-xs text-slate-500">
-          Flat rate charged on every non-US order, regardless of country or weight. Defaults to $0 if left
-          blank.
-        </p>
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Two columns: four short numeric fields stacked in one narrow
+            column left a wide screen mostly empty, and turned the per-field
+            help into a tall ribbon of grey text taller than the form. */}
+        <div className="grid gap-5 sm:grid-cols-2">
+          <NumberSettingField
+            label="Wholesale Minimum ($)"
+            help="Minimum subtotal to check out."
+            placeholder="250"
+            fallback="$250"
+            value={wholesaleMinimum}
+            onChange={setWholesaleMinimum}
+          />
+          <NumberSettingField
+            label="Free Shipping Threshold ($)"
+            help="Subtotal that ships free."
+            placeholder="85"
+            fallback="$85"
+            value={freeShippingThreshold}
+            onChange={setFreeShippingThreshold}
+          />
+          <NumberSettingField
+            label="Fallback Shipping Amount ($)"
+            help="Last resort only — see below."
+            placeholder="0"
+            fallback="$0"
+            value={defaultShippingAmount}
+            onChange={setDefaultShippingAmount}
+          />
+          <NumberSettingField
+            label="International Shipping Amount ($)"
+            help="Flat rate on every non-US order."
+            placeholder="0"
+            fallback="$0"
+            value={internationalShippingAmount}
+            onChange={setInternationalShippingAmount}
+          />
+        </div>
+
+        <Collapsible title="How shipping is calculated">
+          <p>
+            <strong className="font-semibold text-slate-700">Domestic (US).</strong> Priced automatically
+            from the rate tables below, using the cart&apos;s total weight and the destination
+            state&apos;s zone. Variants marked &quot;Sold by drum&quot; use the drum table instead.
+          </p>
+          <p>
+            <strong className="font-semibold text-slate-700">Zone {UNPRICED_ZONE}.</strong> Alaska,
+            Hawaii, DC, the US territories and the military codes are not priced automatically. Checkout
+            shows no shipping cost and asks the customer to contact you for a quote.
+          </p>
+          <p>
+            <strong className="font-semibold text-slate-700">Fallback Shipping Amount.</strong> Used only
+            for a US code with no zone mapping and no table rate — in practice almost never, since every
+            state and territory currently maps to a zone.
+          </p>
+          <p>
+            <strong className="font-semibold text-slate-700">Free shipping</strong> overrides all of the
+            above once the subtotal reaches the threshold, domestic or international.
+          </p>
+        </Collapsible>
+
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-end">
           <Button type="submit" loading={mutation.isPending}>
             Save Changes
           </Button>
         </div>
       </form>
     </Card>
+  );
+}
+
+// Label + input + one line of help. Replaces the previous pattern of a
+// TextField followed by a negative-margin <p> carrying a whole paragraph.
+function NumberSettingField({
+  label,
+  help,
+  placeholder,
+  fallback,
+  value,
+  onChange,
+}: {
+  label: string;
+  help: string;
+  placeholder: string;
+  fallback: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <TextField
+        label={label}
+        type="number"
+        step="0.01"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <p className="mt-1.5 text-xs text-slate-500">
+        {help} <span className="text-slate-400">Blank = {fallback}.</span>
+      </p>
+    </div>
   );
 }
 
@@ -579,7 +693,10 @@ function StaffTab() {
 // below) and only the $ amounts are meant to change. Editing a cell changes
 // the rate for every state in that zone at once.
 
+
 function ZoneAssignmentsCard() {
+  const [openZone, setOpenZone] = useState<number | null>(null);
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['shipping-zone-assignments'],
     queryFn: () => api.get<{ zones: { zone: number; states: { code: string; name: string }[] }[] }>(
@@ -592,22 +709,64 @@ function ZoneAssignmentsCard() {
       <div className="mb-3">
         <h2 className="text-sm font-semibold text-slate-900">Zone Assignments</h2>
         <p className="text-xs text-slate-500">
-          Fixed — which states fall in each zone isn&apos;t editable here. Edit the $ amounts in the tables
-          below instead; every state in a zone shares that zone&apos;s rate.
+          Fixed — edit the $ amounts below instead. Every destination in a zone shares that zone&apos;s
+          rate. Covers the 50 states plus DC and the US territories. Military and diplomatic mail
+          addresses (APO/FPO/DPO) aren&apos;t shippable and are excluded.
         </p>
       </div>
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Couldn't load zone assignments." />}
       {data && (
         <Card className="divide-y divide-slate-100">
-          {data.zones.map((group) => (
-            <div key={group.zone} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-start sm:gap-4">
-              <div className="w-16 shrink-0 text-sm font-semibold text-slate-900">Zone {group.zone}</div>
-              <div className="text-xs leading-relaxed text-slate-600">
-                {group.states.map((s) => s.code).join(', ')}
+          {data.zones.map((group) => {
+            const open = openZone === group.zone;
+            const unpriced = group.zone === UNPRICED_ZONE;
+            return (
+              <div key={group.zone}>
+                {/* Collapsed by default: Zone 7 alone is 23 state codes, and
+                    as one comma-separated line that's unreadable. */}
+                <button
+                  type="button"
+                  onClick={() => setOpenZone(open ? null : group.zone)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
+                >
+                  <ZoneChip zone={group.zone} />
+                  {/* "destinations", not "states" — the 62 codes across all
+                      zones are the 50 states plus DC, the territories and the
+                      military mail codes, so calling them states made the
+                      totals look wrong. */}
+                  <span className="text-xs text-slate-500">
+                    {group.states.length}{' '}
+                    {group.states.length === 1 ? 'destination' : 'destinations'}
+                  </span>
+                  {unpriced && <span className="text-xs font-medium text-slate-400">· quoted manually</span>}
+                  {!open && (
+                    <span className="ml-auto hidden truncate text-xs text-slate-400 sm:block sm:max-w-[52%]">
+                      {group.states.map((st) => st.name).join(', ')}
+                    </span>
+                  )}
+                  <ChevronDownIcon
+                    className={`${open ? 'rotate-180' : ''} ml-auto h-4 w-4 shrink-0 text-slate-400 transition sm:ml-3`}
+                  />
+                </button>
+                {open && (
+                  <div className="flex flex-wrap gap-1.5 border-t border-slate-100 bg-slate-50/60 px-4 py-3">
+                    {group.states.map((st) => (
+                      <span
+                        key={st.code}
+                        className="inline-flex items-center gap-1.5 rounded bg-white py-0.5 pl-1 pr-2 text-xs text-slate-700 ring-1 ring-inset ring-slate-200"
+                      >
+                        <span className="rounded bg-slate-100 px-1 font-mono text-[10px] font-medium text-slate-500">
+                          {st.code}
+                        </span>
+                        {st.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </Card>
       )}
     </div>
@@ -679,6 +838,8 @@ function ShippingZoneRateTable({
     saveMutation.mutate({ zone, breakpoint, amount });
   }
 
+  const zoneCount = data?.[0]?.rates.length ?? 0;
+
   return (
     <div>
       <div className="mb-3">
@@ -692,50 +853,112 @@ function ShippingZoneRateTable({
       {isError && <ErrorState message="Couldn't load the rate table." />}
 
       {data && (
-        <Card>
-          <div className="max-h-[520px] overflow-auto">
-            <Table minWidth={680}>
-              <TableHead>
-                <Th>{kind === 'WEIGHT' ? 'Weight' : 'Drums'}</Th>
-                {(data[0]?.rates || []).map((_, i) => (
-                  <Th key={i}>Zone {i + 1}</Th>
-                ))}
-              </TableHead>
+        <Card className="overflow-hidden">
+          {/* Both axes stick. With ~28 rows x 8 zones all visible, losing the
+              zone header or the weight label mid-scroll makes it easy to type
+              a rate into the wrong column — which silently mis-prices real
+              orders, so this is correctness as much as comfort.
+
+              table-fixed so the zone columns divide the available width
+              evenly instead of collapsing to their content: a fixed-width
+              input was clipping four-digit drum rates like 1901.44. The
+              min-width keeps them from squeezing on a narrow screen —
+              the container scrolls horizontally instead. */}
+          <div className="max-h-[560px] overflow-auto">
+            <table className="w-full min-w-[820px] table-fixed border-separate border-spacing-0 text-left text-sm">
+              <colgroup>
+                <col className="w-[120px]" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th className="sticky left-0 top-0 z-30 border-b border-r border-slate-200 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {kind === 'WEIGHT' ? 'Weight' : 'Drums'}
+                  </th>
+                  {Array.from({ length: zoneCount }, (_, i) => i + 1).map((zone) => (
+                    <th
+                      key={zone}
+                      className="sticky top-0 z-20 border-b border-slate-200 bg-white px-2 py-2.5 text-center"
+                    >
+                      <ZoneChip zone={zone} />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
               <tbody>
-                {data.map((row) => (
-                  <Tr key={row.breakpoint}>
-                    <Td className="font-medium text-slate-900">{rowLabel(row.breakpoint)}</Td>
-                    {row.rates.map((rate, i) => {
-                      const zone = i + 1;
-                      const key = `${row.breakpoint}-${zone}`;
-                      const draftValue = drafts[key] ?? (rate != null ? String(rate) : '');
-                      const cellSaving = savingKey === key && saveMutation.isPending;
-                      return (
-                        <Td key={zone}>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={draftValue}
-                            disabled={cellSaving}
-                            onChange={(e) => setDrafts((prev) => ({ ...prev, [key]: e.target.value }))}
-                            onBlur={() => handleBlur(row.breakpoint, zone, rate)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') e.currentTarget.blur();
-                            }}
-                            className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none focus:border-brand-500 disabled:opacity-50"
-                          />
-                        </Td>
-                      );
-                    })}
-                  </Tr>
-                ))}
+                {data.map((row, rowIndex) => {
+                  // Zebra striping. The stripe has to be repeated on the
+                  // sticky label cell too — that cell paints its own opaque
+                  // background to cover the scrolling columns, so a stripe
+                  // set only on the <tr> would vanish underneath it.
+                  const rowBg = rowIndex % 2 === 1 ? 'bg-slate-50' : 'bg-white';
+                  return (
+                    <tr key={row.breakpoint} className="group">
+                      <td
+                        className={`sticky left-0 z-10 border-b border-r border-slate-100 px-4 py-2 text-xs font-medium text-slate-700 ${rowBg} group-hover:bg-brand-50`}
+                      >
+                        {rowLabel(row.breakpoint)}
+                      </td>
+                      {row.rates.map((rate, i) => {
+                        const zone = i + 1;
+                        const key = `${row.breakpoint}-${zone}`;
+                        const draftValue = drafts[key] ?? (rate != null ? String(rate) : '');
+                        const cellSaving = savingKey === key && saveMutation.isPending;
+
+                        // The pricing code never reads Zone 8, so an editable
+                        // input here would be a lie — an admin could set a
+                        // rate and it would have no effect on any checkout.
+                        if (zone === UNPRICED_ZONE) {
+                          return (
+                            <td
+                              key={zone}
+                              title="Not priced automatically — the customer is asked to contact you for a quote."
+                              className="border-b border-slate-100 bg-slate-100 px-2 py-2 text-center text-slate-400 group-hover:bg-slate-200"
+                            >
+                              —
+                            </td>
+                          );
+                        }
+
+                        return (
+                          <td
+                            key={zone}
+                            className={`border-b border-slate-100 px-2 py-1 ${rowBg} group-hover:bg-brand-50`}
+                          >
+                            {/* Fills the cell (w-full) rather than sitting as a
+                                narrow box in a sea of padding, and stays
+                                borderless until hovered or focused — 200+
+                                bordered boxes at once read as grid noise
+                                rather than as numbers. */}
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={draftValue}
+                              disabled={cellSaving}
+                              onChange={(e) => setDrafts((prev) => ({ ...prev, [key]: e.target.value }))}
+                              onBlur={() => handleBlur(row.breakpoint, zone, rate)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.currentTarget.blur();
+                              }}
+                              className={`w-full rounded border bg-transparent px-2 py-1 text-center text-sm tabular-nums text-slate-700 outline-none transition hover:border-slate-300 hover:bg-white focus:border-brand-500 focus:bg-white focus:text-slate-900 focus:ring-2 focus:ring-brand-100 disabled:opacity-40 ${
+                                drafts[key] !== undefined ? 'border-amber-300 bg-amber-50' : 'border-transparent'
+                              }`}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
-            </Table>
+            </table>
+          </div>
+          <div className="border-t border-slate-200 bg-slate-50/70 px-4 py-2.5 text-xs text-slate-500">
+            Click a cell to edit — it saves when you click away or press Enter. Unsaved edits show amber.
+            Zone {UNPRICED_ZONE} is quoted manually and has no rate.
           </div>
         </Card>
       )}
     </div>
   );
 }
-

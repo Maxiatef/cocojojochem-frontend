@@ -1,6 +1,12 @@
-// 50 states + DC + the US territories/military codes Shippo & USPS both
-// recognize. Shared between the checkout page's state dropdown and the
-// admin per-state shipping rates table.
+// The 50 states + DC + the US territories we ship to. Shared between the
+// checkout page's state dropdown and the admin shipping rate tables.
+//
+// Deliberately excludes the military/diplomatic mail codes (AA/AE/AP and
+// APO/FPO/DPO): only USPS can deliver to them, parcels are capped around
+// 70 lb, and military mail restricts much of what we sell, so nothing in
+// our rate tables could actually be fulfilled there. Must stay in sync with
+// US_STATE_NAMES in the backend's shipping-zones.constants.ts — a code
+// offered here but missing there is quoted as "contact us".
 export const US_STATES: { code: string; name: string }[] = [
   { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
   { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
@@ -21,6 +27,4 @@ export const US_STATES: { code: string; name: string }[] = [
   { code: 'WV', name: 'West Virginia' }, { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' },
   { code: 'AS', name: 'American Samoa' }, { code: 'GU', name: 'Guam' }, { code: 'MP', name: 'Northern Mariana Islands' },
   { code: 'PR', name: 'Puerto Rico' }, { code: 'VI', name: 'U.S. Virgin Islands' },
-  { code: 'AA', name: 'Armed Forces Americas (AA)' }, { code: 'AE', name: 'Armed Forces Europe (AE)' },
-  { code: 'AP', name: 'Armed Forces Pacific (AP)' },
 ];

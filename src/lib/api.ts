@@ -4,9 +4,20 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  // The API's own message, but ONLY when it was a single deliberate sentence
+  // written for end users — i.e. thrown by a service as
+  // `BadRequestException('Your cart is empty …')`. Null when the body carried
+  // class-validator's field-level array instead
+  // ("items.0.productVariantId must be an integer number"), which is
+  // developer-facing and must never be shown to a customer.
+  //
+  // NestJS makes this distinction reliably: a string `message` is ours, an
+  // array is the global ValidationPipe's.
+  serverMessage: string | null;
+  constructor(status: number, message: string, serverMessage: string | null = null) {
     super(message);
     this.status = status;
+    this.serverMessage = serverMessage;
   }
 }
 
@@ -74,8 +85,13 @@ export function createApiClient(config: ApiClientConfig) {
 
   async function toApiError(res: Response): Promise<ApiError> {
     const body = await res.json().catch(() => ({ message: res.statusText }));
-    const message = Array.isArray(body.message) ? body.message.join(', ') : body.message;
-    return new ApiError(res.status, message || 'Request failed');
+    const raw = body?.message;
+    const isFieldValidation = Array.isArray(raw);
+    const message = isFieldValidation ? raw.join(', ') : raw;
+    // Only a plain-string body message is safe to surface verbatim — see the
+    // ApiError.serverMessage comment.
+    const serverMessage = !isFieldValidation && typeof raw === 'string' && raw.trim() ? raw : null;
+    return new ApiError(res.status, message || 'Request failed', serverMessage);
   }
 
   async function request<T>(path: string, options: RequestInit = {}): Promise<T> {

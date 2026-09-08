@@ -527,7 +527,13 @@ export type UserRole = 'CUSTOMER' | 'ADMIN' | 'SALES';
 export interface UserListItem {
   id: number;
   email: string;
+  // fullName stays canonical for display everywhere; firstName/lastName are
+  // the editable parts the admin editor writes, which the backend recomposes
+  // fullName from. Optional because rows created before the migration's
+  // backfill, or by callers that only set fullName, may have them null.
   fullName: string;
+  firstName?: string | null;
+  lastName?: string | null;
   phone: string | null;
   role: UserRole;
   companyId: number | null;

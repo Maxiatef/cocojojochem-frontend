@@ -74,14 +74,38 @@ const NETWORK_ERROR_MESSAGE =
   'Can’t reach the server. Check your internet connection and try again.';
 const FALLBACK_MESSAGE = 'Something went wrong. Please try again.';
 
+// Statuses where our API's own message is a deliberate, actionable sentence
+// aimed at the customer. Deliberately excludes 401 (say "session expired",
+// not whatever the auth layer returned), 429, and every 5xx — a server-error
+// body can carry stack details or internal identifiers.
+const SHOW_SERVER_MESSAGE_STATUSES = new Set([400, 403, 404, 409, 422]);
+
 /**
  * Turns any error thrown by the api client into a single, user-safe sentence.
  * Pass `context` to use copy tailored to a specific form (e.g. "login").
  */
 export function getFriendlyErrorMessage(err: unknown, context: ErrorContext = 'default'): string {
   if (err instanceof ApiError) {
-    const table = STATUS_MESSAGES[context] || STATUS_MESSAGES.default;
-    return table[err.status] || STATUS_MESSAGES.default[err.status] || FALLBACK_MESSAGE;
+    // 1. A form-specific override always wins — those exist precisely to
+    //    replace the API's wording (e.g. login deliberately says "Incorrect
+    //    email or password" rather than echoing which half was wrong).
+    if (context !== 'default') {
+      const contextCopy = STATUS_MESSAGES[context]?.[err.status];
+      if (contextCopy) return contextCopy;
+    }
+
+    // 2. Otherwise prefer the API's own sentence for business-rule
+    //    rejections. The backend writes these FOR customers — "Cetearyl
+    //    Alcohol (1 Gallon) is limited to 5 units per order", "Your cart is
+    //    empty", "…isn't available until March 1" — and replacing them with
+    //    generic status copy left the customer with no idea what to change,
+    //    which is exactly what happened on checkout.
+    if (SHOW_SERVER_MESSAGE_STATUSES.has(err.status) && err.serverMessage) {
+      return err.serverMessage;
+    }
+
+    // 3. Fall back to generic per-status copy.
+    return STATUS_MESSAGES.default[err.status] || FALLBACK_MESSAGE;
   }
 
   // fetch() throws a plain TypeError when the network request itself fails

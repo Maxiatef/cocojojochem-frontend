@@ -234,7 +234,11 @@ export function TextField({
 }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>
+      {/* An empty label is a deliberate caller signal that the field is
+          already labelled by its surrounding layout (see the admin user
+          editor's two-column FieldRow) — rendering the element anyway would
+          leave a stray gap above the input. */}
+      {label && <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>}
       <input
         {...props}
         className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
@@ -265,7 +269,8 @@ export function SelectField({
 }: { label: string; children: React.ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>
+      {/* Empty label = labelled by the surrounding layout; see TextField. */}
+      {label && <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>}
       <select
         {...props}
         className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
