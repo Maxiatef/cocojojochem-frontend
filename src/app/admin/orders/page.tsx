@@ -31,12 +31,16 @@ interface OrderAdminStats {
   guestOrders: number;
 }
 
+// Values are Shippo carrier tokens, because they're sent straight to
+// GET /tracks/{carrier}/{number} for live tracking. 'Other' is deliberately
+// last and flagged: Shippo has no such token, so an order saved with it can
+// store a tracking number but cannot be tracked automatically.
 const CARRIERS: { value: string; label: string }[] = [
   { value: 'usps', label: 'USPS' },
   { value: 'ups', label: 'UPS' },
   { value: 'fedex', label: 'FedEx' },
   { value: 'dhl_express', label: 'DHL Express' },
-  { value: 'other', label: 'Other' },
+  { value: 'other', label: 'Other (no live tracking)' },
 ];
 
 export default function OrdersPage() {

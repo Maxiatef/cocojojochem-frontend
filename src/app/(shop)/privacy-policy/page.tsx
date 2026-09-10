@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Privacy Policy | CocoJojoChem',
+  title: 'Privacy Policy',
   description: 'How CocoJojoChem collects, uses, and protects your information.',
 };
 

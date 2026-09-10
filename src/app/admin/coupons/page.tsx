@@ -4,7 +4,7 @@ import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
 import {
   BulkSaleDiscount,
   Category,
@@ -519,7 +519,7 @@ export default function CouponsAdminPage() {
   const [tab, setTab] = useState<Tab>('coupons');
 
   return (
-    <RequireAdmin>
+    <RequireStaff>
       <div>
         <PageHeader title="Coupons & Promotions" description="Manage discount codes, bulk sales, and view redemption analytics." />
 
@@ -549,7 +549,7 @@ export default function CouponsAdminPage() {
         {tab === 'analytics' && <AnalyticsTab />}
         {tab === 'bulk-sales' && <BulkSalesTab />}
       </div>
-    </RequireAdmin>
+    </RequireStaff>
   );
 }
 
@@ -637,6 +637,7 @@ function CouponListSection({
   isError: boolean;
   extraFilters?: React.ReactNode;
 }) {
+  const isAdmin = useIsAdmin();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<CouponFormState>(EMPTY_COUPON_FORM);
@@ -714,9 +715,11 @@ function CouponListSection({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {extraFilters}
-          <Button onClick={openCreateModal} icon={PlusIcon} size="sm">
-            Add Coupon
-          </Button>
+          {isAdmin && (
+            <Button onClick={openCreateModal} icon={PlusIcon} size="sm">
+              Add Coupon
+            </Button>
+          )}
         </div>
       </div>
 
@@ -759,13 +762,17 @@ function CouponListSection({
                     <Td align="right">
                       <div className="flex justify-end gap-1.5">
                         <IconButton icon={EyeIcon} label="View" onClick={() => setViewingCoupon(c)} />
-                        <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
-                        <IconButton
-                          icon={TrashIcon}
-                          label="Delete"
-                          variant="danger"
-                          onClick={() => setPendingDelete(c)}
-                        />
+                        {isAdmin && (
+                          <>
+                            <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
+                            <IconButton
+                              icon={TrashIcon}
+                              label="Delete"
+                              variant="danger"
+                              onClick={() => setPendingDelete(c)}
+                            />
+                          </>
+                        )}
                       </div>
                     </Td>
                   </Tr>
@@ -1317,6 +1324,7 @@ function AnalyticsTab() {
 // --- Bulk sales tab ----------------------------------------------------------
 
 function BulkSalesTab() {
+  const isAdmin = useIsAdmin();
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-bulk-sales'],
@@ -1396,9 +1404,11 @@ function BulkSalesTab() {
           <h2 className="text-sm font-semibold text-slate-900">Bulk Sales</h2>
           <p className="text-xs text-slate-500">Time-boxed percentage discounts across categories, products, or variants.</p>
         </div>
-        <Button onClick={openCreateModal} icon={PlusIcon} size="sm">
-          Add Bulk Sale
-        </Button>
+        {isAdmin && (
+          <Button onClick={openCreateModal} icon={PlusIcon} size="sm">
+            Add Bulk Sale
+          </Button>
+        )}
       </div>
 
       {isLoading && <LoadingState />}
@@ -1432,13 +1442,17 @@ function BulkSalesTab() {
                     </Td>
                     <Td align="right">
                       <div className="flex justify-end gap-1.5">
-                        <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(b)} />
-                        <IconButton
-                          icon={TrashIcon}
-                          label="Delete"
-                          variant="danger"
-                          onClick={() => setPendingDelete(b)}
-                        />
+                        {isAdmin && (
+                          <>
+                            <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(b)} />
+                            <IconButton
+                              icon={TrashIcon}
+                              label="Delete"
+                              variant="danger"
+                              onClick={() => setPendingDelete(b)}
+                            />
+                          </>
+                        )}
                       </div>
                     </Td>
                   </Tr>

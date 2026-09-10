@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -247,12 +248,28 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     setPasswordError(null);
   }
 
+  const isRecycled = user?.status === 'DELETED';
+
   return (
     <RequireAdmin>
       <PageHeader title="Edit User" description="Update profile details, role, and account access." />
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Couldn't load this user." />}
+
+      {/* This page is reachable by URL for a recycled user. Without this you
+          could still rename them or reset their password while the account
+          is in the Recycle Bin. */}
+      {user?.status === 'DELETED' && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          This user is in the <strong className="font-semibold">Recycle Bin</strong> and can&apos;t sign in.
+          Restore them from{' '}
+          <Link href="/admin/users" className="font-medium underline">
+            Users
+          </Link>{' '}
+          before making changes.
+        </div>
+      )}
 
       {user && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -327,7 +344,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               )}
 
               <div className="flex justify-end">
-                <Button type="submit" loading={saveMutation.isPending}>
+                <Button type="submit" loading={saveMutation.isPending} disabled={isRecycled}>
                   Save Changes
                 </Button>
               </div>
@@ -344,7 +361,13 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                 }
               >
                 {!passwordOpen ? (
-                  <Button type="button" variant="secondary" size="sm" onClick={openPasswordEditor}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={isRecycled}
+                    onClick={openPasswordEditor}
+                  >
                     Set New Password
                   </Button>
                 ) : (
@@ -430,6 +453,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                   variant="secondary"
                   size="sm"
                   loading={resetLinkMutation.isPending}
+                  disabled={isRecycled}
                   onClick={() => setResetConfirmOpen(true)}
                 >
                   Send Reset Link
@@ -446,6 +470,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                   variant="danger"
                   size="sm"
                   loading={revokeSessionsMutation.isPending}
+                  disabled={isRecycled}
                   onClick={() => setSessionsConfirmOpen(true)}
                 >
                   Log Out Everywhere

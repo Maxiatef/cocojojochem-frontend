@@ -29,6 +29,7 @@ import {
 } from '@/components/ui';
 import { EditIcon, EyeIcon, PlusIcon, TrashIcon } from '@/components/icons';
 import Link from 'next/link';
+import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
 
 type CategorySort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
@@ -50,7 +51,8 @@ const EMPTY_FORM: CategoryFormState = {
   sortOrder: '0',
 };
 
-export default function CategoriesAdminPage() {
+function CategoriesAdminPageContent() {
+  const isAdmin = useIsAdmin();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<CategoryFormState>(EMPTY_FORM);
@@ -155,9 +157,11 @@ export default function CategoriesAdminPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Categories" description="Manage the wholesale product category taxonomy." />
-        <Button onClick={openCreateModal} icon={PlusIcon}>
-          Add Category
-        </Button>
+        {isAdmin && (
+          <Button onClick={openCreateModal} icon={PlusIcon}>
+            Add Category
+          </Button>
+        )}
       </div>
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
@@ -209,13 +213,17 @@ export default function CategoriesAdminPage() {
                       <Link href={`/admin/categories/${c.id}`}>
                         <IconButton icon={EyeIcon} label="View" onClick={() => {}} />
                       </Link>
-                      <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
-                      <IconButton
-                        icon={TrashIcon}
-                        label="Delete"
-                        variant="danger"
-                        onClick={() => setPendingDelete(c)}
-                      />
+                      {isAdmin && (
+                        <>
+                          <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
+                          <IconButton
+                            icon={TrashIcon}
+                            label="Delete"
+                            variant="danger"
+                            onClick={() => setPendingDelete(c)}
+                          />
+                        </>
+                      )}
                     </div>
                   </Td>
                 </Tr>
@@ -291,5 +299,16 @@ export default function CategoriesAdminPage() {
         onCancel={() => setPendingDelete(null)}
       />
     </div>
+  );
+}
+
+// Sales can view the catalog but not modify it — the create/edit/delete
+// endpoints are ADMIN-only server-side, so the write controls are hidden
+// rather than left to fail with a 403 on click.
+export default function CategoriesAdminPage() {
+  return (
+    <RequireStaff>
+      <CategoriesAdminPageContent />
+    </RequireStaff>
   );
 }

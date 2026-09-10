@@ -5,8 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { Category, Certification, Paginated, Product, ProductFunction, ProductVisibility } from '@/lib/types';
-import { uploadMultipleProductImages, uploadVariantImage } from '@/lib/uploads';
+import {
+  Category,
+  Certification,
+  Paginated,
+  Product,
+  ProductDocType,
+  ProductFunction,
+  ProductVisibility,
+} from '@/lib/types';
+import { uploadMultipleProductImages, uploadProductDocument, uploadVariantImage } from '@/lib/uploads';
 import {
   Button,
   Card,
@@ -15,7 +23,7 @@ import {
   TextField,
   useToast,
 } from '@/components/ui';
-import { ImagePlaceholderIcon, PlusIcon, StarIcon, TrashIcon } from '@/components/icons';
+import { FileIcon, ImagePlaceholderIcon, PlusIcon, StarIcon, TrashIcon } from '@/components/icons';
 
 interface SpecFormRow {
   key: string;
@@ -77,6 +85,32 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
   };
 }
 
+
+export interface ProductDocumentDraft {
+  url: string;
+  type: ProductDocType;
+  label: string;
+}
+
+const DOC_TYPE_OPTIONS: [ProductDocType, string][] = [
+  ['COA', 'COA'],
+  ['SDS', 'SDS'],
+  ['TDS', 'TDS'],
+  ['SPEC_SHEET', 'Spec Sheet'],
+  ['OTHER', 'Other'],
+];
+
+// Best-effort type from the filename, so the common case needs no clicks.
+// Falls back to OTHER rather than guessing wrongly.
+function guessDocType(filename: string): ProductDocType {
+  const name = filename.toLowerCase();
+  if (name.includes('coa') || name.includes('certificate of analysis')) return 'COA';
+  if (name.includes('sds') || name.includes('msds') || name.includes('safety')) return 'SDS';
+  if (name.includes('tds') || name.includes('technical')) return 'TDS';
+  if (name.includes('spec')) return 'SPEC_SHEET';
+  return 'OTHER';
+}
+
 export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -133,6 +167,14 @@ export function ProductForm({ product }: { product?: Product }) {
     if (sorted.length > 0) return sorted;
     return product?.imageUrl ? [product.imageUrl] : [];
   });
+  const [documents, setDocuments] = useState<ProductDocumentDraft[]>(
+    () =>
+      (product?.documents || []).map((d) => ({
+        url: d.url,
+        type: d.type,
+        label: d.label || '',
+      })),
+  );
   const [error, setError] = useState<string | null>(null);
 
   const { data: categoriesRes } = useQuery({
@@ -295,6 +337,14 @@ export function ProductForm({ product }: { product?: Product }) {
         isSoldByDrum: v.isSoldByDrum,
       })),
       gallery: gallery.map((url, i) => ({ url, sortOrder: i })),
+      // Always sent (even when empty) so removing the last document actually
+      // clears it — products.service only touches documents when the key is
+      // present, treating an omitted key as "leave alone".
+      documents: documents.map((d) => ({
+        url: d.url,
+        type: d.type,
+        label: d.label.trim() || undefined,
+      })),
     };
   }
 
@@ -456,6 +506,7 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
 
           <GalleryField images={gallery} onChange={setGallery} />
+          <DocumentsField documents={documents} onChange={setDocuments} />
           <TextAreaField
             label="Short Description"
             rows={2}
@@ -971,6 +1022,141 @@ export function ProductForm({ product }: { product?: Product }) {
       </div>
     </form>
     </>
+  );
+}
+
+// Certificates and technical paperwork (COA / SDS / TDS / spec sheets),
+// uploaded alongside the images because that is where an admin looks for
+// "the files attached to this product".
+//
+// Stored as ProductDocument rows, NOT as gallery entries: the product's cover
+// image is derived from gallery[0].url server-side, so a PDF sitting in that
+// array would become the product thumbnail across the storefront.
+function DocumentsField({
+  documents,
+  onChange,
+}: {
+  documents: ProductDocumentDraft[];
+  onChange: (docs: ProductDocumentDraft[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setError(null);
+    setUploading(true);
+    try {
+      // Sequential rather than Promise.all: the route takes one file per
+      // request, and a serial loop means a mid-batch failure still keeps the
+      // files that already uploaded.
+      const added: ProductDocumentDraft[] = [];
+      for (const file of files) {
+        const url = await uploadProductDocument(file);
+        added.push({
+          url,
+          // Guessed from the filename so a file named "COA-lot-2291.pdf"
+          // lands on the right type without extra clicks. Always editable.
+          type: guessDocType(file.name),
+          // Default label is the original filename minus its extension —
+          // more useful to a customer than "Document 1".
+          label: file.name.replace(/\.[^.]+$/, ''),
+        });
+      }
+      onChange([...documents, ...added]);
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err, 'upload'));
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  }
+
+  function updateAt(index: number, patch: Partial<ProductDocumentDraft>) {
+    onChange(documents.map((d, i) => (i === index ? { ...d, ...patch } : d)));
+  }
+
+  function removeAt(index: number) {
+    onChange(documents.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="mt-6 border-t border-slate-100 pt-5">
+      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+        Documents &amp; Certificates{documents.length > 0 ? ` (${documents.length})` : ''}
+      </label>
+      <p className="mb-2 text-xs text-slate-500">
+        PDF, Word, Excel, CSV or an image scan, up to 15MB each. Customers see these under the product
+        images and open them in a new tab.
+      </p>
+
+      {documents.length > 0 && (
+        <div className="mb-3 space-y-2">
+          {documents.map((doc, i) => (
+            <div
+              key={doc.url + i}
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+            >
+              <FileIcon className="h-4 w-4 shrink-0 text-slate-400" />
+
+              <select
+                value={doc.type}
+                onChange={(e) => updateAt(i, { type: e.target.value as ProductDocType })}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
+              >
+                {DOC_TYPE_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                value={doc.label}
+                onChange={(e) => updateAt(i, { label: e.target.value })}
+                placeholder="Label shown to customers"
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
+              />
+
+              {/* Opens the stored file so an admin can confirm they attached
+                  the right document before saving. */}
+              <a
+                href={doc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-xs font-medium text-brand-700 underline hover:no-underline"
+              >
+                View
+              </a>
+
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                aria-label="Remove document"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-red-600 hover:bg-red-50"
+              >
+                <TrashIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"
+        onChange={handleFilesChange}
+        disabled={uploading}
+        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   );
 }
 

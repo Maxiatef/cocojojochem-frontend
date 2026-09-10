@@ -96,6 +96,7 @@ export interface Product {
   certifications?: Certification[];
   variants: ProductVariant[];
   gallery?: ProductGalleryImage[];
+  documents?: ProductDocumentRow[];
   createdAt: string;
 }
 
@@ -104,6 +105,18 @@ export interface ProductGalleryImage {
   url: string;
   altText: string | null;
   sortOrder: number;
+}
+
+// Certificates and technical paperwork attached to a product. Stored in
+// product_documents rather than the gallery, because the product's cover
+// image is derived from gallery[0] and a PDF must never land there.
+export type ProductDocType = 'COA' | 'SDS' | 'TDS' | 'SPEC_SHEET' | 'OTHER';
+
+export interface ProductDocumentRow {
+  id: number;
+  url: string;
+  type: ProductDocType;
+  label: string | null;
 }
 
 export interface ServerCartItem {
@@ -297,20 +310,24 @@ export interface TrackingCheckpoint {
 }
 
 export type TrackingInfo =
-  | { available: false; reason: 'not_shipped_yet' | 'tracking_not_configured' | 'lookup_failed' }
+  | {
+      available: false;
+      reason: 'not_shipped_yet' | 'tracking_not_configured' | 'lookup_failed';
+      // Set whenever the order has a stored tracking number but the live
+      // lookup couldn't run, so the UI can still show the number and link
+      // out to the carrier. Absent for 'not_shipped_yet'.
+      carrier?: string;
+      trackingNumber?: string;
+    }
   | {
       available: true;
       carrier: string;
       trackingNumber: string;
-      currentStatus:
-        | 'PRE_TRANSIT'
-        | 'TRANSIT'
-        | 'OUT_FOR_DELIVERY'
-        | 'PICKUP'
-        | 'DELIVERED'
-        | 'RETURNED'
-        | 'FAILURE'
-        | 'UNKNOWN';
+      // Shippo's tracking_status.status has exactly six values. Earlier
+      // versions of this union also listed OUT_FOR_DELIVERY and PICKUP,
+      // neither of which Shippo ever sends here (out_for_delivery is a
+      // *substatus* under TRANSIT), so both were unreachable.
+      currentStatus: 'PRE_TRANSIT' | 'TRANSIT' | 'DELIVERED' | 'RETURNED' | 'FAILURE' | 'UNKNOWN';
       eta: string | null;
       checkpoints: TrackingCheckpoint[];
     };
@@ -524,6 +541,10 @@ export interface SiteSettingsResponse {
 
 export type UserRole = 'CUSTOMER' | 'ADMIN' | 'SALES';
 
+// DELETED users sit in the admin Recycle Bin: they can't sign in, and are
+// either restored or permanently deleted from there.
+export type UserStatus = 'ACTIVE' | 'DELETED';
+
 export interface UserListItem {
   id: number;
   email: string;
@@ -536,6 +557,10 @@ export interface UserListItem {
   lastName?: string | null;
   phone: string | null;
   role: UserRole;
+  status: UserStatus;
+  // Only set when status is DELETED — shown as the "Deleted" column in the
+  // Recycle Bin. Never branch on this; `status` is the authoritative gate.
+  deletedAt?: string | null;
   companyId: number | null;
   company: Company | null;
   createdAt: string;
@@ -608,4 +633,24 @@ export interface ShippingZoneGroup {
 export interface ShippingRateTierRow {
   breakpoint: number; // weight in lb, or drum count, depending on `kind`
   rates: (number | null)[]; // index 0 = Zone 1 ... index 6 = Zone 7
+}
+
+// Narrow projection returned by POST /orders/guest-track — deliberately
+// carries no address, phone or payment identifiers (see trackAsGuest).
+export interface GuestOrderTracking {
+  id: number;
+  status: Order['status'];
+  createdAt: string;
+  total: number;
+  trackingNumber: string | null;
+  carrierCode: string | null;
+  items: {
+    id: number;
+    productName: string;
+    variantLabel: string;
+    sku: string;
+    quantity: number;
+    price: string;
+  }[];
+  tracking: TrackingInfo;
 }

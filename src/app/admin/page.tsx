@@ -18,6 +18,7 @@ import { DashboardOverview, QuoteRequestStats } from '@/lib/types';
 import { Badge, Card, ErrorState, LoadingState, PageHeader, StatCard } from '@/components/ui';
 import { formatUsd } from '@/lib/pricing';
 import { AlertTriangleIcon, BoxIcon, BuildingIcon, DollarIcon, InboxIcon } from '@/components/icons';
+import { ProductEditLink } from '@/components/admin/ProductEditLink';
 
 export default function AdminOverviewPage() {
   const overview = useQuery({
@@ -213,9 +214,9 @@ export default function AdminOverviewPage() {
                   {d.inventory.lowStockProducts.map((v) => (
                     <tr key={v.variantId} className="border-b border-slate-50 last:border-0">
                       <td className="px-6 py-3 font-medium text-slate-900">
-                        <Link href={`/admin/products/${v.productId}/edit`} className="hover:underline">
+                        <ProductEditLink productId={v.productId} className="hover:underline">
                           {v.productName}
-                        </Link>
+                        </ProductEditLink>
                       </td>
                       <td className="px-6 py-3 text-slate-500">{v.variantLabel}</td>
                       <td className="px-6 py-3 text-slate-400">{v.sku}</td>

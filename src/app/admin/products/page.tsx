@@ -27,8 +27,10 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { EditIcon, EyeIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
 import { StatusCard } from '@/components/admin/StatusCard';
+import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
+import { ProductEditLink } from '@/components/admin/ProductEditLink';
 
 type ProductAdminSort =
   | 'name_asc'
@@ -79,7 +81,8 @@ function productStockBadge(p: Product): string {
 
 type PageTab = 'catalog' | 'analytics';
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+  const isAdmin = useIsAdmin();
   const [pageTab, setPageTab] = useState<PageTab>('catalog');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -195,9 +198,11 @@ export default function ProductsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Products" description="The full wholesale ingredient catalog." />
-        <Link href="/admin/products/new">
-          <Button icon={PlusIcon}>Add Product</Button>
-        </Link>
+        {isAdmin && (
+          <Link href="/admin/products/new">
+            <Button icon={PlusIcon}>Add Product</Button>
+          </Link>
+        )}
       </div>
 
       <div className="mb-6 flex gap-1 border-b border-slate-200">
@@ -392,16 +397,20 @@ export default function ProductsPage() {
                       <Badge status={productStockBadge(p)} />
                     </Td>
                     <Td>
+                      {/* Toggling publish state is a write — sales sees the
+                          same badge as a static label instead. */}
                       <button
                         onClick={() =>
                           togglePublishedMutation.mutate({ id: p.id, isPublished: !p.isPublished })
                         }
-                        disabled={toggling}
-                        title="Click to toggle"
-                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-50 ${
+                        disabled={toggling || !isAdmin}
+                        title={isAdmin ? 'Click to toggle' : undefined}
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                          isAdmin ? 'disabled:opacity-50' : 'cursor-default'
+                        } ${
                           p.isPublished
-                            ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            ? `bg-green-50 text-green-700 ${isAdmin ? 'hover:bg-green-100' : ''}`
+                            : `bg-slate-100 text-slate-500 ${isAdmin ? 'hover:bg-slate-200' : ''}`
                         }`}
                       >
                         {p.isPublished ? 'Published' : 'Draft'}
@@ -409,15 +418,24 @@ export default function ProductsPage() {
                     </Td>
                     <Td align="right">
                       <div className="flex justify-end gap-1.5">
-                        <Link href={`/admin/products/${p.id}/edit`}>
-                          <IconButton icon={EditIcon} label="Edit" />
+                        {/* View is read-only, so both roles get it — it's how
+                            sales looks up pricing/stock/CAS for a quote. */}
+                        <Link href={`/admin/products/${p.id}`}>
+                          <IconButton icon={EyeIcon} label="View" />
                         </Link>
-                        <IconButton
-                          icon={TrashIcon}
-                          label="Delete"
-                          variant="danger"
-                          onClick={() => setPendingDelete(p)}
-                        />
+                        {isAdmin && (
+                          <>
+                            <ProductEditLink productId={p.id}>
+                              <IconButton icon={EditIcon} label="Edit" />
+                            </ProductEditLink>
+                            <IconButton
+                              icon={TrashIcon}
+                              label="Delete"
+                              variant="danger"
+                              onClick={() => setPendingDelete(p)}
+                            />
+                          </>
+                        )}
                       </div>
                     </Td>
                   </Tr>
@@ -546,9 +564,9 @@ function ProductsAnalyticsTab() {
                 <Tr key={p.productId}>
                   <Td className="font-medium text-slate-900">
                     <span className="mr-2 text-xs text-slate-400">#{i + 1}</span>
-                    <Link href={`/admin/products/${p.productId}/edit`} className="hover:underline">
+                    <ProductEditLink productId={p.productId} className="hover:underline">
                       {p.name}
-                    </Link>
+                    </ProductEditLink>
                   </Td>
                   <Td className="text-slate-600">{p.categoryName || '—'}</Td>
                   <Td align="right" className="font-medium text-slate-900">{p.unitsSold}</Td>
@@ -592,9 +610,9 @@ function ProductsAnalyticsTab() {
                       .join(', ')}
                   </Td>
                   <Td align="right">
-                    <Link href={`/admin/products/${p.id}/edit`} className="text-xs font-medium text-brand-600 hover:underline">
+                    <ProductEditLink productId={p.id} className="text-xs font-medium text-brand-600 hover:underline">
                       Restock
-                    </Link>
+                    </ProductEditLink>
                   </Td>
                 </Tr>
               ))}
@@ -637,9 +655,9 @@ function ProductsAnalyticsTab() {
                       <Td className="text-slate-600">{v.label}</Td>
                       <Td align="right" className="font-medium text-amber-700">{v.stockQuantity}</Td>
                       <Td align="right">
-                        <Link href={`/admin/products/${p.id}/edit`} className="text-xs font-medium text-brand-600 hover:underline">
+                        <ProductEditLink productId={p.id} className="text-xs font-medium text-brand-600 hover:underline">
                           Restock
-                        </Link>
+                        </ProductEditLink>
                       </Td>
                     </Tr>
                   )),
@@ -669,9 +687,9 @@ function ProductsAnalyticsTab() {
               {(sales?.slowMovers || []).map((p) => (
                 <Tr key={p.productId}>
                   <Td className="font-medium text-slate-900">
-                    <Link href={`/admin/products/${p.productId}/edit`} className="hover:underline">
+                    <ProductEditLink productId={p.productId} className="hover:underline">
                       {p.name}
-                    </Link>
+                    </ProductEditLink>
                   </Td>
                   <Td className="text-slate-600">{p.categoryName || '—'}</Td>
                   <Td className="text-slate-500">{new Date(p.createdAt).toLocaleDateString()}</Td>
@@ -685,3 +703,13 @@ function ProductsAnalyticsTab() {
   );
 }
 
+// Sales can view the catalog but not modify it — the create/edit/delete
+// endpoints are ADMIN-only server-side, so the write controls are hidden
+// rather than left to fail with a 403 on click.
+export default function ProductsPage() {
+  return (
+    <RequireStaff>
+      <ProductsPageContent />
+    </RequireStaff>
+  );
+}

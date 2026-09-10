@@ -4,7 +4,7 @@ import { Reveal } from '@/components/storefront/Reveal';
 import { ArrowRightIcon, FlaskIcon, LeafIcon, MailIcon, ShieldCheckIcon } from '@/components/icons';
 
 export const metadata = {
-  title: 'About Us — CocoJojoChem Wholesale',
+  title: 'About Us',
   description: 'Wholesale cosmetic ingredient sourcing built for formulators, brands, and manufacturers.',
 };
 

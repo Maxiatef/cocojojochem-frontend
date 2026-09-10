@@ -106,7 +106,11 @@ export default function CheckoutPage() {
 
   // Debounced shipping estimate — fires as soon as country=US is picked
   // (zip isn't needed for the free/minimum-only case), but waits for a
-  // filled-in zip on international addresses to avoid wasted Shippo calls.
+  // filled-in zip on international addresses.
+  //
+  // Note this hits POST /orders/shipping-estimate, which prices from the
+  // local zone/weight rate tables — NOT a carrier API. Shippo is only
+  // involved after payment, when the label is bought.
   useEffect(() => {
     if (!ready || estimateItems.length === 0 || !countryIso2) {
       setShippingEstimate(null);

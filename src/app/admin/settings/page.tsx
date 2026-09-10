@@ -575,8 +575,8 @@ function NotificationsTab() {
           onChange={(e) => setSenderEmail(e.target.value)}
         />
         <p className="-mt-2.5 text-xs text-slate-500">
-          The &quot;from&quot; identity on all outgoing transactional emails. Must be a sender verified in your
-          Brevo account, or delivery will fail.
+          The &quot;from&quot; identity on all outgoing transactional emails. The domain must be verified in your
+          Resend account, or delivery will fail.
         </p>
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}

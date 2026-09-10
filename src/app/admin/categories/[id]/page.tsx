@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequireStaff } from '@/components/AdminShell';
 import { Category, Product } from '@/lib/types';
 import {
   Card,
@@ -17,6 +17,7 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
+import { ProductEditLink } from '@/components/admin/ProductEditLink';
 
 interface CategoryDetail extends Category {
   parent: Category | null;
@@ -24,6 +25,8 @@ interface CategoryDetail extends Category {
   products: Product[];
 }
 
+// Read-only detail view (a single GET, no writes), and it's what the View
+// button on the categories list opens — so sales must be able to reach it.
 export default function ViewCategoryPage({ params }: { params: { id: string } }) {
   const { data: category, isLoading, isError } = useQuery({
     queryKey: ['admin-category-detail', params.id],
@@ -34,7 +37,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
   const inStock = products.filter((p) => p.variants.some((v) => v.stockStatus === 'IN_STOCK')).length;
 
   return (
-    <RequireAdmin>
+    <RequireStaff>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title={category ? category.name : 'View Category'} description="Category details and its products." />
         <Link href="/admin/categories" className="text-sm font-medium text-brand-700 hover:underline">
@@ -119,9 +122,9 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
                     {products.map((p) => (
                       <Tr key={p.id}>
                         <Td className="font-medium text-slate-900">
-                          <Link href={`/admin/products/${p.id}/edit`} className="hover:text-brand-700 hover:underline">
+                          <ProductEditLink productId={p.id} className="hover:text-brand-700 hover:underline">
                             {p.name}
-                          </Link>
+                          </ProductEditLink>
                         </Td>
                         <Td className="text-slate-500">{p.sku}</Td>
                         <Td className="text-slate-600">{p.variants.length}</Td>
@@ -141,6 +144,6 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
           </div>
         </div>
       )}
-    </RequireAdmin>
+    </RequireStaff>
   );
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Terms of Service | CocoJojoChem',
+  title: 'Terms of Service',
   description: 'The terms and conditions governing wholesale purchases from CocoJojoChem.',
 };
 

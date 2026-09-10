@@ -128,6 +128,8 @@ const STATUS_STYLES: Record<string, string> = {
   APPROVED: 'bg-green-50 text-green-700',
   REJECTED: 'bg-red-50 text-red-700',
   SUSPENDED: 'bg-slate-100 text-slate-500',
+  ACTIVE: 'bg-green-50 text-green-700',
+  DELETED: 'bg-red-50 text-red-700',
   IN_STOCK: 'bg-green-50 text-green-700',
   OUT_OF_STOCK: 'bg-red-50 text-red-700',
   ON_BACKORDER: 'bg-slate-100 text-slate-500',

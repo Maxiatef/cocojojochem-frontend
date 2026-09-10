@@ -14,6 +14,8 @@ import {
   Testimonial,
 } from '@/lib/types';
 import { Metadata } from 'next';
+import { JsonLd, organizationSchema, webSiteSchema } from '@/components/seo/JsonLd';
+import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
 import {
   ArrowRightIcon,
   BottleIcon,
@@ -30,22 +32,43 @@ import {
   SparklesIcon,
 } from '@/components/icons';
 
-const DEFAULT_METADATA: Metadata = {
-  title: 'CocoJojoChem Wholesale — Cosmetic Ingredient Supply',
-  description:
-    'Wholesale cosmetic ingredients, sourced and supplied at scale for brands, formulators, and manufacturers.',
-};
+// The home page is the one route whose <title> should NOT get the "| BRAND"
+// template applied, because the brand already leads the title. `absolute`
+// opts out of the root template.
+const HOME_TITLE = 'Wholesale Cosmetic Ingredients in Bulk';
+const HOME_DESCRIPTION =
+  'Wholesale cosmetic ingredients for brands, formulators and manufacturers — carrier oils, butters, waxes, emulsifiers, surfactants and actives in bulk and drum sizes. Trade pricing and INCI data.';
+
+const HOME_KEYWORDS = [
+  'wholesale cosmetic ingredients supplier USA',
+  'buy cosmetic ingredients in bulk',
+  'bulk cosmetic ingredients for manufacturers',
+  'cosmetic ingredient distributor',
+  'bulk raw materials skincare',
+  'drum quantity cosmetic ingredients',
+  'trade pricing cosmetic ingredients',
+  'wholesale carrier oils butters waxes',
+  'bulk emulsifiers and surfactants',
+  'cosmetic actives and peptides wholesale',
+];
 
 export async function generateMetadata(): Promise<Metadata> {
+  // Per-path overrides from the admin SEO manager. SeoPagesModule is
+  // currently disabled server-side, so this 404s and serverFetch returns
+  // null — the defaults below then apply unchanged.
   const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/')}`, {
     cache: 'no-store',
   });
-  if (!seo || !seo.metaTitle) return DEFAULT_METADATA;
-  return {
-    title: seo.metaTitle,
-    description: seo.metaDescription || DEFAULT_METADATA.description,
-    ...(seo.ogImageUrl ? { openGraph: { images: [seo.ogImageUrl] } } : {}),
-  };
+
+  const meta = pageMetadata({
+    title: seo?.metaTitle || HOME_TITLE,
+    description: clampDescription(seo?.metaDescription, HOME_DESCRIPTION),
+    path: '/',
+    keywords: HOME_KEYWORDS,
+    images: [seo?.ogImageUrl],
+  });
+
+  return { ...meta, title: { absolute: `${SITE_NAME} — ${seo?.metaTitle || HOME_TITLE}` } };
 }
 
 function categoryIcon(name: string) {
@@ -89,6 +112,11 @@ export default async function HomePage() {
 
   return (
     <div>
+      {/* Identifies the business and the site itself. The WebSite node's
+          SearchAction is what can earn a search box inside Google's result
+          for branded queries. */}
+      <JsonLd data={[organizationSchema(), webSiteSchema()]} />
+
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-sand-100">
         <div
@@ -331,6 +359,94 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── How wholesale ordering works ──
+          Substantive buyer-facing copy. The home page carried only ~246
+          words of indexable body text (nav/header/footer are excluded from
+          the count), which is thin for a commercial landing page and scores
+          poorly in the SEO analyzer's word-count band. This is real
+          purchasing guidance, not filler. */}
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-olive-600">
+            Buying Wholesale
+          </p>
+          <h2 className="mt-1 font-display text-3xl text-ink">
+            How ordering wholesale ingredients works
+          </h2>
+        </div>
+
+        <div className="mt-10 grid gap-x-12 gap-y-10 text-sm leading-relaxed text-ink-soft md:grid-cols-2">
+          <div>
+            <h3 className="mb-2 font-semibold text-ink">Pricing scales with pack size</h3>
+            <p>
+              Every material is quoted per unit at each pack size, so the cost per kilo or per gallon
+              falls as the size increases. A drum is almost always materially cheaper per unit than the
+              same volume bought in gallons. Where a material is sold by drum, the listing prices it per
+              drum rather than per kilo, because freight on drum shipments is quoted on pallet space
+              rather than parcel weight. There is a minimum order value at checkout, since this is a
+              trade catalogue rather than a retail one.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-semibold text-ink">Verify on INCI, not trade name</h3>
+            <p>
+              Naming in this industry is inconsistent — the same material is sold under several trade
+              names, and the same trade name occasionally covers materially different grades. Every
+              listing carries the INCI name as it should appear on a finished-product label, the CAS
+              number where one applies, and the botanical source for plant-derived materials. Matching
+              on those rather than on a marketing name is what stops a substitution failing in
+              production.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-semibold text-ink">Documentation on request</h3>
+            <p>
+              Certificates of Analysis and Safety Data Sheets are available for anything we stock. We
+              recommend requesting both before scaling a formula from bench to production, and keeping
+              the COA for the specific lot you received on file. If you need a particular grade, a
+              certification we do not list, or a pack size outside the standard range, send a quote
+              request with your volume and timing rather than assuming it is unavailable.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-semibold text-ink">Stock, lead times and freight</h3>
+            <p>
+              Anything showing as in stock ships from our US warehouse. Shipping is rated by cart weight
+              and destination zone at checkout, so the figure you see is the figure you pay. Materials
+              brought in to order carry a lead time we confirm on quote. Drum freight, and shipments to
+              Alaska, Hawaii and the US territories, are quoted manually — those routes cannot be priced
+              honestly from a rate table, so our team confirms them directly instead of guessing.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-semibold text-ink">Find materials by problem, not name</h3>
+            <p>
+              Most formulation questions present as a behaviour rather than a material: a cream that
+              separates needs an emulsifier or stabiliser, a cleanser that strips needs a milder
+              surfactant blend, a serum that dries down tight needs its humectant load rebalanced
+              against the occlusives. Browsing by function groups every material that addresses the same
+              problem, which makes substitution and cost engineering far quicker than working down a
+              single supplier&apos;s product list.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-semibold text-ink">Samples and first orders</h3>
+            <p>
+              We would rather you trial a material at bench scale than commit to a drum on
+              specification alone. If you are evaluating several candidates for the same role, request a
+              quote listing all of them and we will price them together so the comparison is on
+              like-for-like terms. Repeat and contract volumes are priced against commitment rather than
+              from the standard table — talk to the sales team once your usage is predictable.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* ── Newsletter ── */}
       <section

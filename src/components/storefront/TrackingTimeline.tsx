@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { TrackingInfo } from '@/lib/types';
+import { carrierLabel, carrierTrackingUrl } from '@/lib/carrierTracking';
 
 interface TrackingApiClient {
   get: <T>(path: string) => Promise<T>;
@@ -13,11 +14,12 @@ const REASON_MESSAGE: Record<string, string> = {
   lookup_failed: "Couldn't retrieve tracking right now — try again later.",
 };
 
+// Shippo sends exactly these six. 'OUT_FOR_DELIVERY' and 'PICKUP' used to be
+// listed here too, but they are substatus codes rather than top-level
+// statuses, so those entries could never match.
 const CURRENT_STATUS_LABEL: Record<string, string> = {
   PRE_TRANSIT: 'Label created',
   TRANSIT: 'In transit',
-  OUT_FOR_DELIVERY: 'Out for delivery',
-  PICKUP: 'Ready for pickup',
   DELIVERED: 'Delivered',
   RETURNED: 'Returned',
   FAILURE: 'Delivery failed',
@@ -47,6 +49,7 @@ export function TrackingTimeline({
   client,
   adminView = false,
   theme = 'shop',
+  showSummary = true,
 }: {
   orderId: number;
   enabled: boolean;
@@ -54,6 +57,12 @@ export function TrackingTimeline({
   /** GET /orders/:id/tracking/admin vs GET /orders/:id/tracking */
   adminView?: boolean;
   theme?: 'shop' | 'admin';
+  /**
+   * Hides the carrier/number/link header line. Set false by callers that
+   * already show those from the order itself (OrderShippingModal), so the
+   * tracking number isn't printed twice.
+   */
+  showSummary?: boolean;
 }) {
   const path = `/orders/${orderId}/tracking${adminView ? '/admin' : ''}`;
 
@@ -88,13 +97,40 @@ export function TrackingTimeline({
   }
 
   if (!data.available) {
+    // The order may still HAVE a tracking number even though the live lookup
+    // couldn't run (test-mode token, a manually entered carrier we don't
+    // model, or a Shippo outage). Showing it with a carrier link is far more
+    // useful than "tracking unavailable" on its own.
+    const fallbackUrl = carrierTrackingUrl(data.carrier, data.trackingNumber);
+    const muted = theme === 'shop' ? 'text-xs text-[#16241c]/50' : 'text-xs text-slate-500';
+    const linkClass =
+      theme === 'shop'
+        ? 'font-semibold text-brand-700 underline hover:no-underline'
+        : 'font-medium text-brand-700 underline hover:no-underline';
+
     return (
-      <p
-        style={fontMono}
-        className={theme === 'shop' ? 'py-3 text-xs text-[#16241c]/50' : 'py-2 text-xs text-slate-500'}
-      >
-        {REASON_MESSAGE[data.reason] || REASON_MESSAGE.lookup_failed}
-      </p>
+      <div className={theme === 'shop' ? 'space-y-1.5 py-3' : 'space-y-1.5 py-2'}>
+        {showSummary && data.trackingNumber && (
+          <p style={fontMono} className={theme === 'shop' ? 'text-xs text-[#16241c]' : 'text-xs text-slate-900'}>
+            <span className="font-semibold">{carrierLabel(data.carrier)}</span>{' '}
+            <span className="select-all">{data.trackingNumber}</span>
+          </p>
+        )}
+        <p style={fontMono} className={muted}>
+          {REASON_MESSAGE[data.reason] || REASON_MESSAGE.lookup_failed}
+        </p>
+        {showSummary && fallbackUrl && (
+          <a
+            href={fallbackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={fontMono}
+            className={`inline-block text-xs ${linkClass}`}
+          >
+            Track on {carrierLabel(data.carrier)} &rarr;
+          </a>
+        )}
+      </div>
     );
   }
 
@@ -104,10 +140,24 @@ export function TrackingTimeline({
   if (theme === 'admin') {
     return (
       <div className="py-2">
-        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+        <div
+          className={`mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 ${
+            showSummary ? '' : 'hidden'
+          }`}
+        >
           <span className="font-medium text-slate-900">{CURRENT_STATUS_LABEL[data.currentStatus] || data.currentStatus}</span>
-          <span>{data.carrier.toUpperCase()} · {data.trackingNumber}</span>
+          <span className="select-all">{carrierLabel(data.carrier)} · {data.trackingNumber}</span>
           {data.eta && <span>ETA {formatTimestamp(data.eta)}</span>}
+          {carrierTrackingUrl(data.carrier, data.trackingNumber) && (
+            <a
+              href={carrierTrackingUrl(data.carrier, data.trackingNumber)!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-brand-700 underline hover:no-underline"
+            >
+              Track on {carrierLabel(data.carrier)} &rarr;
+            </a>
+          )}
         </div>
         {checkpoints.length === 0 ? (
           <p className="text-xs text-slate-500">No checkpoints yet.</p>
@@ -145,14 +195,29 @@ export function TrackingTimeline({
 
   return (
     <div className="py-3">
-      <div style={fontMono} className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#16241c]/60">
+      <div
+        style={fontMono}
+        className={`mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#16241c]/60 ${
+          showSummary ? '' : 'hidden'
+        }`}
+      >
         <span className="font-semibold uppercase tracking-wide text-[#16241c]">
           {CURRENT_STATUS_LABEL[data.currentStatus] || data.currentStatus}
         </span>
-        <span>
-          {data.carrier.toUpperCase()} · {data.trackingNumber}
+        <span className="select-all">
+          {carrierLabel(data.carrier)} · {data.trackingNumber}
         </span>
         {data.eta && <span>ETA {formatTimestamp(data.eta)}</span>}
+        {carrierTrackingUrl(data.carrier, data.trackingNumber) && (
+          <a
+            href={carrierTrackingUrl(data.carrier, data.trackingNumber)!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-brand-700 underline hover:no-underline"
+          >
+            Track on {carrierLabel(data.carrier)} &rarr;
+          </a>
+        )}
       </div>
       {checkpoints.length === 0 ? (
         <p style={fontMono} className="text-xs text-[#16241c]/50">No checkpoints yet.</p>

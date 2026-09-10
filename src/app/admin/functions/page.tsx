@@ -27,6 +27,7 @@ import {
   Tr,
 } from '@/components/ui';
 import { EditIcon, EyeIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
 
 type FunctionSort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
@@ -39,7 +40,8 @@ interface FunctionFormState {
 
 const EMPTY_FORM: FunctionFormState = { id: null, name: '', slug: '', description: '' };
 
-export default function FunctionsAdminPage() {
+function FunctionsAdminPageContent() {
+  const isAdmin = useIsAdmin();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FunctionFormState>(EMPTY_FORM);
@@ -136,9 +138,11 @@ export default function FunctionsAdminPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Functions" description="Manage the 'shop by chemical function' tags." />
-        <Button onClick={openCreateModal} icon={PlusIcon}>
-          Add Function
-        </Button>
+        {isAdmin && (
+          <Button onClick={openCreateModal} icon={PlusIcon}>
+            Add Function
+          </Button>
+        )}
       </div>
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
@@ -186,13 +190,17 @@ export default function FunctionsAdminPage() {
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
                       <IconButton icon={EyeIcon} label="View Products" onClick={() => setViewingFunction(f)} />
-                      <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(f)} />
-                      <IconButton
-                        icon={TrashIcon}
-                        label="Delete"
-                        variant="danger"
-                        onClick={() => setPendingDelete(f)}
-                      />
+                      {isAdmin && (
+                        <>
+                          <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(f)} />
+                          <IconButton
+                            icon={TrashIcon}
+                            label="Delete"
+                            variant="danger"
+                            onClick={() => setPendingDelete(f)}
+                          />
+                        </>
+                      )}
                     </div>
                   </Td>
                 </Tr>
@@ -326,5 +334,16 @@ function FunctionProductsModal({ fn, onClose }: { fn: ProductFunction; onClose: 
         </div>
       )}
     </Modal>
+  );
+}
+
+// Sales can view the catalog but not modify it — the create/edit/delete
+// endpoints are ADMIN-only server-side, so the write controls are hidden
+// rather than left to fail with a 403 on click.
+export default function FunctionsAdminPage() {
+  return (
+    <RequireStaff>
+      <FunctionsAdminPageContent />
+    </RequireStaff>
   );
 }

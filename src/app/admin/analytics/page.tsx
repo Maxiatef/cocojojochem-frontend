@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { api } from '@/lib/api';
 import { SalesProductsAnalytics, VisitorsAnalytics } from '@/lib/types';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequireStaff } from '@/components/AdminShell';
 import {
   Badge,
   Card,
@@ -32,6 +32,7 @@ import {
 } from '@/components/ui';
 import { formatUsd } from '@/lib/pricing';
 import { DollarIcon, BoxIcon, ChartIcon, EyeIcon, UsersIcon } from '@/components/icons';
+import { ProductEditLink } from '@/components/admin/ProductEditLink';
 
 // This is the first of several planned Analytics tabs — keep the union open
 // for the next ones (e.g. 'customers', 'marketing') so adding a tab later is
@@ -49,7 +50,7 @@ export default function AnalyticsAdminPage() {
   const [tab, setTab] = useState<Tab>('sales-products');
 
   return (
-    <RequireAdmin>
+    <RequireStaff>
       <div>
         <PageHeader title="Analytics" description="Sales performance, product movement, and top accounts." />
 
@@ -77,7 +78,7 @@ export default function AnalyticsAdminPage() {
         {tab === 'sales-products' && <SalesProductsTab />}
         {tab === 'visitors' && <VisitorsTab />}
       </div>
-    </RequireAdmin>
+    </RequireStaff>
   );
 }
 
@@ -182,9 +183,9 @@ function SalesProductsTab() {
                   {data.products.map((p) => (
                     <Tr key={p.productId}>
                       <Td className="font-medium text-slate-900">
-                        <Link href={`/admin/products/${p.productId}/edit`} className="hover:underline">
+                        <ProductEditLink productId={p.productId} className="hover:underline">
                           {p.name}
-                        </Link>
+                        </ProductEditLink>
                       </Td>
                       <Td className="text-slate-600">{p.categoryName || '—'}</Td>
                       <Td align="right" className="text-slate-600">{p.unitsSold}</Td>
@@ -259,9 +260,9 @@ function SalesProductsTab() {
                   {data.slowMovers.map((p) => (
                     <Tr key={p.productId}>
                       <Td className="font-medium text-slate-900">
-                        <Link href={`/admin/products/${p.productId}/edit`} className="hover:underline">
+                        <ProductEditLink productId={p.productId} className="hover:underline">
                           {p.name}
-                        </Link>
+                        </ProductEditLink>
                       </Td>
                       <Td className="text-slate-600">{p.categoryName || '—'}</Td>
                       <Td className="text-slate-500">{new Date(p.createdAt).toLocaleDateString()}</Td>

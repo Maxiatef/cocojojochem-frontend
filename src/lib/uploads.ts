@@ -40,6 +40,11 @@ async function upload(endpoint: string, file: File): Promise<string> {
 }
 
 export const uploadProductImage = (file: File) => upload('product-image', file);
+// Product paperwork: COA / SDS / TDS / spec sheets, plus scanned
+// certificates. Separate route from the image ones because it accepts PDFs
+// and Office files and allows a larger 15MB file (see the backend's
+// product-document handler, which carries its own multer rules).
+export const uploadProductDocument = (file: File) => upload('product-document', file);
 export const uploadVariantImage = (file: File) => upload('variant-image', file);
 export const uploadCategoryImage = (file: File) => upload('category-image', file);
 

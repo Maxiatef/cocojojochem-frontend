@@ -10,7 +10,8 @@ import { getCustomerToken } from '@/lib/customerAuth';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { useToast } from '@/components/ui';
 import { addToQuoteList } from '@/lib/quoteListStore';
-import { CheckCircleIcon, ImagePlaceholderIcon } from '@/components/icons';
+import { CheckCircleIcon } from '@/components/icons';
+import { ProductMediaGallery } from '@/components/storefront/ProductMediaGallery';
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const router = useRouter();
@@ -115,18 +116,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
   return (
     <>
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-      <div className="flex aspect-square items-center justify-center overflow-hidden bg-sand-100">
-        {variant?.imageUrl || product.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={variant?.imageUrl || product.imageUrl || ''}
-            alt={product.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <ImagePlaceholderIcon className="h-14 w-14 text-sand-400" />
-        )}
-      </div>
+      {/* Main image + thumbnail strip + document tiles. The strip is new:
+          this page used to render only the cover, so gallery images uploaded
+          in admin were never shown to customers. */}
+      <ProductMediaGallery product={product} variantImageUrl={variant?.imageUrl} />
 
       <div>
         {product.category && (

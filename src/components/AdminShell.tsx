@@ -31,13 +31,13 @@ const NAV: { href: string; label: string; icon: (props: { className?: string }) 
   { href: '/admin', label: 'Overview', icon: DashboardIcon },
   { href: '/admin/messages', label: 'Messages', icon: MailIcon },
   { href: '/admin/quote-requests', label: 'Quote Requests', icon: InboxIcon },
-  { href: '/admin/products', label: 'Products', icon: BottleIcon, roles: ['ADMIN'] },
-  { href: '/admin/categories', label: 'Categories', icon: GridIcon, roles: ['ADMIN'] },
-  { href: '/admin/functions', label: 'Functions', icon: TagIcon, roles: ['ADMIN'] },
+  { href: '/admin/products', label: 'Products', icon: BottleIcon },
+  { href: '/admin/categories', label: 'Categories', icon: GridIcon },
+  { href: '/admin/functions', label: 'Functions', icon: TagIcon },
   { href: '/admin/orders', label: 'Orders', icon: BoxIcon },
   { href: '/admin/companies', label: 'Companies', icon: BuildingIcon },
-  { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon, roles: ['ADMIN'] },
-  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon, roles: ['ADMIN'] },
+  { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon },
+  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon },
   { href: '/admin/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
   { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, roles: ['ADMIN'] },
   { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, roles: ['ADMIN'] },
@@ -298,9 +298,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Wrap ADMIN-only pages with this so a SALES user hitting the URL directly gets
-// bounced back to the dashboard instead of seeing the page flash before redirect.
-export function RequireAdmin({ children }: { children: React.ReactNode }) {
+// Client-side route gate. This is a UX guard only — it stops a page flashing
+// before redirect — and is NEVER the security boundary: every endpoint these
+// pages call is guarded server-side by RolesGuard, which is what actually
+// enforces access.
+function RoleGate({
+  children,
+  allow,
+  deniedMessage,
+}: {
+  children: React.ReactNode;
+  allow: AdminRole[];
+  deniedMessage: string;
+}) {
   const [allowed, setAllowed] = useState(false);
   const [denied, setDenied] = useState<'not-logged-in' | 'wrong-role' | null>(null);
 
@@ -311,18 +321,21 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
       return;
     }
     const payload = decodeToken(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!payload || !allow.includes(payload.role as AdminRole)) {
       setDenied('wrong-role');
       return;
     }
     setAllowed(true);
+    // `allow` is a literal array at every call site, so a deps entry would
+    // re-run this on every render; the role can't change without a reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (denied) {
     return (
       <AccessDenied
         reason={denied}
-        message={denied === 'wrong-role' ? 'This section is restricted to admin accounts.' : undefined}
+        message={denied === 'wrong-role' ? deniedMessage : undefined}
         backHref="/admin"
         backLabel="Back to dashboard"
       />
@@ -338,4 +351,42 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+// ADMIN only — settings, staff, SEO, analytics.
+export function RequireAdmin({ children }: { children: React.ReactNode }) {
+  return (
+    <RoleGate allow={['ADMIN']} deniedMessage="This section is restricted to admin accounts.">
+      {children}
+    </RoleGate>
+  );
+}
+
+// ADMIN + SALES — sections sales can view but not modify (catalog, coupons).
+// The read/write split is enforced server-side: the list endpoints allow both
+// roles, while create/edit/delete stay ADMIN-only, so a sales user reaching
+// one of these pages can browse it and nothing more.
+export function RequireStaff({ children }: { children: React.ReactNode }) {
+  return (
+    <RoleGate allow={['ADMIN', 'SALES']} deniedMessage="This section is restricted to staff accounts.">
+      {children}
+    </RoleGate>
+  );
+}
+
+// Current staff role from the access token, for hiding write controls a sales
+// user isn't allowed to use. Returns null until the token is read on mount
+// (and on the server), so treat null as "not admin" and render read-only.
+export function useAdminRole(): AdminRole | null {
+  const [role, setRole] = useState<AdminRole | null>(null);
+  useEffect(() => {
+    const token = getToken();
+    const payload = token ? decodeToken(token) : null;
+    setRole((payload?.role as AdminRole) || null);
+  }, []);
+  return role;
+}
+
+export function useIsAdmin(): boolean {
+  return useAdminRole() === 'ADMIN';
 }
