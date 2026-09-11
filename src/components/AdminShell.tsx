@@ -23,6 +23,7 @@ import {
   UsersIcon,
   SettingsIcon,
   GlobeIcon,
+  ClockIcon,
 } from '@/components/icons';
 
 type AdminRole = 'ADMIN' | 'SALES';
@@ -39,6 +40,7 @@ const NAV: { href: string; label: string; icon: (props: { className?: string }) 
   { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon },
   { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon },
   { href: '/admin/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, roles: ['ADMIN'] },
   { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, roles: ['ADMIN'] },
   { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, roles: ['ADMIN'] },
 ];

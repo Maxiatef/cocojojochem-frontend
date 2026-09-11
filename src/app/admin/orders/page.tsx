@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { RecordHistory } from '@/components/admin/RecordHistory';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { Order, OrderStatus, Paginated } from '@/lib/types';
 import {
@@ -318,6 +319,12 @@ function ViewOrderModal({ order, onClose }: { order: Order; onClose: () => void 
             <p className="whitespace-pre-line text-sm text-slate-700">{order.notes}</p>
           </div>
         )}
+
+        {/* Who changed this order, and what. ADMIN-only; renders nothing for a
+            SALES account, matching the API guard. */}
+        <div className="border-t border-slate-100 pt-5">
+          <RecordHistory entityName="Order" entityId={order.id} />
+        </div>
       </div>
     </Modal>
   );

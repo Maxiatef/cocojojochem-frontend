@@ -361,6 +361,22 @@ export function ChevronDownIcon({ className = base }: IconProps) {
   );
 }
 
+export function ChevronLeftIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 5.5L8.5 12l6.5 6.5" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5.5l6.5 6.5L9 18.5" />
+    </svg>
+  );
+}
+
 export function ReceiptIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>

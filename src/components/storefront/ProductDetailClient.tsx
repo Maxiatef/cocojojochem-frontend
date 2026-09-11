@@ -10,7 +10,7 @@ import { getCustomerToken } from '@/lib/customerAuth';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { useToast } from '@/components/ui';
 import { addToQuoteList } from '@/lib/quoteListStore';
-import { CheckCircleIcon } from '@/components/icons';
+import { CheckCircleIcon, FileIcon} from '@/components/icons';
 import { ProductMediaGallery } from '@/components/storefront/ProductMediaGallery';
 
 export function ProductDetailClient({ product }: { product: Product }) {
@@ -149,11 +149,38 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 {f.name}
               </span>
             ))}
-            {product.certifications?.map((c) => (
-              <span key={c.id} className="bg-olive-100 px-2.5 py-1 text-xs text-olive-800">
-                {c.name}
-              </span>
-            ))}
+            {product.certifications?.map((c) => {
+              // When a certificate PDF has been attached for this
+              // certification, the badge becomes its link — proof rather than
+              // a claim. Otherwise it stays a plain label.
+              const proof = (product.documents || []).find(
+                (d) => d.type === 'CERTIFICATE' && d.certificationId === c.id,
+              );
+
+              if (!proof) {
+                return (
+                  <span key={c.id} className="bg-olive-100 px-2.5 py-1 text-xs text-olive-800">
+                    {c.name}
+                  </span>
+                );
+              }
+
+              return (
+                <a
+                  key={c.id}
+                  href={proof.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`View the ${c.name} certificate (opens in a new tab)`}
+                  className="group inline-flex items-center gap-1.5 bg-olive-100 px-2.5 py-1 text-xs text-olive-800 transition hover:bg-olive-200"
+                >
+                  <FileIcon className="h-3 w-3" />
+                  <span className="underline decoration-olive-400 group-hover:decoration-olive-700">
+                    {c.name}
+                  </span>
+                </a>
+              );
+            })}
           </div>
         ) : null}
 

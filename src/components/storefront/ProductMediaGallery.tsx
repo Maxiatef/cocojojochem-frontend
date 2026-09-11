@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Product, ProductDocType, ProductDocumentRow } from '@/lib/types';
-import { FileIcon, ImagePlaceholderIcon } from '@/components/icons';
+import { ChevronLeftIcon, ChevronRightIcon, FileIcon, ImagePlaceholderIcon } from '@/components/icons';
 
 // Human labels for the document types. Kept here rather than reusing the
 // admin form's list because the customer-facing wording is spelled out —
@@ -13,6 +13,7 @@ const DOC_TYPE_LABEL: Record<ProductDocType, string> = {
   SDS: 'Safety Data Sheet',
   TDS: 'Technical Data Sheet',
   SPEC_SHEET: 'Spec Sheet',
+  CERTIFICATE: 'Certificate',
   OTHER: 'Document',
 };
 
@@ -22,8 +23,21 @@ const DOC_TYPE_BADGE: Record<ProductDocType, string> = {
   SDS: 'SDS',
   TDS: 'TDS',
   SPEC_SHEET: 'SPEC',
+  CERTIFICATE: 'CERT',
   OTHER: 'DOC',
 };
+
+// A certificate's most useful name is the certification it proves —
+// "USDA Organic" tells a formulator more than "Certificate" ever will.
+function documentTitle(doc: ProductDocumentRow): string {
+  if (doc.type === 'CERTIFICATE' && doc.certification?.name) return doc.certification.name;
+  return doc.label || DOC_TYPE_LABEL[doc.type];
+}
+
+function documentKind(doc: ProductDocumentRow): string {
+  if (doc.type === 'CERTIFICATE') return 'Certificate';
+  return DOC_TYPE_LABEL[doc.type];
+}
 
 function fileExtension(url: string): string {
   const clean = url.split('?')[0];
@@ -76,14 +90,49 @@ export function ProductMediaGallery({
   // A single image with no paperwork is just a photo — no strip needed.
   const showStrip = images.length > 1 || documents.length > 0;
 
+  // Arrows are hidden while a variant photo is taking over the main pane:
+  // stepping through the gallery wouldn't change what's displayed, and a
+  // control that visibly does nothing is worse than no control.
+  const showArrows = images.length > 1 && !variantImageUrl;
+
+  // Wraps in both directions, so the gallery never dead-ends on an arrow.
+  function step(delta: number) {
+    setActiveIndex((i) => (i + delta + images.length) % images.length);
+  }
+
   return (
     <div>
-      <div className="flex aspect-square items-center justify-center overflow-hidden bg-sand-100">
+      <div className="group relative flex aspect-square items-center justify-center overflow-hidden bg-sand-100">
         {mainImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
         ) : (
           <ImagePlaceholderIcon className="h-14 w-14 text-sand-400" />
+        )}
+
+        {showArrows && (
+          <>
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              aria-label="Previous image"
+              className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => step(1)}
+              aria-label="Next image"
+              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+            >
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+
+            <span className="absolute bottom-2 right-2 rounded-full bg-white/85 px-2 py-0.5 text-xs text-ink-soft">
+              {activeIndex + 1} / {images.length}
+            </span>
+          </>
         )}
       </div>
 
@@ -114,7 +163,7 @@ export function ProductMediaGallery({
               href={doc.url}
               target="_blank"
               rel="noopener noreferrer"
-              title={`${DOC_TYPE_LABEL[doc.type]}${doc.label ? ` — ${doc.label}` : ''} (opens in a new tab)`}
+              title={`${documentTitle(doc)} — ${documentKind(doc)} (opens in a new tab)`}
               className="flex aspect-square flex-col items-center justify-center gap-1 border border-sand-300 bg-white px-1 text-center transition hover:border-olive-400 hover:bg-sand-50"
             >
               <FileIcon className="h-5 w-5 text-olive-600" />
@@ -143,10 +192,10 @@ export function ProductMediaGallery({
                 >
                   <FileIcon className="h-4 w-4 shrink-0 text-olive-600" />
                   <span className="underline decoration-sand-400 group-hover:decoration-olive-600">
-                    {doc.label || DOC_TYPE_LABEL[doc.type]}
+                    {documentTitle(doc)}
                   </span>
                   <span className="text-xs text-ink-soft/70">
-                    {DOC_TYPE_LABEL[doc.type]} &middot; {fileExtension(doc.url)}
+                    {documentKind(doc)} &middot; {fileExtension(doc.url)}
                   </span>
                 </a>
               </li>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -11,10 +12,8 @@ import {
   Badge,
   Button,
   Card,
-  ConfirmDialog,
   EmptyState,
   ErrorState,
-  IconButton,
   LoadingState,
   PageHeader,
   Pagination,
@@ -27,7 +26,7 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, EyeIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { ImagePlaceholderIcon, PlusIcon } from '@/components/icons';
 import { StatusCard } from '@/components/admin/StatusCard';
 import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
 import { ProductEditLink } from '@/components/admin/ProductEditLink';
@@ -92,9 +91,9 @@ function ProductsPageContent() {
   const [stockStatus, setStockStatus] = useState('');
   const [lowStock, setLowStock] = useState(false);
   const [sort, setSort] = useState<ProductAdminSort>('name_asc');
-  const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data: stats } = useQuery({
     queryKey: ['admin-products-stats'],
@@ -173,16 +172,6 @@ function ProductsPageContent() {
   }
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/wholesale/products/${id}`),
-    onSuccess: () => {
-      invalidate();
-      invalidateStats();
-      setPendingDelete(null);
-    },
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
 
   const togglePublishedMutation = useMutation({
     mutationFn: ({ id, isPublished }: { id: number; isPublished: boolean }) =>
@@ -359,7 +348,6 @@ function ProductsPageContent() {
               <Th {...sortHeaderProps('price')}>Price range</Th>
               <Th {...sortHeaderProps('stock')}>Stock</Th>
               <Th {...sortHeaderProps('status')}>Status</Th>
-              <Th align="right">Actions</Th>
             </TableHead>
             <tbody>
               {data.data.map((p) => {
@@ -370,7 +358,15 @@ function ProductsPageContent() {
                   togglePublishedMutation.isPending && togglePublishedMutation.variables?.id === p.id;
                 const thumbUrl = p.imageUrl || p.variants.find((v) => v.imageUrl)?.imageUrl || null;
                 return (
-                  <Tr key={p.id}>
+                  // The row IS the link now — there is no separate read-only
+                  // product page any more, so opening a product means opening
+                  // its editor. Only admins can go there (the editor is
+                  // RequireAdmin), so a sales user's rows stay inert rather
+                  // than leading to an access-denied screen.
+                  <Tr
+                    key={p.id}
+                    onClick={isAdmin ? () => router.push(`/admin/products/${p.id}/edit`) : undefined}
+                  >
                     <Td>
                       <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
                         {thumbUrl ? (
@@ -400,9 +396,12 @@ function ProductsPageContent() {
                       {/* Toggling publish state is a write — sales sees the
                           same badge as a static label instead. */}
                       <button
-                        onClick={() =>
-                          togglePublishedMutation.mutate({ id: p.id, isPublished: !p.isPublished })
-                        }
+                        onClick={(e) => {
+                          // Without this the row's navigation fires too and the
+                          // admin is yanked into the editor mid-toggle.
+                          e.stopPropagation();
+                          togglePublishedMutation.mutate({ id: p.id, isPublished: !p.isPublished });
+                        }}
                         disabled={toggling || !isAdmin}
                         title={isAdmin ? 'Click to toggle' : undefined}
                         className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium transition ${
@@ -415,28 +414,6 @@ function ProductsPageContent() {
                       >
                         {p.isPublished ? 'Published' : 'Draft'}
                       </button>
-                    </Td>
-                    <Td align="right">
-                      <div className="flex justify-end gap-1.5">
-                        {/* View is read-only, so both roles get it — it's how
-                            sales looks up pricing/stock/CAS for a quote. */}
-                        <Link href={`/admin/products/${p.id}`}>
-                          <IconButton icon={EyeIcon} label="View" />
-                        </Link>
-                        {isAdmin && (
-                          <>
-                            <ProductEditLink productId={p.id}>
-                              <IconButton icon={EditIcon} label="Edit" />
-                            </ProductEditLink>
-                            <IconButton
-                              icon={TrashIcon}
-                              label="Delete"
-                              variant="danger"
-                              onClick={() => setPendingDelete(p)}
-                            />
-                          </>
-                        )}
-                      </div>
                     </Td>
                   </Tr>
                 );
@@ -454,15 +431,6 @@ function ProductsPageContent() {
         </Card>
       )}
 
-      <ConfirmDialog
-        open={!!pendingDelete}
-        title="Delete product"
-        message={`Delete "${pendingDelete?.name}"? This also removes all its variants. This cannot be undone.`}
-        confirmLabel="Delete"
-        loading={deleteMutation.isPending}
-        onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
-        onCancel={() => setPendingDelete(null)}
-      />
         </>
       )}
     </div>

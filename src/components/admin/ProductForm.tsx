@@ -1,10 +1,11 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { SeoScorePanel } from '@/components/admin/SeoScorePanel';
 import {
   Category,
   Certification,
@@ -26,6 +27,9 @@ import {
 import { FileIcon, ImagePlaceholderIcon, PlusIcon, StarIcon, TrashIcon } from '@/components/icons';
 
 interface SpecFormRow {
+  // Round-tripped so the server patches this existing row in place instead of
+  // recreating it. Undefined on a row the admin just added.
+  id?: number;
   key: string;
   value: string;
 }
@@ -33,6 +37,9 @@ interface SpecFormRow {
 const EMPTY_SPEC: SpecFormRow = { key: '', value: '' };
 
 interface VariantFormRow {
+  // Round-tripped so the server patches this existing row in place instead of
+  // recreating it. Undefined on a row the admin just added.
+  id?: number;
   sku: string;
   label: string;
   price: string;
@@ -68,6 +75,7 @@ const EMPTY_VARIANT: VariantFormRow = {
 
 function toVariantRow(v: Product['variants'][number]): VariantFormRow {
   return {
+    id: v.id,
     sku: v.sku,
     label: v.label,
     price: v.price,
@@ -87,17 +95,24 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
 
 
 export interface ProductDocumentDraft {
+  id?: number;
   url: string;
   type: ProductDocType;
   label: string;
+  /** Only meaningful when type is CERTIFICATE. */
+  certificationId?: number | null;
 }
+
+// The select carries one of these as its value. Certifications are encoded
+// with a prefix so a single dropdown can offer both document kinds and the
+// certification catalogue without two controls.
+const CERT_VALUE_PREFIX = 'cert:';
 
 const DOC_TYPE_OPTIONS: [ProductDocType, string][] = [
   ['COA', 'COA'],
   ['SDS', 'SDS'],
   ['TDS', 'TDS'],
   ['SPEC_SHEET', 'Spec Sheet'],
-  ['OTHER', 'Other'],
 ];
 
 // Best-effort type from the filename, so the common case needs no clicks.
@@ -111,7 +126,18 @@ function guessDocType(filename: string): ProductDocType {
   return 'OTHER';
 }
 
-export function ProductForm({ product }: { product?: Product }) {
+export function ProductForm({
+  product,
+  headerActions,
+}: {
+  product?: Product;
+  /**
+   * Rendered in the sticky top bar next to Save. The editor doubles as the
+   * product's detail view now, so the page passes its Delete control in here
+   * rather than owning a second toolbar of its own.
+   */
+  headerActions?: React.ReactNode;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -140,7 +166,7 @@ export function ProductForm({ product }: { product?: Product }) {
   const [brand, setBrand] = useState(product?.brand || '');
   const [description, setDescription] = useState(product?.description || '');
   const [specs, setSpecs] = useState<SpecFormRow[]>(
-    product?.specs?.length ? product.specs.map((s) => ({ key: s.key, value: s.value })) : [],
+    product?.specs?.length ? product.specs.map((sp) => ({ id: sp.id, key: sp.key, value: sp.value })) : [],
   );
   const [slugEditing, setSlugEditing] = useState(!isEdit);
 
@@ -153,7 +179,13 @@ export function ProductForm({ product }: { product?: Product }) {
   const [socialImageUrl, setSocialImageUrl] = useState(product?.seo?.socialImageUrl || '');
   const [tags, setTags] = useState<string[]>(product?.seo?.tags || []);
   const [tagInput, setTagInput] = useState('');
-  const [seoOpen, setSeoOpen] = useState(false);
+  // Open by default: the score and its fix list are the point of the panel,
+  // and they do nothing behind a collapsed header.
+  const [seoOpen, setSeoOpen] = useState(true);
+  // Open by default on a NEW product (functions are part of setting one up)
+  // and closed when editing, where the list is usually already right and
+  // just takes up space.
+  const [functionsOpen, setFunctionsOpen] = useState(!product);
 
   const [variants, setVariants] = useState<VariantFormRow[]>(
     product?.variants?.length ? product.variants.map(toVariantRow) : [EMPTY_VARIANT],
@@ -167,9 +199,51 @@ export function ProductForm({ product }: { product?: Product }) {
     if (sorted.length > 0) return sorted;
     return product?.imageUrl ? [product.imageUrl] : [];
   });
+  // url -> existing ProductImage id, for the submit mapping above.
+  // What the live SEO panel scores. Built from current form state rather
+  // than the saved product, so feedback tracks what is on screen.
+  const seoDraft = useMemo(
+    () => ({
+      productId: product?.id,
+      name,
+      slug,
+      shortDescription: shortDescription || undefined,
+      chemicalDescriptions: chemicalDescriptions || undefined,
+      inciName: inciName || undefined,
+      casNumber: casNumber || undefined,
+      focusKeyphrase: focusKeyphrase || undefined,
+      seoTitle: seoTitle || undefined,
+      metaDescription: metaDescription || undefined,
+      imageCount: gallery.length,
+      // The gallery uploader carries no alt-text field yet, so alt text is
+      // reported as absent rather than guessed — the check tells the admin to
+      // add it, which is accurate until that field exists.
+      imagesWithAlt: 0,
+    }),
+    [
+      product?.id,
+      name,
+      slug,
+      shortDescription,
+      chemicalDescriptions,
+      inciName,
+      casNumber,
+      focusKeyphrase,
+      seoTitle,
+      metaDescription,
+      gallery.length,
+    ],
+  );
+
+  const galleryIdByUrl = useMemo(
+    () => new Map((product?.gallery || []).map((g) => [g.url, g.id])),
+    [product?.gallery],
+  );
   const [documents, setDocuments] = useState<ProductDocumentDraft[]>(
     () =>
       (product?.documents || []).map((d) => ({
+        id: d.id,
+        certificationId: d.certificationId ?? null,
         url: d.url,
         type: d.type,
         label: d.label || '',
@@ -191,15 +265,65 @@ export function ProductForm({ product }: { product?: Product }) {
     queryFn: () => api.get<Certification[]>('/wholesale/certifications'),
   });
 
+  // Rows created by the save we just ran come back from the server with real
+  // database ids. Adopting them matters: the update endpoint reconciles child
+  // collections by id, so a row still carrying no id on the NEXT save would be
+  // deleted and re-inserted rather than patched — which is exactly what used to
+  // detach past order items from their variant.
+  //
+  // Matched on each collection's natural key rather than array position,
+  // because the relations come back in whatever order the database returns.
+  function adoptChildIds(saved: Product) {
+    const variantIdBySku = new Map((saved.variants || []).map((v) => [v.sku, v.id]));
+    setVariants((rows) =>
+      rows.map((r) => (r.id == null && variantIdBySku.has(r.sku) ? { ...r, id: variantIdBySku.get(r.sku) } : r)),
+    );
+
+    const specIdByKey = new Map((saved.specs || []).map((sp) => [sp.key, sp.id]));
+    setSpecs((rows) =>
+      rows.map((r) => (r.id == null && specIdByKey.has(r.key) ? { ...r, id: specIdByKey.get(r.key) } : r)),
+    );
+
+    const docIdByUrl = new Map((saved.documents || []).map((d) => [d.url, d.id]));
+    setDocuments((rows) =>
+      rows.map((r) => (r.id == null && docIdByUrl.has(r.url) ? { ...r, id: docIdByUrl.get(r.url) } : r)),
+    );
+  }
+
   const saveMutation = useMutation({
-    mutationFn: ({ body }: { body: Record<string, unknown>; redirect: boolean }) =>
-      isEdit ? api.patch(`/wholesale/products/${product!.id}`, body) : api.post('/wholesale/products', body),
-    onSuccess: (_data, variables) => {
+    mutationFn: ({ body }: { body: Record<string, unknown> }) =>
+      isEdit
+        ? api.patch<Product>(`/wholesale/products/${product!.id}`, body)
+        : api.post<Product>('/wholesale/products', body),
+    onSuccess: (saved) => {
+      // The admin screens key off 'admin-*'. Invalidating only 'products'
+      // refreshed the storefront queries and nothing else, so a save that had
+      // genuinely succeeded still returned you to a cached, pre-save list —
+      // which is why saving looked like it did nothing at all.
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success(isEdit ? 'Product updated successfully.' : 'Product created successfully.');
-      if (variables.redirect) {
-        router.push('/admin/products');
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-products-stats'] });
+      // The product's own History section should show the edit straight away.
+      queryClient.invalidateQueries({ queryKey: ['record-history'] });
+      queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+
+      if (isEdit) {
+        // Seed the detail cache with the server's own copy so the page around
+        // this form (title, History, gallery ids) reflects what was saved
+        // without a refetch round trip.
+        if (saved?.id) {
+          queryClient.setQueryData(['admin-product', String(saved.id)], saved);
+          adoptChildIds(saved);
+        }
+        toast.success('Product updated successfully.');
+        return;
       }
+
+      toast.success('Product created successfully.');
+      // A brand new product is the one case that must navigate: staying on a
+      // form with no product id would make the next save create a second copy.
+      if (saved?.id) router.push(`/admin/products/${saved.id}/edit`);
+      else router.push('/admin/products');
     },
     onError: (err) => {
       const message = getFriendlyErrorMessage(err);
@@ -259,7 +383,7 @@ export function ProductForm({ product }: { product?: Product }) {
   function persistTags(nextTags: string[]) {
     const body = buildBody({ tagsOverride: nextTags });
     if (!body) return;
-    saveMutation.mutate({ body, redirect: false });
+    saveMutation.mutate({ body });
   }
 
   function handleTagInputKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -307,7 +431,9 @@ export function ProductForm({ product }: { product?: Product }) {
       scheduledPublishAt: scheduledPublishAt ? new Date(scheduledPublishAt).toISOString() : undefined,
       brand: brand || undefined,
       description: description || undefined,
-      specs: specs.filter((s) => s.key.trim() && s.value.trim()).map((s) => ({ key: s.key, value: s.value })),
+      specs: specs
+        .filter((sp) => sp.key.trim() && sp.value.trim())
+        .map((sp) => ({ id: sp.id, key: sp.key, value: sp.value })),
       seo: {
         focusKeyphrase: focusKeyphrase || undefined,
         seoTitle: seoTitle || undefined,
@@ -318,6 +444,7 @@ export function ProductForm({ product }: { product?: Product }) {
         tags: opts?.tagsOverride ?? tags,
       },
       variants: variants.map((v) => ({
+        id: v.id,
         sku: v.sku,
         label: v.label,
         price: Number(v.price),
@@ -336,37 +463,48 @@ export function ProductForm({ product }: { product?: Product }) {
         weightLb: v.weightLb ? Number(v.weightLb) : undefined,
         isSoldByDrum: v.isSoldByDrum,
       })),
-      gallery: gallery.map((url, i) => ({ url, sortOrder: i })),
+      // The gallery is held as a plain string[] so the reorder UI stays
+      // simple, so the row ids are recovered here by URL. An uploaded file's
+      // URL is unique to its row, which identifies existing images just as
+      // precisely as threading an id through the whole component would — and
+      // sending them means reordering patches sortOrder in place rather than
+      // deleting and recreating every image on every save.
+      gallery: gallery.map((url, i) => ({ id: galleryIdByUrl.get(url), url, sortOrder: i })),
       // Always sent (even when empty) so removing the last document actually
       // clears it — products.service only touches documents when the key is
       // present, treating an omitted key as "leave alone".
       documents: documents.map((d) => ({
+        id: d.id,
         url: d.url,
         type: d.type,
         label: d.label.trim() || undefined,
+        certificationId: d.type === 'CERTIFICATE' ? (d.certificationId ?? undefined) : undefined,
       })),
     };
   }
 
+  // Every save path — the sticky header button, the sidebar Update button and
+  // the one at the foot of the form — stays on this page. Editing a product is
+  // iterative, and being thrown back to the list after each save both loses
+  // your place and hides whether the change actually took.
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const body = buildBody();
     if (!body) return;
-    saveMutation.mutate({ body, redirect: true });
+    saveMutation.mutate({ body });
   }
 
-  // SEO panel's standalone Save button — persists the whole product (SEO
-  // fields are part of the same record) but stays on the edit page instead
-  // of navigating back to the list, since you're likely still tuning fields.
+  // SEO panel's standalone Save button — persists the whole product, since the
+  // SEO fields are part of the same record rather than a separate one.
   function handleSaveSeo() {
     const body = buildBody();
     if (!body) return;
-    saveMutation.mutate({ body, redirect: false });
+    saveMutation.mutate({ body });
   }
 
-  // Pressing Enter in a plain text field would otherwise submit the form and
-  // bounce back to the product list — instead, treat it as a quick save that
-  // stays on the page. Textareas/buttons/selects are untouched (Enter in a
+  // Pressing Enter in a plain text field submits the form, which is a save —
+  // routed through the same handler deliberately, so there is one save path.
+  // Textareas/buttons/selects are untouched (Enter in a
   // textarea just adds a newline), and the tag input's own Enter-to-add-chip
   // behavior (data-tag-input) is deliberately left alone.
   function handleFormKeyDown(e: KeyboardEvent<HTMLFormElement>) {
@@ -449,6 +587,15 @@ export function ProductForm({ product }: { product?: Product }) {
       onKeyDown={handleFormKeyDown}
       className="grid grid-cols-1 gap-6 lg:grid-cols-3"
     >
+      {/* Sticky so Save stays reachable on a form this long — the bottom bar
+          is a scroll away once the variants section fills out. */}
+      <div className="sticky top-0 z-20 -mx-1 flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 bg-slate-50/95 px-1 py-3 backdrop-blur lg:col-span-3">
+        <Button type="submit" loading={saveMutation.isPending}>
+          {isEdit ? 'Save Changes' : 'Create Product'}
+        </Button>
+        {headerActions}
+      </div>
+
       <div className="space-y-6 lg:col-span-2">
         <Card className="space-y-4 p-6">
           <h2 className="text-sm font-semibold text-slate-900">Basic Information</h2>
@@ -506,7 +653,11 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
 
           <GalleryField images={gallery} onChange={setGallery} />
-          <DocumentsField documents={documents} onChange={setDocuments} />
+          <DocumentsField
+            documents={documents}
+            onChange={setDocuments}
+            certifications={certifications || []}
+          />
           <TextAreaField
             label="Short Description"
             rows={2}
@@ -529,23 +680,157 @@ export function ProductForm({ product }: { product?: Product }) {
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">Functions</h2>
-          <div className="flex flex-wrap gap-2">
-            {(functions || []).map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => toggleId(functionIds, f.id, setFunctionIds)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                  functionIds.includes(f.id)
-                    ? 'border-brand-600 bg-brand-50 text-brand-700'
-                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                {f.name}
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => setSeoOpen((v) => !v)}
+            className="flex w-full items-center justify-between text-sm font-semibold text-slate-900"
+          >
+            SEO
+            <span className="text-slate-400">{seoOpen ? '−' : '+'}</span>
+          </button>
+          {seoOpen && (
+            <div className="mt-4 space-y-5">
+              {/* --- Search Appearance --- */}
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Search Appearance
+                </p>
+                <div className="space-y-3">
+                  <TextField
+                    label="Focus Keyphrase"
+                    value={focusKeyphrase}
+                    onChange={(e) => setFocusKeyphrase(e.target.value)}
+                    placeholder="e.g. cetearyl alcohol wholesale"
+                  />
+                  <TextField label="SEO Title" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
+                  <TextAreaField
+                    label="Meta Description"
+                    rows={2}
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                  />
+
+                  {/* Yoast-style live search preview */}
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Google Preview
+                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-base text-blue-700 hover:underline">
+                          {seoTitle || name || 'Product title'}
+                        </p>
+                        <p className="text-sm text-green-700">
+                          yoursite.com/products/{slug || 'product-slug'}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {metaDescription || shortDescription || 'A meta description will appear here as you type.'}
+                        </p>
+                      </div>
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        {socialImageUrl || gallery[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={socialImageUrl || gallery[0]} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImagePlaceholderIcon className="h-8 w-8 text-slate-300" />
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[11px] text-slate-400">
+                      Uses the Social Image URL below, or falls back to this product&apos;s cover image.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* --- SEO Analysis --- */}
+              <div className="border-t border-slate-100 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  SEO Analysis
+                </p>
+                {/* Sits directly under the Google preview: you see how the
+                    result will look, then what is wrong with it. */}
+                <SeoScorePanel draft={seoDraft} onApplyKeyphrase={setFocusKeyphrase} />
+              </div>
+
+              {/* --- Social Sharing --- */}
+              <div className="border-t border-slate-100 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Social Sharing
+                </p>
+                <div className="space-y-3">
+                  <TextField
+                    label="Social Title"
+                    value={socialTitle}
+                    onChange={(e) => setSocialTitle(e.target.value)}
+                    placeholder="Falls back to SEO Title if left blank"
+                  />
+                  <TextAreaField
+                    label="Social Description"
+                    rows={2}
+                    value={socialDescription}
+                    onChange={(e) => setSocialDescription(e.target.value)}
+                  />
+                  <TextField
+                    label="Social Image URL"
+                    value={socialImageUrl}
+                    onChange={(e) => setSocialImageUrl(e.target.value)}
+                    placeholder="https://…"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  loading={saveMutation.isPending}
+                  onClick={handleSaveSeo}
+                >
+                  Save SEO
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <button
+            type="button"
+            onClick={() => setFunctionsOpen((v) => !v)}
+            className="flex w-full items-center justify-between text-sm font-semibold text-slate-900"
+          >
+            <span>
+              Functions
+              {/* The count stays visible while collapsed, so the section can be
+                  closed without losing track of what is selected. */}
+              {functionIds.length > 0 && (
+                <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                  {functionIds.length}
+                </span>
+              )}
+            </span>
+            <span className="text-slate-400">{functionsOpen ? '−' : '+'}</span>
+          </button>
+          {functionsOpen && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {(functions || []).map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => toggleId(functionIds, f.id, setFunctionIds)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    functionIds.includes(f.id)
+                      ? 'border-brand-600 bg-brand-50 text-brand-700'
+                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                  }`}
+                >
+                  {f.name}
+                </button>
+              ))}
+            </div>
+          )}
         </Card>
 
         <Card className="p-6">
@@ -693,111 +978,6 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <button
-            type="button"
-            onClick={() => setSeoOpen((v) => !v)}
-            className="flex w-full items-center justify-between text-sm font-semibold text-slate-900"
-          >
-            SEO
-            <span className="text-slate-400">{seoOpen ? '−' : '+'}</span>
-          </button>
-          {seoOpen && (
-            <div className="mt-4 space-y-5">
-              {/* --- Search Appearance --- */}
-              <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Search Appearance
-                </p>
-                <div className="space-y-3">
-                  <TextField
-                    label="Focus Keyphrase"
-                    value={focusKeyphrase}
-                    onChange={(e) => setFocusKeyphrase(e.target.value)}
-                    placeholder="e.g. cetearyl alcohol wholesale"
-                  />
-                  <TextField label="SEO Title" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
-                  <TextAreaField
-                    label="Meta Description"
-                    rows={2}
-                    value={metaDescription}
-                    onChange={(e) => setMetaDescription(e.target.value)}
-                  />
-
-                  {/* Yoast-style live search preview */}
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                      Google Preview
-                    </p>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-base text-blue-700 hover:underline">
-                          {seoTitle || name || 'Product title'}
-                        </p>
-                        <p className="text-sm text-green-700">
-                          yoursite.com/products/{slug || 'product-slug'}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {metaDescription || shortDescription || 'A meta description will appear here as you type.'}
-                        </p>
-                      </div>
-                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
-                        {socialImageUrl || gallery[0] ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={socialImageUrl || gallery[0]} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <ImagePlaceholderIcon className="h-8 w-8 text-slate-300" />
-                        )}
-                      </div>
-                    </div>
-                    <p className="mt-2 text-[11px] text-slate-400">
-                      Uses the Social Image URL below, or falls back to this product&apos;s cover image.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* --- Social Sharing --- */}
-              <div className="border-t border-slate-100 pt-4">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Social Sharing
-                </p>
-                <div className="space-y-3">
-                  <TextField
-                    label="Social Title"
-                    value={socialTitle}
-                    onChange={(e) => setSocialTitle(e.target.value)}
-                    placeholder="Falls back to SEO Title if left blank"
-                  />
-                  <TextAreaField
-                    label="Social Description"
-                    rows={2}
-                    value={socialDescription}
-                    onChange={(e) => setSocialDescription(e.target.value)}
-                  />
-                  <TextField
-                    label="Social Image URL"
-                    value={socialImageUrl}
-                    onChange={(e) => setSocialImageUrl(e.target.value)}
-                    placeholder="https://…"
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-slate-100 pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  loading={saveMutation.isPending}
-                  onClick={handleSaveSeo}
-                >
-                  Save SEO
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
 
         {/* Product tags — separate box, WooCommerce-style: an input + Add
             button (in addition to Enter/comma), tags shown as removable chips
@@ -1035,9 +1215,11 @@ export function ProductForm({ product }: { product?: Product }) {
 function DocumentsField({
   documents,
   onChange,
+  certifications,
 }: {
   documents: ProductDocumentDraft[];
   onChange: (docs: ProductDocumentDraft[]) => void;
+  certifications: Certification[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -1101,16 +1283,51 @@ function DocumentsField({
             >
               <FileIcon className="h-4 w-4 shrink-0 text-slate-400" />
 
+              {/* One dropdown for both: the kind of document, and the
+                  certification catalogue. Certifications are read live from
+                  the API, so adding one in admin makes it selectable here
+                  with no code change. */}
               <select
-                value={doc.type}
-                onChange={(e) => updateAt(i, { type: e.target.value as ProductDocType })}
+                value={
+                  doc.type === 'CERTIFICATE' && doc.certificationId != null
+                    ? `${CERT_VALUE_PREFIX}${doc.certificationId}`
+                    : doc.type
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(CERT_VALUE_PREFIX)) {
+                    updateAt(i, {
+                      type: 'CERTIFICATE',
+                      certificationId: Number(value.slice(CERT_VALUE_PREFIX.length)),
+                    });
+                  } else {
+                    // Clear the link when switching back to a document kind,
+                    // so a file can't stay attached to a certification it is
+                    // no longer labelled as.
+                    updateAt(i, { type: value as ProductDocType, certificationId: null });
+                  }
+                }}
                 className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
               >
-                {DOC_TYPE_OPTIONS.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+                <optgroup label="Document">
+                  {DOC_TYPE_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </optgroup>
+                {certifications.length > 0 && (
+                  <optgroup label="Certification">
+                    {certifications.map((c) => (
+                      <option key={c.id} value={`${CERT_VALUE_PREFIX}${c.id}`}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="&nbsp;">
+                  <option value="OTHER">Other</option>
+                </optgroup>
               </select>
 
               <input

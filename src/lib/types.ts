@@ -110,13 +110,17 @@ export interface ProductGalleryImage {
 // Certificates and technical paperwork attached to a product. Stored in
 // product_documents rather than the gallery, because the product's cover
 // image is derived from gallery[0] and a PDF must never land there.
-export type ProductDocType = 'COA' | 'SDS' | 'TDS' | 'SPEC_SHEET' | 'OTHER';
+export type ProductDocType = 'COA' | 'SDS' | 'TDS' | 'SPEC_SHEET' | 'CERTIFICATE' | 'OTHER';
 
 export interface ProductDocumentRow {
   id: number;
   url: string;
   type: ProductDocType;
   label: string | null;
+  // Set only when type is CERTIFICATE — which of the product's certifications
+  // this file is the proof of.
+  certificationId?: number | null;
+  certification?: { id: number; name: string } | null;
 }
 
 export interface ServerCartItem {
@@ -653,4 +657,103 @@ export interface GuestOrderTracking {
     price: string;
   }[];
   tracking: TrackingInfo;
+}
+
+// ---------------------------------------------------------------- audit log
+
+export type AuditAction =
+  | 'CREATE'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'LOGIN'
+  | 'LOGIN_FAILED'
+  | 'LOGOUT'
+  | 'PASSWORD_CHANGE'
+  | 'SESSION_REVOKE';
+
+export type AuditActorType = 'ADMIN' | 'SALES' | 'SYSTEM';
+
+export interface AuditFieldChange {
+  field: string;
+  before: unknown;
+  after: unknown;
+}
+
+export interface AuditChildChange {
+  entity: string;
+  added: { id: string; label: string | null; values: Record<string, unknown> }[];
+  removed: { id: string; label: string | null; values: Record<string, unknown> }[];
+  modified: { id: string; label: string | null; changes: AuditFieldChange[] }[];
+}
+
+export interface AuditLogEntry {
+  id: string;
+  occurredAt: string;
+  requestId: string;
+  actorType: AuditActorType;
+  actorId: number | null;
+  actorEmail: string | null;
+  actorRole: string | null;
+  actorSource: string | null;
+  action: AuditAction;
+  // entityName + entityId is a polymorphic link to the record this describes.
+  // There is no foreign key, deliberately, so the entry outlives a deletion.
+  entityName: string;
+  entityId: string;
+  entityLabel: string | null;
+  summary: string;
+  changes: AuditFieldChange[];
+  childChanges: AuditChildChange[] | null;
+  truncated: boolean;
+  httpMethod: string | null;
+  route: string | null;
+  statusCode: number | null;
+  durationMs: number | null;
+  ip: string | null;
+  userAgent: string | null;
+}
+
+// Every list here is the DISTINCT set actually present in audit_logs, not a
+// hardcoded enum — the dropdowns can only offer values that match something.
+export interface AuditFilterOptions {
+  entityNames: string[];
+  // Every staff account (role != CUSTOMER), plus anyone already in the log
+  // who is no longer staff. `status` is 'GONE' for the latter.
+  actors: { id: number; email: string; role: string; status?: string }[];
+  roles: AuditActorType[];
+  actions: AuditAction[];
+}
+
+// ------------------------------------------------------------ product SEO
+
+export interface SeoCheck {
+  id: string;
+  status: 'good' | 'warning' | 'bad';
+  /** States the problem AND the fix. */
+  message: string;
+  group: 'keyphrase' | 'content' | 'metadata' | 'media';
+}
+
+export interface ProductSeoAnalysis {
+  score: number;
+  checks: SeoCheck[];
+  /** Derived from the product's own INCI/name — offered as a one-click fill. */
+  suggestedKeyphrase: string | null;
+  summary: { good: number; warning: number; bad: number };
+}
+
+/** What the editor sends for a live score — a draft, not a saved product. */
+export interface ProductSeoDraft {
+  productId?: number;
+  name: string;
+  slug: string;
+  shortDescription?: string;
+  chemicalDescriptions?: string;
+  inciName?: string;
+  casNumber?: string;
+  focusKeyphrase?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  imageCount?: number;
+  imagesWithAlt?: number;
 }

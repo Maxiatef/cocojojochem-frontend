@@ -140,6 +140,17 @@ const STATUS_STYLES: Record<string, string> = {
   HIGH: 'bg-orange-50 text-orange-700',
   MEDIUM: 'bg-amber-50 text-amber-700',
   LOW: 'bg-slate-100 text-slate-500',
+  // Audit log
+  CREATE: 'bg-green-50 text-green-700',
+  UPDATE: 'bg-amber-50 text-amber-700',
+  DELETE: 'bg-red-50 text-red-700',
+  LOGIN: 'bg-blue-50 text-blue-700',
+  LOGIN_FAILED: 'bg-red-50 text-red-700',
+  LOGOUT: 'bg-slate-100 text-slate-500',
+  PASSWORD_CHANGE: 'bg-purple-50 text-purple-700',
+  SESSION_REVOKE: 'bg-orange-50 text-orange-700',
+  SYSTEM: 'bg-slate-100 text-slate-500',
+  SALES: 'bg-blue-50 text-blue-700',
 };
 
 export function Badge({ status }: { status: string }) {
@@ -485,8 +496,38 @@ export function Td({
   );
 }
 
-export function Tr({ children }: { children: React.ReactNode }) {
-  return <tr className="border-b border-slate-100 last:border-0">{children}</tr>;
+export function Tr({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  /** Makes the whole row activate. Keyboard support comes with it. */
+  onClick?: () => void;
+}) {
+  if (!onClick) {
+    return <tr className="border-b border-slate-100 last:border-0">{children}</tr>;
+  }
+
+  // role="link" + tabIndex + Enter/Space keeps a clickable row reachable
+  // without a mouse; a row that only responds to click is invisible to
+  // keyboard and screen-reader users.
+  return (
+    <tr
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="link"
+      tabIndex={0}
+      className="cursor-pointer border-b border-slate-100 transition last:border-0 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+    >
+      {children}
+    </tr>
+  );
 }
 
 // --- Confirm dialog (replaces window.confirm with a styled modal) -----------

@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { RecordHistory } from '@/components/admin/RecordHistory';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireAdmin } from '@/components/AdminShell';
 import { Paginated, UserDetail, UserListItem, UserRole } from '@/lib/types';
@@ -536,6 +537,12 @@ function UserDetailModal({ userId, onClose }: { userId: number; onClose: () => v
               </div>
             </div>
           )}
+
+          {/* This account's own trail — role changes, password resets,
+              sign-ins and failed attempts. */}
+          <div className="border-t border-slate-100 pt-5">
+            <RecordHistory entityName="User" entityId={user.id} />
+          </div>
         </div>
       )}
     </Modal>
