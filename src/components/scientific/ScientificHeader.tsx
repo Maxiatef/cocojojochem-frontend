@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Container, SciButton } from '@/components/scientific/primitives';
@@ -78,6 +79,15 @@ function BadgeLink({
   );
 }
 
+/** The count beside a menu row — the badge overlay has no room to sit here. */
+function MenuCount({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sci-accent px-1.5 font-sci-body text-[11px] font-semibold text-sci-navy">
+      {children}
+    </span>
+  );
+}
+
 export function ScientificHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -91,7 +101,11 @@ export function ScientificHeader() {
           <p className="font-sci-body text-[10px] font-medium leading-4">
             Your ingredient partner. From concept to scale.
           </p>
-          <div className="ml-auto flex items-center gap-6 sm:gap-8">
+          {/* Hidden below `md`: the mobile design (Figma 25:464) gives this
+              bar a single line of text and nothing else, and these five items
+              wrapped onto three lines at 390px — a 72px bar before the
+              wordmark had been drawn. They move into the disclosure below. */}
+          <div className="ml-auto hidden items-center gap-6 md:flex md:gap-8">
             <Link href="/about" className="font-sci-body text-xs font-medium leading-5 hover:underline">
               About COCOJOJO
             </Link>
@@ -125,24 +139,40 @@ export function ScientificHeader() {
 
       {/* Brand, search, primary CTA */}
       <Container className="flex flex-wrap items-center justify-between gap-4 py-5">
-        <Link href="/" className="flex flex-col gap-1">
-          <span className="font-sci-heading text-[34px] font-extrabold leading-[42px] text-sci-navy">
-            COCOJOJO
-          </span>
-          <span className="font-sci-body text-[8px] font-medium leading-4 tracking-[2px] text-sci-blue">
-            CHEMICALS &amp; INGREDIENTS
-          </span>
+        {/* The supplied artwork already sets "COCOJOJO CHEMICAL", so the
+            separate tagline line the drawn wordmark carried is dropped — it
+            would restate the logo's own second line.
+
+            next/image rather than a plain <img>: the source is a 2MB 1983px
+            PNG, and this is on every page. Next serves it resized and in a
+            modern format instead. `priority` because it is above the fold on
+            every route, so it must not arrive after first paint. */}
+        <Link href="/" aria-label="COCOJOJO Chemical — home" className="flex items-center">
+          <Image
+            src="/brand/cocojojo-logo.png"
+            alt="COCOJOJO Chemical"
+            width={991}
+            height={396}
+            priority
+            sizes="(min-width: 768px) 160px, 128px"
+            className="h-[52px] w-auto md:h-16"
+          />
         </Link>
 
+        {/* The mobile design gives this its own row under the wordmark with a
+            short label (Figma 33:638). The desktop wording wraps to two lines
+            at 342px, which is what made the mobile header nearly 200px tall. */}
         <Link
           href="/products"
-          className="order-last w-full rounded-lg border border-sci-border bg-sci-pale p-4 font-sci-body text-sci-body text-sci-muted transition hover:border-sci-blue md:order-none md:w-[650px]"
+          className="order-last w-full rounded-lg border border-sci-border bg-sci-pale p-4 font-sci-body text-sci-label text-sci-muted transition hover:border-sci-blue md:order-none md:w-[650px] md:text-sci-body"
         >
-          Search products, ingredients or categories ↗
+          <span className="md:hidden">Find an ingredient →</span>
+          <span className="hidden md:inline">Search products, ingredients or categories ↗</span>
         </Link>
 
         <div className="flex items-center gap-3">
-          <SciButton href="/quote-request" variant="navy">
+          {/* The design's mobile brand row is wordmark + burger only. */}
+          <SciButton href="/quote-request" variant="navy" className="hidden md:inline-flex">
             Request a quote →
           </SciButton>
           <button
@@ -159,7 +189,9 @@ export function ScientificHeader() {
         </div>
       </Container>
 
-      {/* Primary navigation */}
+      {/* Primary navigation. Below `md` this is the disclosure the burger
+          opens, so it carries the utility links too — otherwise the account,
+          quote list and cart would be unreachable on a phone. */}
       <nav className={`border-t border-sci-border md:border-t-0 ${open ? 'block' : 'hidden md:block'}`}>
         <Container className="flex flex-col gap-4 py-3.5 md:flex-row md:items-center md:gap-9">
           {NAV.map((item) => {
@@ -180,6 +212,45 @@ export function ScientificHeader() {
               </Link>
             );
           })}
+
+          <div className="flex flex-col gap-4 border-t border-sci-border pt-4 md:hidden">
+            <Link
+              href={customerEmail ? '/account' : '/account/login'}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 font-sci-body text-sci-label font-medium text-sci-navy"
+            >
+              <UserCircleIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{customerEmail || 'Sign in'}</span>
+            </Link>
+
+            <Link
+              href="/quote-request"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 font-sci-body text-sci-label font-medium text-sci-navy"
+            >
+              <QuoteIcon className="h-4 w-4 shrink-0" />
+              Quote list
+              {quoteListCount > 0 && <MenuCount>{quoteListCount}</MenuCount>}
+            </Link>
+
+            <Link
+              href="/cart"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 font-sci-body text-sci-label font-medium text-sci-navy"
+            >
+              <CartIcon className="h-4 w-4 shrink-0" />
+              Cart
+              {itemCount > 0 && <MenuCount>{itemCount}</MenuCount>}
+            </Link>
+
+            <SciButton
+              href="/quote-request"
+              variant="navy"
+              className="mt-1 justify-center"
+            >
+              Request a quote →
+            </SciButton>
+          </div>
         </Container>
       </nav>
     </header>

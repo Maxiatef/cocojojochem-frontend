@@ -3,9 +3,30 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { serverFetch } from '@/lib/serverFetch';
 import { Category, Paginated, Product } from '@/lib/types';
-import { ProductFilterGrid } from '@/components/storefront/ProductFilterGrid';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
+import { IngredientRow } from '@/components/scientific/IngredientRow';
+import { ArrowLink, Container, Eyebrow, SciButton } from '@/components/scientific/primitives';
+
+/**
+ * A single ingredient category, rebuilt to the "Scientific edition" design
+ * (Figma rj57PsDgSsbo86iG4RC1SA, node 21:366 —
+ * "Oils, emollients & waxes / directory / desktop").
+ *
+ * The design is a flat A-Z directory: every record in the category on one
+ * page, no facets and no pagination. That replaces the filter sidebar this
+ * page used to carry, so the intro links across to /products?category=<slug>,
+ * where the same catalogue is available with search, price, function and
+ * stock filters — the filter engine is not duplicated here.
+ *
+ * Listing the whole category server-side is also what the page wanted anyway:
+ * the old version rendered its grid client-side and had to emit a second,
+ * hidden list of links purely so crawlers could see the products at all.
+ */
+
+// The directory shows the whole category on one page. This cap exists only so
+// a runaway category can't produce an unbounded response.
+const MAX_RECORDS = 300;
 
 function categoryKeywords(name: string): string[] {
   const lower = name.toLowerCase();
@@ -53,17 +74,17 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
   const category = await serverFetch<Category>(`/wholesale/categories/${params.slug}`);
   if (!category) notFound();
 
-  // The visible grid is client-rendered by ProductFilterGrid (it owns the
-  // filter/sort URL state), so crawlers see no products in the initial HTML.
-  // This server-side fetch exists purely to emit an ItemList of what's in the
-  // category, giving search engines the collection they'd otherwise miss.
   const productsRes = await serverFetch<Paginated<Product>>(
-    `/wholesale/products?categoryId=${category.id}&page=1&limit=50`,
+    `/wholesale/products?categoryId=${category.id}&page=1&limit=${MAX_RECORDS}&sort=name_asc`,
   );
   const products = productsRes?.data || [];
+  const total = productsRes?.pagination.total ?? products.length;
+  // The API is asked for name_asc, but the directory's promise is "A-Z" — so
+  // it sorts locally too rather than trusting the collation to match.
+  const records = [...products].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+    <>
       <JsonLd
         data={[
           breadcrumbSchema([
@@ -71,51 +92,91 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
             { name: 'Categories', path: '/categories' },
             { name: category.name, path: `/categories/${category.slug}` },
           ]),
-          ...(products.length
+          ...(records.length
             ? [
                 itemListSchema({
                   name: `Wholesale ${category.name}`,
                   path: `/categories/${category.slug}`,
-                  items: products.map((p) => ({ name: p.name, path: `/products/${p.slug}` })),
+                  items: records.map((p) => ({ name: p.name, path: `/products/${p.slug}` })),
                 }),
               ]
             : []),
         ]}
       />
 
-      <nav aria-label="Breadcrumb" className="mb-3 text-xs text-ink-soft">
-        <Link href="/categories" className="hover:text-olive-700">
-          Categories
-        </Link>
-        {' / '}
-        <span>{category.name}</span>
-      </nav>
-      <h1 className="font-display text-4xl text-ink">Wholesale {category.name}</h1>
-      {category.description && (
-        <p className="mt-2 max-w-2xl text-sm text-ink-soft">{category.description}</p>
-      )}
+      {/* Category introduction — 21:380 */}
+      <section className="bg-sci-pale py-16">
+        <Container className="flex flex-col gap-6">
+          <nav aria-label="Breadcrumb">
+            <Link
+              href="/categories"
+              className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
+            >
+              ← All ingredient categories
+            </Link>
+          </nav>
 
-      <div className="mt-8">
-        <ProductFilterGrid fixedCategoryId={category.id} />
-      </div>
+          <Eyebrow>Ingredient directory</Eyebrow>
 
-      {/* Crawlable links to every product in this category. The filter grid
-          above is client-side, so without this the category page has no
-          outbound product links in its server HTML for a crawler to follow. */}
-      {products.length > 0 && (
-        <nav aria-label={`All ${category.name} products`} className="mt-16 border-t border-sand-200 pt-8">
-          <h2 className="mb-4 text-sm font-semibold text-ink">All {category.name}</h2>
-          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-ink-soft">
-            {products.map((p) => (
-              <li key={p.id}>
-                <Link href={`/products/${p.slug}`} className="hover:text-olive-700 hover:underline">
-                  {p.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-    </div>
+          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
+            {category.name}
+          </h1>
+
+          <p className="font-sci-body text-sci-label font-medium text-sci-navy">
+            {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · A–Z
+          </p>
+
+          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
+            {category.description ||
+              `Every ${category.name.toLowerCase()} record we list, with pack sizes, wholesale pricing and live stock status. Certificates of Analysis and Safety Data Sheets are available on request — confirm grade, availability and documentation during quotation.`}
+          </p>
+
+          {/* The faceted view lives on /products; this page is the full index. */}
+          <ArrowLink href={`/products?category=${category.slug}`}>
+            Filter and sort this category
+          </ArrowLink>
+        </Container>
+      </section>
+
+      {/* Ingredient records — 21:387 */}
+      <section className="bg-white py-16">
+        <Container>
+          {records.length === 0 ? (
+            <p className="font-sci-body text-sci-body text-sci-muted">
+              No products are listed in this category yet.{' '}
+              <Link href="/quote-request" className="text-sci-blue hover:underline">
+                Send a quote request
+              </Link>{' '}
+              and we will confirm what we can source.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {records.map((p) => (
+                <li key={p.id}>
+                  <IngredientRow product={p} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Container>
+      </section>
+
+      {/* Contact / Request a quote — 21:1078 */}
+      <section className="bg-sci-pale py-16">
+        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-6">
+            <Eyebrow>Let’s move your next idea forward</Eyebrow>
+            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
+              The next great formula
+              <br />
+              starts with a conversation.
+            </p>
+          </div>
+          <SciButton href="/quote-request" className="shrink-0">
+            Request a quote →
+          </SciButton>
+        </Container>
+      </section>
+    </>
   );
 }

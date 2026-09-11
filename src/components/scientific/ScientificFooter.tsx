@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@/components/scientific/primitives';
 
@@ -29,7 +30,21 @@ export function ScientificFooter() {
       <Container className="flex flex-col gap-10 py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
           <div className="flex flex-col gap-6">
-            <p className="font-sci-heading text-[32px] font-extrabold leading-10">COCOJOJO</p>
+            <Link href="/" aria-label="COCOJOJO Chemical — home" className="w-fit">
+              {/* Rendered as a solid white silhouette: the artwork is dark
+                  navy, which on this near-black footer is all but invisible.
+                  `brightness-0` crushes every colour to black, `invert` flips
+                  that to white — transparency is untouched, so only the mark
+                  itself is recoloured. */}
+              <Image
+                src="/brand/cocojojo-logo.png"
+                alt="COCOJOJO Chemical"
+                width={991}
+                height={396}
+                sizes="180px"
+                className="h-12 w-auto brightness-0 invert"
+              />
+            </Link>
             <p className="font-sci-body text-sci-body">
               The right chemistry.
               <br />
