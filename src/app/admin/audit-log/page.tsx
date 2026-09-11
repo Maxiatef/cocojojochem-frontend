@@ -32,6 +32,7 @@ import {
   AuditChildChanges,
   AuditDiffTable,
   ChildChangeChips,
+  visibleChildChanges,
 } from '@/components/admin/AuditDiffTable';
 
 // Staff are grouped by role so a long list stays scannable, with anyone no
@@ -279,7 +280,7 @@ function AuditLog() {
                   </Td>
                   <Td className="text-slate-600">
                     {entry.summary}
-                    {entry.childChanges && entry.childChanges.length > 0 && (
+                    {entry.childChanges && visibleChildChanges(entry.childChanges).length > 0 && (
                       <span className="ml-2">
                         <ChildChangeChips childChanges={entry.childChanges} />
                       </span>
@@ -365,7 +366,7 @@ function AuditDetailModal({ id, onClose }: { id: string; onClose: () => void }) 
             <AuditDiffTable changes={entry.changes} />
           </div>
 
-          {entry.childChanges && entry.childChanges.length > 0 && (
+          {entry.childChanges && visibleChildChanges(entry.childChanges).length > 0 && (
             <div className="border-t border-slate-100 pt-5">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Related records

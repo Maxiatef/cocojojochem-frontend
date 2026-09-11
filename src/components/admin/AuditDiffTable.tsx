@@ -5,6 +5,42 @@ import { AuditChildChange, AuditFieldChange } from '@/lib/types';
 const REDACTED = '«redacted»';
 
 /**
+ * Fields written by the system on every save rather than by a person.
+ *
+ * `seoScore` / `seoCheckedAt` are stamped by refreshSeoScore() after each
+ * product write, so logging them turned "saved with no edits" into a change
+ * whose only content was a timestamp moving by a few seconds.
+ *
+ * The backend now skips them at capture (IGNORED_DIFF_FIELDS in
+ * audit-config.ts), but the log is append-only — entries written before that
+ * still contain them and cannot be edited out. So they are filtered here too,
+ * at render time, which is what cleans up existing history.
+ */
+const MACHINE_FIELDS = new Set(['seoScore', 'seoCheckedAt']);
+
+/** Drops machine-written fields from a diff. */
+export function visibleChanges(changes: AuditFieldChange[]): AuditFieldChange[] {
+  return changes.filter((c) => !MACHINE_FIELDS.has(c.field));
+}
+
+/**
+ * The same filter for child collections, cascading upward: a modified row
+ * whose only changes were machine-written disappears, and a child group left
+ * with nothing to report disappears with it — otherwise the UI would render an
+ * empty "Related records" heading over nothing.
+ */
+export function visibleChildChanges(childChanges: AuditChildChange[]): AuditChildChange[] {
+  return childChanges
+    .map((child) => ({
+      ...child,
+      modified: child.modified
+        .map((row) => ({ ...row, changes: visibleChanges(row.changes) }))
+        .filter((row) => row.changes.length > 0),
+    }))
+    .filter((child) => child.added.length + child.removed.length + child.modified.length > 0);
+}
+
+/**
  * Renders one value as it should read in a diff.
  *
  * Empty, null and undefined all collapse to a visible "empty" marker rather
@@ -61,7 +97,8 @@ function Value({ value, tone }: { value: unknown; tone: 'before' | 'after' }) {
  * that stayed the same — so every row here is something the actor actually did.
  */
 export function AuditDiffTable({ changes }: { changes: AuditFieldChange[] }) {
-  if (changes.length === 0) {
+  const rows = visibleChanges(changes);
+  if (rows.length === 0) {
     return <p className="text-sm text-slate-400">No field-level changes recorded.</p>;
   }
 
@@ -76,7 +113,7 @@ export function AuditDiffTable({ changes }: { changes: AuditFieldChange[] }) {
           </tr>
         </thead>
         <tbody>
-          {changes.map((c) => (
+          {rows.map((c) => (
             <tr key={c.field} className="border-b border-slate-100 align-top last:border-0">
               <td className="py-1.5 pr-3 font-medium text-slate-700">{humanizeField(c.field)}</td>
               <td className="py-1.5 pr-3">
@@ -146,7 +183,7 @@ function ValueList({ values }: { values: Record<string, unknown> }) {
 export function ChildChangeChips({ childChanges }: { childChanges: AuditChildChange[] }) {
   const chips: { key: string; text: string; className: string }[] = [];
 
-  for (const child of childChanges) {
+  for (const child of visibleChildChanges(childChanges)) {
     const noun = humanizeField(child.entity).toLowerCase();
     if (child.removed.length) {
       chips.push({
@@ -197,7 +234,7 @@ export function ChildChangeChips({ childChanges }: { childChanges: AuditChildCha
 export function AuditChildChanges({ childChanges }: { childChanges: AuditChildChange[] }) {
   return (
     <div className="space-y-4">
-      {childChanges.map((child) => (
+      {visibleChildChanges(childChanges).map((child) => (
         <div key={child.entity}>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             {humanizeField(child.entity)}

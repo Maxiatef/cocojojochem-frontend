@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { SeoScorePanel } from '@/components/admin/SeoScorePanel';
+import { YoastScorePanel } from '@/components/admin/YoastScorePanel';
 import {
   Category,
   Certification,
@@ -751,6 +752,13 @@ export function ProductForm({
                 {/* Sits directly under the Google preview: you see how the
                     result will look, then what is wrong with it. */}
                 <SeoScorePanel draft={seoDraft} onApplyKeyphrase={setFocusKeyphrase} />
+
+                {/* Second opinion from the real Yoast engine, run in the
+                    browser. Separated by a rule because the two scores are not
+                    measuring the same thing and should not be read as one. */}
+                <div className="mt-5 border-t border-slate-100 pt-4">
+                  <YoastScorePanel draft={seoDraft} />
+                </div>
               </div>
 
               {/* --- Social Sharing --- */}

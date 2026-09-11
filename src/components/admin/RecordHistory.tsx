@@ -4,13 +4,24 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { AuditLogEntry, Paginated } from '@/lib/types';
-import { Badge, ErrorState, LoadingState } from '@/components/ui';
+import { Badge, ErrorState, LoadingState, Pagination } from '@/components/ui';
 import { useIsAdmin } from '@/components/AdminShell';
 import {
   AuditChildChanges,
   AuditDiffTable,
   ChildChangeChips,
+  visibleChildChanges,
 } from '@/components/admin/AuditDiffTable';
+
+/**
+ * How many history entries are shown per page.
+ *
+ * Deliberately a named constant rather than a literal: a busy product can
+ * accumulate hundreds of entries, and this is the one number to change to tune
+ * the section's height against the rest of the detail page. Callers can still
+ * override it per-instance via the `pageSize` prop.
+ */
+export const HISTORY_PAGE_SIZE = 5;
 
 /**
  * One record's own audit trail, for embedding in a product / order / user
@@ -26,29 +37,48 @@ import {
 export function RecordHistory({
   entityName,
   entityId,
-  limit = 20,
+  pageSize = HISTORY_PAGE_SIZE,
 }: {
   entityName: string;
   entityId: number | string;
-  limit?: number;
+  pageSize?: number;
 }) {
   const isAdmin = useIsAdmin();
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
+  // Paged on the SERVER, not sliced in the browser: the whole point of the
+  // (entityName, entityId, occurredAt) index is that a record with hundreds of
+  // entries fetches ten of them, not all of them.
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['record-history', entityName, String(entityId), limit],
+    queryKey: ['record-history', entityName, String(entityId), page, pageSize],
     queryFn: () =>
       api.get<Paginated<AuditLogEntry>>(
         `/audit-logs?entityName=${encodeURIComponent(entityName)}&entityId=${encodeURIComponent(
           String(entityId),
-        )}&limit=${limit}`,
+        )}&page=${page}&limit=${pageSize}`,
       ),
     enabled: isAdmin,
+    // Keeps the current page on screen while the next one loads, so paging
+    // doesn't collapse the section to a spinner and jump the page around it.
+    placeholderData: (previous) => previous,
   });
 
   if (!isAdmin) return null;
 
   const entries = data?.data || [];
+  // totalPages is optional on the shared Paginated type, so it is derived from
+  // the counts the API always sends rather than assumed to be present.
+  const totalPages =
+    data?.pagination.totalPages ??
+    (data ? Math.max(1, Math.ceil(data.pagination.total / (data.pagination.limit || pageSize))) : 1);
+
+  function goToPage(next: number) {
+    setPage(next);
+    // An expanded entry belongs to the page being left; keeping it open would
+    // leave a detail panel open against an unrelated row.
+    setExpanded(null);
+  }
 
   return (
     <div>
@@ -87,7 +117,7 @@ export function RecordHistory({
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm text-slate-800">
                       {entry.summary}
-                      {entry.childChanges && entry.childChanges.length > 0 && (
+                      {entry.childChanges && visibleChildChanges(entry.childChanges).length > 0 && (
                         <span className="ml-2">
                           <ChildChangeChips childChanges={entry.childChanges} />
                         </span>
@@ -126,7 +156,7 @@ export function RecordHistory({
                       <AuditDiffTable changes={entry.changes} />
                     </section>
 
-                    {entry.childChanges && entry.childChanges.length > 0 && (
+                    {entry.childChanges && visibleChildChanges(entry.childChanges).length > 0 && (
                       <section>
                         <SectionLabel>Related records</SectionLabel>
                         <AuditChildChanges childChanges={entry.childChanges} />
@@ -160,6 +190,18 @@ export function RecordHistory({
             );
           })}
         </ol>
+      )}
+
+      {data && totalPages > 1 && (
+        <div className="mt-3">
+          <Pagination
+            page={data.pagination.page}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={data.pagination.total}
+            itemLabel="change"
+          />
+        </div>
       )}
     </div>
   );
