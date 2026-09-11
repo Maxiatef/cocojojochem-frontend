@@ -39,9 +39,13 @@ function isNavItemActive(pathname: string, href: string) {
  * An icon link carrying a count badge — the cart and the quote list differ
  * only in icon and destination.
  *
- * The badge is teal on navy rather than the design's accent-on-white, because
- * a count is information the eye should find without hunting; `aria-label`
- * carries the same number for anyone not seeing the badge at all.
+ * Lives in the navy utility bar next to the account, so it is drawn in white:
+ * on the white band below it the same icons read as faint grey marks and are
+ * easy to miss entirely.
+ *
+ * The label sits beside the icon from `sm` up rather than relying on the glyph
+ * alone — a cart is unambiguous, a quote list is not. Below `sm` the label is
+ * dropped for room, and `aria-label` carries the name and the count either way.
  */
 function BadgeLink({
   href,
@@ -59,14 +63,17 @@ function BadgeLink({
       href={href}
       title={label}
       aria-label={count > 0 ? `${label} (${count})` : label}
-      className="relative flex h-10 w-10 items-center justify-center rounded-md text-sci-navy transition hover:bg-sci-pale"
+      className="relative flex items-center gap-1.5 rounded-md px-2 py-1 font-sci-body text-xs font-medium leading-5 text-white transition hover:bg-white/10"
     >
-      {children}
-      {count > 0 && (
-        <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sci-accent px-1 font-sci-body text-[10px] font-semibold text-sci-navy">
-          {count}
-        </span>
-      )}
+      <span className="relative flex items-center">
+        {children}
+        {count > 0 && (
+          <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sci-accent px-1 font-sci-body text-[10px] font-semibold text-sci-navy">
+            {count}
+          </span>
+        )}
+      </span>
+      <span className="hidden sm:inline">{label}</span>
     </Link>
   );
 }
@@ -80,7 +87,7 @@ export function ScientificHeader() {
     <header className="bg-white">
       {/* Utility navigation */}
       <div className="bg-sci-navy text-white">
-        <Container className="flex flex-wrap items-center gap-x-8 gap-y-1 py-2">
+        <Container className="flex flex-wrap items-center gap-x-6 gap-y-1 py-1.5">
           <p className="font-sci-body text-[10px] font-medium leading-4">
             Your ingredient partner. From concept to scale.
           </p>
@@ -99,11 +106,19 @@ export function ScientificHeader() {
               href={customerEmail ? '/account' : '/account/login'}
               className="flex items-center gap-1.5 font-sci-body text-xs font-medium leading-5 hover:underline"
             >
-              <UserCircleIcon className="h-3.5 w-3.5" />
-              <span className="max-w-[160px] truncate">
+              <UserCircleIcon className="h-3.5 w-3.5 shrink-0" />
+              <span className="max-w-[180px] truncate">
                 {customerEmail ? customerEmail : 'Sign in'}
               </span>
             </Link>
+
+            <BadgeLink href="/quote-request" label="Quote list" count={quoteListCount}>
+              <QuoteIcon className="h-4 w-4" />
+            </BadgeLink>
+
+            <BadgeLink href="/cart" label="Cart" count={itemCount}>
+              <CartIcon className="h-4 w-4" />
+            </BadgeLink>
           </div>
         </Container>
       </div>
@@ -126,16 +141,8 @@ export function ScientificHeader() {
           Search products, ingredients or categories ↗
         </Link>
 
-        <div className="flex items-center gap-1 sm:gap-2">
-          <BadgeLink href="/quote-request" label="Quote list" count={quoteListCount}>
-            <QuoteIcon className="h-5 w-5" />
-          </BadgeLink>
-
-          <BadgeLink href="/cart" label="Cart" count={itemCount}>
-            <CartIcon className="h-5 w-5" />
-          </BadgeLink>
-
-          <SciButton href="/quote-request" variant="navy" className="ml-1 hidden sm:inline-flex">
+        <div className="flex items-center gap-3">
+          <SciButton href="/quote-request" variant="navy">
             Request a quote →
           </SciButton>
           <button
