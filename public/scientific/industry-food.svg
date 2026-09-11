@@ -1,0 +1,25 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="365" height="134" viewBox="0 0 365 134" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Scientific application illustration" clip-path="url(#clip0_0_53)">
+<path id="Vector" d="M356 0H9C4.02944 0 0 4.02944 0 9V125C0 129.971 4.02944 134 9 134H356C360.971 134 365 129.971 365 125V9C365 4.02944 360.971 0 356 0Z" fill="#EFF7FA"/>
+<path id="Vector_2" d="M270 145C315.84 145 353 107.84 353 62C353 16.1604 315.84 -21 270 -21C224.16 -21 187 16.1604 187 62C187 107.84 224.16 145 270 145Z" fill="#E1F3F5"/>
+<path id="Vector_3" d="M142 104C139 53 177 31 222 30C220 74 187 107 142 104Z" fill="#B6E7DF" stroke="#147887" stroke-width="2"/>
+<path id="Vector_4" d="M146 102L208 44M172 79L169 53M188 63L210 65" stroke="#147887" stroke-width="2"/>
+<path id="Vector_5" d="M252 115C264.703 115 275 104.703 275 92C275 79.2975 264.703 69 252 69C239.297 69 229 79.2975 229 92C229 104.703 239.297 115 252 115Z" fill="url(#paint0_radial_0_53)"/>
+<path id="Vector_6" d="M113 63C118.523 63 123 58.5228 123 53C123 47.4772 118.523 43 113 43C107.477 43 103 47.4772 103 53C103 58.5228 107.477 63 113 63Z" fill="url(#paint1_radial_0_53)"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_53" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(242.8 78.2) scale(39.1)">
+<stop stop-color="white"/>
+<stop offset="0.25" stop-color="#98E3E6"/>
+<stop offset="1" stop-color="#2776AF"/>
+</radialGradient>
+<radialGradient id="paint1_radial_0_53" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(109 47) scale(17)">
+<stop stop-color="white"/>
+<stop offset="0.25" stop-color="#98E3E6"/>
+<stop offset="1" stop-color="#2776AF"/>
+</radialGradient>
+<clipPath id="clip0_0_53">
+<rect width="365" height="134" fill="white"/>
+</clipPath>
+</defs>
+</svg>
