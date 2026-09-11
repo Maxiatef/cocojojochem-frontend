@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireAdmin } from '@/components/AdminShell';
+import { PageSeoDetail } from '@/components/admin/PageSeoDetail';
 import { SeoAnalyzeResult, SeoIssue, SeoMetric, SeoOverview } from '@/lib/types';
 import {
   Badge,
@@ -249,6 +250,36 @@ import { AlertTriangleIcon, ChartIcon, CheckCircleIcon, ClockIcon, GlobeIcon } f
  * }
  * ------------------------------------------------------------------------- */
 
+/** Row disclosure arrow. Rotates rather than swapping glyphs, so it animates. */
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      aria-hidden
+      className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${
+        open ? 'rotate-90' : ''
+      }`}
+    >
+      <path d="M7 5l6 5-6 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ScorePill({ score }: { score: number | null }) {
+  if (score === null || score === undefined) {
+    return <span className="text-xs text-slate-300">—</span>;
+  }
+  return (
+    <span
+      className={`inline-block min-w-[2.75rem] rounded-full px-2.5 py-1 text-xs font-medium tabular-nums ${scorePillClass(
+        score,
+      )}`}
+    >
+      {score}
+    </span>
+  );
+}
+
 export default function SeoAdminPage() {
   return (
     <RequireAdmin>
@@ -277,6 +308,7 @@ function fmtDateTime(d: string | null) {
 function SiteAnalysisTab() {
   const queryClient = useQueryClient();
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [expandedMetricId, setExpandedMetricId] = useState<number | null>(null);
 
   const overviewQuery = useQuery({
     queryKey: ['seo-analyzer-overview'],
@@ -365,44 +397,77 @@ function SiteAnalysisTab() {
           <EmptyState message="No pages analyzed yet — click Analyze Site to run a crawl." />
         )}
         {!metricsQuery.isLoading && metrics.length > 0 && (
-          <Table minWidth={780}>
+          <Table minWidth={820}>
             <TableHead>
               <Th>Path</Th>
               <Th>Title</Th>
-              <Th>Meta Description</Th>
-              <Th align="right">Word Count</Th>
-              <Th align="right">SEO Score</Th>
-              <Th>Last Analyzed</Th>
+              <Th>Meta</Th>
+              <Th align="right">Words</Th>
+              <Th align="right">SEO</Th>
+              <Th align="right">Readability</Th>
+              <Th align="right">To fix</Th>
             </TableHead>
             <tbody>
-              {metrics.map((m) => (
-                <Tr key={m.id}>
-                  <Td className="font-medium text-slate-900">{m.path}</Td>
-                  <Td>
-                    {m.title ? (
-                      <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <span className="text-slate-300">—</span>
+              {metrics.map((m) => {
+                const isOpen = expandedMetricId === m.id;
+                const toFix = m.seoProblems + m.readabilityProblems;
+                const hasReport = !!m.yoastChecks?.length;
+                return (
+                  // Keyed Fragment, not the shorthand: each row contributes TWO
+                  // sibling <tr>s and React needs the key on the element it is
+                  // actually iterating over.
+                  <Fragment key={m.id}>
+                    <Tr onClick={() => setExpandedMetricId(isOpen ? null : m.id)}>
+                      <Td className="font-medium text-slate-900">
+                        <span className="inline-flex items-center gap-2">
+                          <ChevronIcon open={isOpen} />
+                          {m.path}
+                        </span>
+                      </Td>
+                      <Td>
+                        {m.title ? (
+                          <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </Td>
+                      <Td>
+                        {m.metaDescription ? (
+                          <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </Td>
+                      <Td align="right" className="tabular-nums text-slate-600">
+                        {m.wordCount ?? '—'}
+                      </Td>
+                      <Td align="right">
+                        <ScorePill score={m.yoastSeoScore} />
+                      </Td>
+                      <Td align="right">
+                        <ScorePill score={m.readabilityScore} />
+                      </Td>
+                      <Td align="right">
+                        {!hasReport ? (
+                          <span className="text-xs text-slate-300">—</span>
+                        ) : toFix === 0 ? (
+                          <span className="text-xs font-medium text-green-700">Clean</span>
+                        ) : (
+                          <span className="text-xs font-medium text-red-600">{toFix}</span>
+                        )}
+                      </Td>
+                    </Tr>
+
+                    {isOpen && (
+                      <tr className="border-b border-slate-100 last:border-0">
+                        <td colSpan={7} className="bg-slate-50/70 px-5 py-4">
+                          <PageSeoDetail metric={m} />
+                        </td>
+                      </tr>
                     )}
-                  </Td>
-                  <Td>
-                    {m.metaDescription ? (
-                      <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </Td>
-                  <Td align="right" className="text-slate-600">
-                    {m.wordCount ?? '—'}
-                  </Td>
-                  <Td align="right">
-                    <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${scorePillClass(m.seoScore)}`}>
-                      {m.seoScore ?? '—'}
-                    </span>
-                  </Td>
-                  <Td className="text-slate-500">{fmtDateTime(m.lastAnalyzed)}</Td>
-                </Tr>
-              ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </Table>
         )}

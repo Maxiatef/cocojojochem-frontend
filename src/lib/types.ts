@@ -476,6 +476,8 @@ export interface SeoPage {
   metaTitle: string | null;
   metaDescription: string | null;
   ogImageUrl: string | null;
+  /** Never rendered to visitors — it drives Yoast's keyphrase checks. */
+  focusKeyphrase: string | null;
 }
 
 // --- SEO analyzer ---------------------------------------------------------------
@@ -490,6 +492,16 @@ export type SeoIssueType =
 
 export type SeoIssueSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
+export interface PageYoastCheck {
+  id: string;
+  /** Yoast's raw 0-9 mark. */
+  score: number;
+  /** Yoast's own bands: <=4 bad, 5-7 ok, >7 good. */
+  rating: 'good' | 'ok' | 'bad' | 'feedback' | 'error' | '';
+  text: string;
+  group: 'seo' | 'readability';
+}
+
 export interface SeoMetric {
   id: number;
   path: string;
@@ -502,7 +514,15 @@ export interface SeoMetric {
   imageCount: number;
   imagesWithAltText: number;
   pageLoadTimeMs: number | null;
+  /** Our own catalogue rubric. Kept, but Yoast's score is the headline. */
   seoScore: number | null;
+  yoastSeoScore: number | null;
+  readabilityScore: number | null;
+  seoProblems: number;
+  readabilityProblems: number;
+  yoastChecks: PageYoastCheck[] | null;
+  /** Keyphrase assessments excluded — a crawled page has no keyphrase field. */
+  skippedChecks: number;
   lastAnalyzed: string | null;
   createdAt: string;
   updatedAt: string;
