@@ -1,18 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCart, clearCart } from '@/lib/cartStore';
-import { useQuoteList, clearQuoteList } from '@/lib/quoteListStore';
-import { customerApi } from '@/lib/customerApi';
-import {
-  clearCustomerToken,
-  decodeCustomerToken,
-  getCustomerRefreshToken,
-  getCustomerToken,
-} from '@/lib/customerAuth';
+import { useStorefrontSession } from '@/lib/useStorefrontSession';
 import { CartIcon, MenuIcon, CloseIcon, ReceiptIcon, LogoutIcon, LeafLogoIcon, QuoteIcon } from '@/components/icons';
 import { AccountMenu } from '@/components/storefront/AccountMenu';
 
@@ -33,84 +24,18 @@ function isNavItemActive(pathname: string, href: string) {
 export function StorefrontHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const queryClient = useQueryClient();
-  const { itemCount: localItemCount } = useCart();
-  const { count: localQuoteListCount } = useQuoteList();
   const [search, setSearch] = useState('');
-  const [customerEmail, setCustomerEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    function syncAuth() {
-      const token = getCustomerToken();
-      const payload = token ? decodeCustomerToken(token) : null;
-      setCustomerEmail(payload?.email || null);
-    }
-    syncAuth();
-    window.addEventListener('customer-auth-changed', syncAuth);
-    return () => window.removeEventListener('customer-auth-changed', syncAuth);
-  }, []);
-
-  // Logged-in customers have a server-persisted cart — reflect that count
-  // here instead of the guest localStorage cart, and refresh whenever any
-  // page adds/updates/removes a server cart item.
-  const { data: serverCartSummary } = useQuery({
-    queryKey: ['customer-cart-summary'],
-    queryFn: () => customerApi.get<{ itemCount: number }>('/cart/summary'),
-    enabled: !!customerEmail,
-  });
-
-  useEffect(() => {
-    if (!customerEmail) return;
-    function onServerCartChanged() {
-      queryClient.invalidateQueries({ queryKey: ['customer-cart-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-cart'] });
-    }
-    window.addEventListener('cocojojochem-server-cart-changed', onServerCartChanged);
-    return () => window.removeEventListener('cocojojochem-server-cart-changed', onServerCartChanged);
-  }, [customerEmail, queryClient]);
-
-  const itemCount = customerEmail ? serverCartSummary?.itemCount || 0 : localItemCount;
-
-  // Same pattern as the cart above — logged-in customers get a server-
-  // persisted quote list instead of the guest localStorage one.
-  const { data: serverQuoteListSummary } = useQuery({
-    queryKey: ['customer-quote-list-summary'],
-    queryFn: () => customerApi.get<{ count: number }>('/quote-list/summary'),
-    enabled: !!customerEmail,
-  });
-
-  useEffect(() => {
-    if (!customerEmail) return;
-    function onServerQuoteListChanged() {
-      queryClient.invalidateQueries({ queryKey: ['customer-quote-list-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-quote-list'] });
-    }
-    window.addEventListener('cocojojochem-server-quote-list-changed', onServerQuoteListChanged);
-    return () => window.removeEventListener('cocojojochem-server-quote-list-changed', onServerQuoteListChanged);
-  }, [customerEmail, queryClient]);
-
-  const quoteListCount = customerEmail ? serverQuoteListSummary?.count || 0 : localQuoteListCount;
+  // Cart/quote counts, the signed-in customer and sign-out all live in one
+  // hook, shared with the Scientific edition header — see useStorefrontSession.
+  const { customerEmail, itemCount, quoteListCount, signOut } = useStorefrontSession();
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     router.push(`/products${search ? `?search=${encodeURIComponent(search)}` : ''}`);
   }
 
-  function handleLogout() {
-    const refreshToken = getCustomerRefreshToken();
-    if (refreshToken) {
-      // Fire-and-forget — revoke the refresh token server-side, but don't
-      // block sign-out on the network round trip.
-      customerApi.post('/auth/logout', { refreshToken }).catch(() => {});
-    }
-    clearCustomerToken();
-    // Clear any leftover local (guest) cart/quote list so the next person on
-    // this device doesn't see this customer's items after they've signed out.
-    clearCart();
-    clearQuoteList();
-    router.push('/');
-  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-sand-200 bg-white">
@@ -250,7 +175,7 @@ export function StorefrontHeader() {
                   My Orders
                 </Link>
                 <button
-                  onClick={handleLogout}
+                  onClick={signOut}
                   className="flex items-center gap-2.5 rounded-md px-2 py-2 text-left text-sm font-medium text-ink-soft hover:bg-sand-50"
                 >
                   <LogoutIcon className="h-4 w-4 text-ink-soft" />

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Container, SciButton } from '@/components/scientific/primitives';
+import { useStorefrontSession } from '@/lib/useStorefrontSession';
+import { CartIcon, QuoteIcon, UserCircleIcon } from '@/components/icons';
 
 /**
  * COCOJOJO "Scientific edition" header — utility bar, wordmark + search, and
@@ -33,9 +35,46 @@ function isNavItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + '/');
 }
 
+/**
+ * An icon link carrying a count badge — the cart and the quote list differ
+ * only in icon and destination.
+ *
+ * The badge is teal on navy rather than the design's accent-on-white, because
+ * a count is information the eye should find without hunting; `aria-label`
+ * carries the same number for anyone not seeing the badge at all.
+ */
+function BadgeLink({
+  href,
+  label,
+  count,
+  children,
+}: {
+  href: string;
+  label: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      title={label}
+      aria-label={count > 0 ? `${label} (${count})` : label}
+      className="relative flex h-10 w-10 items-center justify-center rounded-md text-sci-navy transition hover:bg-sci-pale"
+    >
+      {children}
+      {count > 0 && (
+        <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sci-accent px-1 font-sci-body text-[10px] font-semibold text-sci-navy">
+          {count}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 export function ScientificHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { customerEmail, itemCount, quoteListCount } = useStorefrontSession();
 
   return (
     <header className="bg-white">
@@ -45,12 +84,25 @@ export function ScientificHeader() {
           <p className="font-sci-body text-[10px] font-medium leading-4">
             Your ingredient partner. From concept to scale.
           </p>
-          <div className="ml-auto flex items-center gap-8">
+          <div className="ml-auto flex items-center gap-6 sm:gap-8">
             <Link href="/about" className="font-sci-body text-xs font-medium leading-5 hover:underline">
               About COCOJOJO
             </Link>
             <Link href="/contact" className="font-sci-body text-xs font-medium leading-5 hover:underline">
               Contact us
+            </Link>
+            {/* Signed-out state is a plain link; signed-in shows the account
+                area. The old header's AccountMenu dropdown is styled in the
+                sand/olive palette, so it is not reused here — the account page
+                itself carries the same actions. */}
+            <Link
+              href={customerEmail ? '/account' : '/account/login'}
+              className="flex items-center gap-1.5 font-sci-body text-xs font-medium leading-5 hover:underline"
+            >
+              <UserCircleIcon className="h-3.5 w-3.5" />
+              <span className="max-w-[160px] truncate">
+                {customerEmail ? customerEmail : 'Sign in'}
+              </span>
             </Link>
           </div>
         </Container>
@@ -74,8 +126,16 @@ export function ScientificHeader() {
           Search products, ingredients or categories ↗
         </Link>
 
-        <div className="flex items-center gap-3">
-          <SciButton href="/quote-request" variant="navy">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <BadgeLink href="/quote-request" label="Quote list" count={quoteListCount}>
+            <QuoteIcon className="h-5 w-5" />
+          </BadgeLink>
+
+          <BadgeLink href="/cart" label="Cart" count={itemCount}>
+            <CartIcon className="h-5 w-5" />
+          </BadgeLink>
+
+          <SciButton href="/quote-request" variant="navy" className="ml-1 hidden sm:inline-flex">
             Request a quote →
           </SciButton>
           <button
