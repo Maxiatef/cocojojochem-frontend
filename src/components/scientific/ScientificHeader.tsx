@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Container, SciButton } from '@/components/scientific/primitives';
 import { useStorefrontSession } from '@/lib/useStorefrontSession';
-import { CartIcon, QuoteIcon, UserCircleIcon } from '@/components/icons';
+import { CartIcon, HeartIcon, QuoteIcon, UserCircleIcon } from '@/components/icons';
 import { CategoryMenu } from '@/components/scientific/CategoryMenu';
 
 /**
@@ -55,11 +55,13 @@ function BadgeLink({
   label,
   count,
   children,
+  labelClassName = 'hidden sm:inline',
 }: {
   href: string;
   label: string;
   count: number;
   children: React.ReactNode;
+  labelClassName?: string;
 }) {
   return (
     <Link
@@ -76,7 +78,7 @@ function BadgeLink({
           </span>
         )}
       </span>
-      <span className="hidden sm:inline">{label}</span>
+      <span className={labelClassName}>{label}</span>
     </Link>
   );
 }
@@ -93,7 +95,7 @@ function MenuCount({ children }: { children: React.ReactNode }) {
 export function ScientificHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { customerEmail, itemCount, quoteListCount } = useStorefrontSession();
+  const { customerEmail, itemCount, quoteListCount, wishlistCount } = useStorefrontSession();
 
   return (
     <header className="bg-white">
@@ -127,6 +129,15 @@ export function ScientificHeader() {
                 {customerEmail ? customerEmail : 'Sign in'}
               </span>
             </Link>
+
+            <BadgeLink
+              href="/account/wishlist"
+              label="Saved"
+              count={wishlistCount}
+              labelClassName="hidden lg:inline"
+            >
+              <HeartIcon className="h-4 w-4" />
+            </BadgeLink>
 
             <BadgeLink href="/quote-request" label="Quote list" count={quoteListCount}>
               <QuoteIcon className="h-4 w-4" />
@@ -247,6 +258,16 @@ export function ScientificHeader() {
             >
               <UserCircleIcon className="h-4 w-4 shrink-0" />
               <span className="truncate">{customerEmail || 'Sign in'}</span>
+            </Link>
+
+            <Link
+              href="/account/wishlist"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 font-sci-body text-sci-label font-medium text-sci-navy"
+            >
+              <HeartIcon className="h-4 w-4 shrink-0" />
+              Saved
+              {wishlistCount > 0 && <MenuCount>{wishlistCount}</MenuCount>}
             </Link>
 
             <Link

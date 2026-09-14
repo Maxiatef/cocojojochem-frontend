@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Product } from '@/lib/types';
 import { formatUsd, getDefaultVariant, getPriceRange } from '@/lib/pricing';
 import { ImagePlaceholderIcon } from '@/components/icons';
+import { WishlistButton } from '@/components/scientific/WishlistButton';
 
 /**
  * One product in the catalog grid, in the Scientific edition.
@@ -36,6 +37,10 @@ export function ProductTile({ product }: { product: Product }) {
             Sale
           </span>
         )}
+        {/* Top-right, opposite the Sale flag so the two never collide. The
+            button stops its own click from reaching the tile's link. */}
+        <WishlistButton productId={product.id} className="absolute right-3 top-3 z-10" />
+
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

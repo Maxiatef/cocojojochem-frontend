@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCart, clearCart } from '@/lib/cartStore';
 import { useQuoteList, clearQuoteList } from '@/lib/quoteListStore';
+import { useWishlist, clearWishlist } from '@/lib/wishlistStore';
 import { customerApi } from '@/lib/customerApi';
 import {
   clearCustomerToken,
@@ -33,6 +34,7 @@ export function useStorefrontSession() {
   const queryClient = useQueryClient();
   const { itemCount: localItemCount } = useCart();
   const { count: localQuoteListCount } = useQuoteList();
+  const { count: localWishlistCount } = useWishlist();
   const [customerEmail, setCustomerEmail] = useState<string | null>(null);
 
   // `customer-auth-changed` is dispatched by the auth helpers, so signing in or
@@ -85,6 +87,12 @@ export function useStorefrontSession() {
       );
   }, [customerEmail, queryClient]);
 
+  const { data: serverWishlistSummary } = useQuery({
+    queryKey: ['customer-wishlist-summary'],
+    queryFn: () => customerApi.get<{ count: number }>('/wishlist/summary'),
+    enabled: !!customerEmail,
+  });
+
   const signOut = useCallback(() => {
     const refreshToken = getCustomerRefreshToken();
     if (refreshToken) {
@@ -97,6 +105,7 @@ export function useStorefrontSession() {
     // this device doesn't see this customer's items after they've signed out.
     clearCart();
     clearQuoteList();
+    clearWishlist();
     router.push('/');
   }, [router]);
 
@@ -104,6 +113,7 @@ export function useStorefrontSession() {
     customerEmail,
     itemCount: customerEmail ? serverCartSummary?.itemCount || 0 : localItemCount,
     quoteListCount: customerEmail ? serverQuoteListSummary?.count || 0 : localQuoteListCount,
+    wishlistCount: customerEmail ? serverWishlistSummary?.count || 0 : localWishlistCount,
     signOut,
   };
 }

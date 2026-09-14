@@ -377,6 +377,27 @@ export default function AccountPage() {
 
           {/* ---- Account panel ---- */}
           <aside className="flex flex-col gap-6">
+            {/* Saved products sit above the account details: it is a place
+                people return to, where the details panel is something they set
+                once and rarely reopen. */}
+            <Link
+              href="/account/wishlist"
+              className="group flex items-center justify-between gap-4 rounded-xl border border-sci-border bg-white p-6 transition hover:border-sci-blue"
+            >
+              <span className="flex flex-col gap-1">
+                <span className={PANEL_HEADING}>Saved products</span>
+                <span className="font-sci-body text-sci-label text-sci-muted">
+                  Your shortlist, with live pricing
+                </span>
+              </span>
+              <span
+                aria-hidden
+                className="font-sci-body text-sci-label font-medium text-sci-blue transition-transform group-hover:translate-x-0.5"
+              >
+                →
+              </span>
+            </Link>
+
             <div className="rounded-xl border border-sci-border bg-white p-6">
               <div className="flex items-center justify-between border-b border-sci-border pb-3">
                 <h2 className={PANEL_HEADING}>Account details</h2>

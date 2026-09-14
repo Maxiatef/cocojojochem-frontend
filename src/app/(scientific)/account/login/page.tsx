@@ -7,6 +7,11 @@ import { customerApi } from '@/lib/customerApi';
 import { setCustomerTokens } from '@/lib/customerAuth';
 import { getCartAsMergePayload, clearCart, getCart } from '@/lib/cartStore';
 import { getQuoteListAsMergePayload, clearQuoteList, getQuoteList } from '@/lib/quoteListStore';
+import {
+  getWishlist,
+  getWishlistAsMergePayload,
+  clearWishlist,
+} from '@/lib/wishlistStore';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
 
@@ -47,6 +52,16 @@ function LoginForm() {
           .catch(() => {});
         clearQuoteList();
         window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
+      }
+
+      // And the guest wishlist. A union server-side, so saving on a phone and
+      // on a laptop leaves both sets, not whichever signed in last.
+      const localWishlist = getWishlist();
+      if (localWishlist.length > 0) {
+        await customerApi
+          .post('/wishlist/merge', { productIds: getWishlistAsMergePayload() })
+          .catch(() => {});
+        clearWishlist();
       }
 
       router.push(redirectTo);

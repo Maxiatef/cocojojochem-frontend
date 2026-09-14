@@ -12,6 +12,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { useToast } from '@/components/ui';
 import { addToQuoteList } from '@/lib/quoteListStore';
 import { CheckCircleIcon, FileIcon } from '@/components/icons';
+import { WishlistButton } from '@/components/scientific/WishlistButton';
 import { ProductMediaGallery } from '@/components/storefront/ProductMediaGallery';
 
 /**
@@ -331,6 +332,12 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                           : 'Add to cart'}
                   </button>
                 </div>
+
+                <WishlistButton
+                  productId={product.id}
+                  variant="labelled"
+                  className="mt-3 w-full sm:w-auto"
+                />
 
                 {added && (
                   <button
