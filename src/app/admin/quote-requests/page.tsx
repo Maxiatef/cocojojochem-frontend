@@ -7,10 +7,14 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { QuoteRequest, RequestStatus } from '@/lib/types';
 import { Badge, Card, EmptyState, ErrorState, IconButton, LoadingState, Modal, PageHeader } from '@/components/ui';
 import { EyeIcon } from '@/components/icons';
+import { useCan } from '@/components/AdminShell';
 
 const STATUSES: RequestStatus[] = ['NEW', 'IN_PROGRESS', 'QUOTED', 'WON', 'LOST'];
 
 export default function QuoteRequestsPage() {
+  // Without the edit permission the status is shown as a read-only badge —
+  // a dropdown whose every change is refused reads as a broken control.
+  const canEdit = useCan('canEditQuoteRequest');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'ALL'>('ALL');
   const [error, setError] = useState<string | null>(null);
   const [viewing, setViewing] = useState<QuoteRequest | null>(null);
@@ -93,20 +97,22 @@ export default function QuoteRequestsPage() {
                     {new Date(qr.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-5 py-3.5">
-                    <select
-                      value={qr.status}
-                      onChange={(e) =>
-                        updateStatus.mutate({ id: qr.id, status: e.target.value as RequestStatus })
-                      }
-                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s.replace(/_/g, ' ')}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="mt-1.5">
+                    {canEdit && (
+                      <select
+                        value={qr.status}
+                        onChange={(e) =>
+                          updateStatus.mutate({ id: qr.id, status: e.target.value as RequestStatus })
+                        }
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                      >
+                        {STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s.replace(/_/g, ' ')}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <div className={canEdit ? 'mt-1.5' : ''}>
                       <Badge status={qr.status} />
                     </div>
                   </td>

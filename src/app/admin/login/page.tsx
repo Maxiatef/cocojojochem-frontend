@@ -41,8 +41,11 @@ export default function LoginPage() {
         email,
         password,
       });
+      // Dashboard access means "holds a role", which only the server can
+      // answer now that roles are rows — the token carries a roleId whose
+      // meaning lives in the roles table.
       const payload = decodeToken(res.accessToken);
-      if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'SALES')) {
+      if (!payload || payload.roleId == null) {
         setError('This account does not have dashboard access.');
         setLoading(false);
         return;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useIsAdmin } from '@/components/AdminShell';
+import { useCan } from '@/components/AdminShell';
 
 /**
  * Links a product name to the product editor — but only for admins.
@@ -25,7 +25,7 @@ export function ProductEditLink({
   className?: string;
   children: React.ReactNode;
 }) {
-  const isAdmin = useIsAdmin();
+  const isAdmin = useCan('canEditProduct');
 
   if (!isAdmin) {
     // Plain text, not a disabled link — nothing here hints at an action a

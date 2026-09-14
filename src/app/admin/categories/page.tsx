@@ -35,7 +35,7 @@ import {
   TrashIcon,
 } from '@/components/icons';
 import Link from 'next/link';
-import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
+import { RequireStaff, useCan } from '@/components/AdminShell';
 
 type CategorySort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
@@ -59,7 +59,12 @@ const EMPTY_FORM: CategoryFormState = {
 };
 
 function CategoriesAdminPageContent() {
-  const isAdmin = useIsAdmin();
+  // Create, edit and delete are three separate permissions server-side, so
+  // each control is gated by the one its own endpoint checks — a button that
+  // is always going to 403 shouldn't be offered.
+  const canCreate = useCan('canCreateCategory');
+  const canEdit = useCan('canEditCategory');
+  const canDelete = useCan('canDeleteCategory');
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<CategoryFormState>(EMPTY_FORM);
@@ -182,7 +187,7 @@ function CategoriesAdminPageContent() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Categories" description="Manage the wholesale product category taxonomy." />
-        {isAdmin && (
+        {canCreate && (
           <Button onClick={openCreateModal} icon={PlusIcon}>
             Add Category
           </Button>
@@ -259,16 +264,16 @@ function CategoriesAdminPageContent() {
                       <Link href={`/admin/categories/${c.id}`}>
                         <IconButton icon={EyeIcon} label="View" onClick={() => {}} />
                       </Link>
-                      {isAdmin && (
-                        <>
-                          <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
-                          <IconButton
-                            icon={TrashIcon}
-                            label="Delete"
-                            variant="danger"
-                            onClick={() => setPendingDelete(c)}
-                          />
-                        </>
+                      {canEdit && (
+                        <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
+                      )}
+                      {canDelete && (
+                        <IconButton
+                          icon={TrashIcon}
+                          label="Delete"
+                          variant="danger"
+                          onClick={() => setPendingDelete(c)}
+                        />
                       )}
                     </div>
                   </Td>

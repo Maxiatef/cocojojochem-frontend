@@ -25,26 +25,71 @@ import {
   SettingsIcon,
   GlobeIcon,
   ClockIcon,
+  ShieldIcon,
 } from '@/components/icons';
 
-type AdminRole = 'ADMIN' | 'SALES';
-
-const NAV: { href: string; label: string; icon: (props: { className?: string }) => React.ReactElement; roles?: AdminRole[] }[] = [
-  { href: '/admin', label: 'Overview', icon: DashboardIcon },
-  { href: '/admin/messages', label: 'Messages', icon: MailIcon },
-  { href: '/admin/quote-requests', label: 'Quote Requests', icon: InboxIcon },
-  { href: '/admin/products', label: 'Products', icon: BottleIcon },
-  { href: '/admin/categories', label: 'Categories', icon: GridIcon },
-  { href: '/admin/functions', label: 'Functions', icon: TagIcon },
-  { href: '/admin/orders', label: 'Orders', icon: BoxIcon },
-  { href: '/admin/companies', label: 'Companies', icon: BuildingIcon },
-  { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon },
-  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon },
-  { href: '/admin/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
-  { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, roles: ['ADMIN'] },
-  { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, roles: ['ADMIN'] },
-  { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, roles: ['ADMIN'] },
+// Each entry names the permission that its page's own list endpoint requires,
+// so the sidebar shows exactly what the account can actually open. The nav is
+// presentation only — the server enforces the same permission on every call.
+const NAV: {
+  href: string;
+  label: string;
+  icon: (props: { className?: string }) => React.ReactElement;
+  permission?: string;
+}[] = [
+  { href: '/admin', label: 'Overview', icon: DashboardIcon, permission: 'canViewDashboard' },
+  { href: '/admin/messages', label: 'Messages', icon: MailIcon, permission: 'canViewContactMessages' },
+  { href: '/admin/quote-requests', label: 'Quote Requests', icon: InboxIcon, permission: 'canViewQuoteRequests' },
+  { href: '/admin/products', label: 'Products', icon: BottleIcon, permission: 'canViewProducts' },
+  { href: '/admin/categories', label: 'Categories', icon: GridIcon, permission: 'canViewCategories' },
+  { href: '/admin/functions', label: 'Functions', icon: TagIcon, permission: 'canViewFunctions' },
+  { href: '/admin/orders', label: 'Orders', icon: BoxIcon, permission: 'canViewOrders' },
+  { href: '/admin/companies', label: 'Companies', icon: BuildingIcon, permission: 'canViewCompanies' },
+  { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon, permission: 'canViewCoupons' },
+  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon, permission: 'canViewAnalytics' },
+  { href: '/admin/users', label: 'Users', icon: UsersIcon, permission: 'canViewUsers' },
+  { href: '/admin/roles', label: 'Roles', icon: ShieldIcon, permission: 'canViewRoles' },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, permission: 'canViewAuditLog' },
+  { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, permission: 'canViewSeoPages' },
+  { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, permission: 'canViewSiteSettings' },
 ];
+
+/**
+ * The signed-in staff account, read from the server rather than from the JWT.
+ *
+ * Permissions live on the role row and an admin can change them at any time,
+ * so the token is deliberately not the source of truth — it carries only
+ * `roleId`. Cached for a minute so the sidebar and every page gate share one
+ * request rather than issuing their own.
+ */
+export function useMe() {
+  return useQuery({
+    queryKey: ['auth-me'],
+    queryFn: () => api.get<MeResponse>('/auth/me'),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+type MeResponse = {
+  id: number;
+  email: string;
+  roleId: number | null;
+  role: { id: number; name: string; permissions: Record<string, boolean> } | null;
+};
+
+/** `undefined` while loading — callers must treat that as "not yet allowed". */
+export function usePermissions(): Record<string, boolean> | undefined {
+  const { data, isLoading } = useMe();
+  if (isLoading) return undefined;
+  return data?.role?.permissions ?? {};
+}
+
+/** True only once permissions have loaded AND the permission is granted. */
+export function useCan(permission: string): boolean {
+  const permissions = usePermissions();
+  return permissions?.[permission] === true;
+}
 
 function initialsFromEmail(email: string) {
   return email.slice(0, 2).toUpperCase();
@@ -106,7 +151,8 @@ function SidebarContent({
   onNavigate: () => void;
   onLogout: () => void;
 }) {
-  const nav = NAV.filter((item) => !item.roles || (role && item.roles.includes(role as AdminRole)));
+  const permissions = usePermissions();
+  const nav = NAV.filter((item) => !item.permission || permissions?.[item.permission] === true);
 
   const { data: messageStats } = useQuery({
     queryKey: ['contact-messages-stats'],
@@ -204,21 +250,29 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [denied, setDenied] = useState<'not-logged-in' | 'wrong-role' | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const { data: me, isLoading: meLoading, isError: meError } = useMe();
+
+  // Staff-ness is "holds a role", decided by the server, because the token no
+  // longer carries a role name — only a roleId whose meaning lives in the
+  // roles table and can be edited at any time.
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
+    if (!getToken()) {
       setDenied('not-logged-in');
       return;
     }
-    const payload = decodeToken(token);
-    if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'SALES')) {
+    if (meLoading) return;
+    if (meError || !me) {
+      setDenied('not-logged-in');
+      return;
+    }
+    if (me.roleId == null) {
       setDenied('wrong-role');
       return;
     }
-    setEmail(payload.email);
-    setRole(payload.role);
+    setEmail(me.email);
+    setRole(me.role?.name ?? null);
     setReady(true);
-  }, []);
+  }, [me, meLoading, meError]);
 
   // Close the drawer automatically whenever the route changes
   useEffect(() => {
@@ -313,49 +367,25 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
 // Client-side route gate. This is a UX guard only — it stops a page flashing
 // before redirect — and is NEVER the security boundary: every endpoint these
-// pages call is guarded server-side by RolesGuard, which is what actually
+// pages call is guarded server-side by PermissionGuard, which is what actually
 // enforces access.
-function RoleGate({
+function PermissionGate({
   children,
-  allow,
+  permission,
   deniedMessage,
 }: {
   children: React.ReactNode;
-  allow: AdminRole[];
+  /** Omitted means "any staff account", i.e. anyone holding a role at all. */
+  permission?: string;
   deniedMessage: string;
 }) {
-  const [allowed, setAllowed] = useState(false);
-  const [denied, setDenied] = useState<'not-logged-in' | 'wrong-role' | null>(null);
+  const { data, isLoading, isError } = useMe();
 
-  useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      setDenied('not-logged-in');
-      return;
-    }
-    const payload = decodeToken(token);
-    if (!payload || !allow.includes(payload.role as AdminRole)) {
-      setDenied('wrong-role');
-      return;
-    }
-    setAllowed(true);
-    // `allow` is a literal array at every call site, so a deps entry would
-    // re-run this on every render; the role can't change without a reload.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (denied) {
-    return (
-      <AccessDenied
-        reason={denied}
-        message={denied === 'wrong-role' ? deniedMessage : undefined}
-        backHref="/admin"
-        backLabel="Back to dashboard"
-      />
-    );
+  if (!getToken()) {
+    return <AccessDenied reason="not-logged-in" backHref="/admin" backLabel="Back to dashboard" />;
   }
 
-  if (!allowed) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
@@ -363,43 +393,61 @@ function RoleGate({
     );
   }
 
+  // A failed /auth/me means the session is gone or unreadable — treat it as
+  // not signed in rather than silently rendering an empty page.
+  if (isError || !data) {
+    return <AccessDenied reason="not-logged-in" backHref="/admin" backLabel="Back to dashboard" />;
+  }
+
+  const allowed = permission ? data.role?.permissions?.[permission] === true : data.roleId != null;
+
+  if (!allowed) {
+    return (
+      <AccessDenied
+        reason="wrong-role"
+        message={deniedMessage}
+        backHref="/admin"
+        backLabel="Back to dashboard"
+      />
+    );
+  }
+
   return <>{children}</>;
 }
 
-// ADMIN only — settings, staff, SEO, analytics.
-export function RequireAdmin({ children }: { children: React.ReactNode }) {
+/**
+ * Gate a page on one permission. Replaces the old RequireAdmin, which could
+ * only ask "is this account the ADMIN enum value" — a question that no longer
+ * has an answer now that an admin can define any role they like.
+ */
+export function RequirePermission({
+  permission,
+  children,
+}: {
+  permission: string;
+  children: React.ReactNode;
+}) {
   return (
-    <RoleGate allow={['ADMIN']} deniedMessage="This section is restricted to admin accounts.">
+    <PermissionGate
+      permission={permission}
+      deniedMessage="Your role doesn't include permission to view this section."
+    >
       {children}
-    </RoleGate>
+    </PermissionGate>
   );
 }
 
-// ADMIN + SALES — sections sales can view but not modify (catalog, coupons).
-// The read/write split is enforced server-side: the list endpoints allow both
-// roles, while create/edit/delete stay ADMIN-only, so a sales user reaching
-// one of these pages can browse it and nothing more.
+// Any staff account — anyone holding a role at all. Customers hold none.
 export function RequireStaff({ children }: { children: React.ReactNode }) {
   return (
-    <RoleGate allow={['ADMIN', 'SALES']} deniedMessage="This section is restricted to staff accounts.">
+    <PermissionGate deniedMessage="This section is restricted to staff accounts.">
       {children}
-    </RoleGate>
+    </PermissionGate>
   );
 }
 
-// Current staff role from the access token, for hiding write controls a sales
-// user isn't allowed to use. Returns null until the token is read on mount
-// (and on the server), so treat null as "not admin" and render read-only.
-export function useAdminRole(): AdminRole | null {
-  const [role, setRole] = useState<AdminRole | null>(null);
-  useEffect(() => {
-    const token = getToken();
-    const payload = token ? decodeToken(token) : null;
-    setRole((payload?.role as AdminRole) || null);
-  }, []);
-  return role;
-}
-
-export function useIsAdmin(): boolean {
-  return useAdminRole() === 'ADMIN';
+/** The signed-in account's role name, or null for a customer / while loading. */
+export function useAdminRole(): string | null {
+  const { data } = useMe();
+  return data?.role?.name ?? null;
 }

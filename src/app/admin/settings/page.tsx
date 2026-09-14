@@ -4,7 +4,7 @@ import { Fragment, FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequirePermission, useCan } from '@/components/AdminShell';
 import { Paginated, ShippingRateTierRow, SiteSettingsResponse, UserListItem } from '@/lib/types';
 import {
   Badge,
@@ -23,8 +23,9 @@ import {
 } from '@/components/ui';
 import { ChevronDownIcon, PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
+import { TestimonialsTab } from '@/components/admin/TestimonialsTab';
 
-type Tab = 'shipping' | 'tax' | 'notifications' | 'staff';
+type Tab = 'shipping' | 'tax' | 'notifications' | 'staff' | 'testimonials';
 
 // Site-settings is a generic key/value store on the backend — these are the
 // keys this admin UI has adopted for the fields the plan calls for.
@@ -50,6 +51,7 @@ const TABS: [Tab, string][] = [
   ['tax', 'Tax'],
   ['notifications', 'Notifications'],
   ['staff', 'Staff'],
+  ['testimonials', 'Testimonials'],
 ];
 
 // Zone 8 is quoted manually — OrdersService.getShippingEstimate short-circuits
@@ -120,9 +122,20 @@ function Collapsible({
 
 export default function SettingsAdminPage() {
   const [tab, setTab] = useState<Tab>('shipping');
+  // The Staff tab lists users and the rate tables read shipping rates — both
+  // are separate permissions from viewing settings, so a role can reach this
+  // page without being entitled to either.
+  const canViewStaff = useCan('canViewUsers');
+  const canViewTestimonials = useCan('canViewTestimonials');
+  const canViewRates = useCan('canViewShippingRates');
+  const tabs = TABS.filter(([key]) => {
+    if (key === 'staff') return canViewStaff;
+    if (key === 'testimonials') return canViewTestimonials;
+    return true;
+  });
 
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canViewSiteSettings">
       <div>
         <PageHeader
           title="Settings"
@@ -130,7 +143,7 @@ export default function SettingsAdminPage() {
         />
 
         <div className="mb-6 flex flex-wrap gap-x-1 gap-y-2 border-b border-slate-200">
-          {TABS.map(([key, label]) => (
+          {tabs.map(([key, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -149,25 +162,30 @@ export default function SettingsAdminPage() {
           <div className="space-y-6">
             <ShippingTab />
             <ZoneAssignmentsCard />
-            <ShippingZoneRateTable
-              kind="WEIGHT"
-              title="Weight Rates"
-              description="Priced by cart weight and destination zone for regular (non-drum) items. A cart weight between two rows uses the next row up."
-              rowLabel={(lb) => `${lb} lb`}
-            />
-            <ShippingZoneRateTable
-              kind="DRUM"
-              title="Drum Rates"
-              description={'Used instead of the weight table for any variant marked "Sold by drum" in the product editor — cart quantity is treated as a drum count.'}
-              rowLabel={(n) => `${n} drum${n === 1 ? '' : 's'}`}
-            />
+            {canViewRates && (
+              <>
+                <ShippingZoneRateTable
+                  kind="WEIGHT"
+                  title="Weight Rates"
+                  description="Priced by cart weight and destination zone for regular (non-drum) items. A cart weight between two rows uses the next row up."
+                  rowLabel={(lb) => `${lb} lb`}
+                />
+                <ShippingZoneRateTable
+                  kind="DRUM"
+                  title="Drum Rates"
+                  description={'Used instead of the weight table for any variant marked "Sold by drum" in the product editor — cart quantity is treated as a drum count.'}
+                  rowLabel={(n) => `${n} drum${n === 1 ? '' : 's'}`}
+                />
+              </>
+            )}
           </div>
         )}
         {tab === 'tax' && <TaxTab />}
         {tab === 'notifications' && <NotificationsTab />}
-        {tab === 'staff' && <StaffTab />}
+        {tab === 'staff' && canViewStaff && <StaffTab />}
+        {tab === 'testimonials' && canViewTestimonials && <TestimonialsTab />}
       </div>
-    </RequireAdmin>
+    </RequirePermission>
   );
 }
 
@@ -218,6 +236,7 @@ function TaxTab() {
   const { data, isLoading, isError } = useSiteSettings();
   const [taxName, setTaxName] = useState('');
   const [taxValue, setTaxValue] = useState('');
+  const canEditSettings = useCan('canEditSiteSettings');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -275,7 +294,7 @@ function TaxTab() {
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
         <div className="flex justify-end pt-2">
-          <Button type="submit" loading={mutation.isPending}>
+          <Button type="submit" loading={mutation.isPending} disabled={!canEditSettings}>
             Save Changes
           </Button>
         </div>
@@ -291,6 +310,7 @@ function ShippingTab() {
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('');
   const [defaultShippingAmount, setDefaultShippingAmount] = useState('');
   const [internationalShippingAmount, setInternationalShippingAmount] = useState('');
+  const canEditSettings = useCan('canEditSiteSettings');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -392,7 +412,7 @@ function ShippingTab() {
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
         <div className="flex justify-end">
-          <Button type="submit" loading={mutation.isPending}>
+          <Button type="submit" loading={mutation.isPending} disabled={!canEditSettings}>
             Save Changes
           </Button>
         </div>
@@ -480,6 +500,7 @@ function NotificationsTab() {
   const [emails, setEmails] = useState<Record<string, string>>({});
   const [senderName, setSenderName] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
+  const canEditSettings = useCan('canEditSiteSettings');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -581,7 +602,7 @@ function NotificationsTab() {
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
         <div className="flex justify-end pt-2">
-          <Button type="submit" loading={mutation.isPending}>
+          <Button type="submit" loading={mutation.isPending} disabled={!canEditSettings}>
             Save Changes
           </Button>
         </div>
@@ -592,13 +613,17 @@ function NotificationsTab() {
 
 function StaffTab() {
   const queryClient = useQueryClient();
+  const canCreateStaff = useCan('canCreateUser');
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<StaffFormState>(EMPTY_STAFF_FORM);
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-users', '', 'ADMIN,SALES'],
-    queryFn: () => api.get<Paginated<UserListItem>>('/users?page=1&limit=200&role=ADMIN,SALES'),
+    // 'staff' is the server-side sentinel for "holds any role", so this list
+    // keeps working for roles created after this page was written — the old
+    // role=ADMIN,SALES filter referenced enum values that no longer exist.
+    queryKey: ['admin-users', '', 'staff'],
+    queryFn: () => api.get<Paginated<UserListItem>>('/users?page=1&limit=200&roleId=staff'),
   });
 
   const createStaffMutation = useMutation({
@@ -619,12 +644,16 @@ function StaffTab() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!form.roleId) {
+      setError('Choose a role for this staff account.');
+      return;
+    }
     createStaffMutation.mutate({
       fullName: form.fullName,
       email: form.email,
       phone: form.phone || undefined,
       password: form.password,
-      role: form.role,
+      roleId: Number(form.roleId),
     });
   }
 
@@ -637,9 +666,11 @@ function StaffTab() {
           <h2 className="text-sm font-semibold text-slate-900">Staff Accounts</h2>
           <p className="text-xs text-slate-500">Admin and sales users with dashboard access.</p>
         </div>
-        <Button onClick={() => setModalOpen(true)} icon={PlusIcon} size="sm">
-          Add Staff Account
-        </Button>
+        {canCreateStaff && (
+          <Button onClick={() => setModalOpen(true)} icon={PlusIcon} size="sm">
+            Add Staff Account
+          </Button>
+        )}
       </div>
 
       {isLoading && <LoadingState />}
@@ -661,7 +692,7 @@ function StaffTab() {
                     <div className="text-xs text-slate-500">{u.email}</div>
                   </Td>
                   <Td>
-                    <Badge status={u.role} />
+                    <Badge status={u.role?.name ?? 'Customer'} />
                   </Td>
                   <Td className="text-slate-500">{new Date(u.createdAt).toLocaleDateString()}</Td>
                 </Tr>
@@ -796,6 +827,10 @@ function ShippingZoneRateTable({
     queryFn: () => api.get<ShippingRateTierRow[]>(`/admin/shipping-rate-tiers?kind=${kind}`),
   });
 
+  // Rates are edited inline; without the permission the grid stays readable
+  // but the cells don't accept input.
+  const canEditRates = useCan('canEditShippingRates');
+
   const saveMutation = useMutation({
     mutationFn: ({ zone, breakpoint, amount }: { zone: number; breakpoint: number; amount: number }) =>
       api.put(`/admin/shipping-rate-tiers/${kind}/${zone}/${breakpoint}`, { amount }),
@@ -817,6 +852,7 @@ function ShippingZoneRateTable({
   });
 
   function handleBlur(breakpoint: number, zone: number, currentValue: number | null) {
+    if (!canEditRates) return;
     const key = `${breakpoint}-${zone}`;
     const draft = drafts[key];
     if (draft === undefined) return; // untouched — nothing to save
@@ -934,6 +970,7 @@ function ShippingZoneRateTable({
                               step="0.01"
                               min="0"
                               value={draftValue}
+                              readOnly={!canEditRates}
                               disabled={cellSaving}
                               onChange={(e) => setDrafts((prev) => ({ ...prev, [key]: e.target.value }))}
                               onBlur={() => handleBlur(row.breakpoint, zone, rate)}

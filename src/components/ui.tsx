@@ -153,6 +153,9 @@ const STATUS_STYLES: Record<string, string> = {
   SESSION_REVOKE: 'bg-orange-50 text-orange-700',
   SYSTEM: 'bg-slate-100 text-slate-500',
   SALES: 'bg-blue-50 text-blue-700',
+  // Testimonials
+  PUBLISHED: 'bg-green-50 text-green-700',
+  DRAFT: 'bg-slate-100 text-slate-500',
 };
 
 export function Badge({ status }: { status: string }) {

@@ -17,6 +17,7 @@ import {
   ProductVisibility,
 } from '@/lib/types';
 import { uploadMultipleProductImages, uploadProductDocument, uploadVariantImage } from '@/lib/uploads';
+import { useCan } from '@/components/AdminShell';
 import {
   Button,
   Card,
@@ -1278,6 +1279,7 @@ function DocumentsField({
   certifications: Certification[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1418,15 +1420,17 @@ function DocumentsField({
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"
-        onChange={handleFilesChange}
-        disabled={uploading}
-        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
-      />
+      {canUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"
+          onChange={handleFilesChange}
+          disabled={uploading}
+          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+        />
+      )}
       {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -1440,6 +1444,7 @@ function DocumentsField({
 // persisted as ProductImage rows keyed by their position in this list.
 function GalleryField({ images, onChange }: { images: string[]; onChange: (urls: string[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1528,15 +1533,17 @@ function GalleryField({ images, onChange }: { images: string[]; onChange: (urls:
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        onChange={handleFilesChange}
-        disabled={uploading}
-        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
-      />
+      {canUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleFilesChange}
+          disabled={uploading}
+          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+        />
+      )}
       {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -1557,6 +1564,7 @@ function VariantImagePanel({
   upload: (file: File) => Promise<string>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1588,14 +1596,16 @@ function VariantImagePanel({
         )}
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleFileChange}
-          disabled={uploading}
-          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
-        />
+        {canUpload && (
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleFileChange}
+            disabled={uploading}
+            className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+          />
+        )}
         {value && (
           <button
             type="button"

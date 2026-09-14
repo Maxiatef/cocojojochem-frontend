@@ -27,7 +27,7 @@ import {
   Tr,
 } from '@/components/ui';
 import { EditIcon, EyeIcon, ImagePlaceholderIcon, PlusIcon, TrashIcon } from '@/components/icons';
-import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
+import { RequireStaff, useCan } from '@/components/AdminShell';
 
 type FunctionSort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
@@ -41,7 +41,10 @@ interface FunctionFormState {
 const EMPTY_FORM: FunctionFormState = { id: null, name: '', slug: '', description: '' };
 
 function FunctionsAdminPageContent() {
-  const isAdmin = useIsAdmin();
+  // One permission per action, matching what each endpoint checks.
+  const canCreate = useCan('canCreateFunction');
+  const canEdit = useCan('canEditFunction');
+  const canDelete = useCan('canDeleteFunction');
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FunctionFormState>(EMPTY_FORM);
@@ -138,7 +141,7 @@ function FunctionsAdminPageContent() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Functions" description="Manage the 'shop by chemical function' tags." />
-        {isAdmin && (
+        {canCreate && (
           <Button onClick={openCreateModal} icon={PlusIcon}>
             Add Function
           </Button>
@@ -190,16 +193,16 @@ function FunctionsAdminPageContent() {
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
                       <IconButton icon={EyeIcon} label="View Products" onClick={() => setViewingFunction(f)} />
-                      {isAdmin && (
-                        <>
-                          <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(f)} />
-                          <IconButton
-                            icon={TrashIcon}
-                            label="Delete"
-                            variant="danger"
-                            onClick={() => setPendingDelete(f)}
-                          />
-                        </>
+                      {canEdit && (
+                        <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(f)} />
+                      )}
+                      {canDelete && (
+                        <IconButton
+                          icon={TrashIcon}
+                          label="Delete"
+                          variant="danger"
+                          onClick={() => setPendingDelete(f)}
+                        />
                       )}
                     </div>
                   </Td>

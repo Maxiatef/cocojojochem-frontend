@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
 import { clampDescription, pageMetadata } from '@/lib/seo';
-import { SeoPage } from '@/lib/types';
+import { SeoPage, Testimonial } from '@/lib/types';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
+import { TestimonialCarousel } from '@/components/scientific/TestimonialCarousel';
 import {
   Container,
   Eyebrow,
@@ -86,6 +87,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
+  // Published testimonials, managed under admin Settings → Testimonials.
+  // serverFetch returns null on any failure, so the section simply doesn't
+  // render if the API is unreachable — a story page must not 500 over a
+  // supporting band.
+  const testimonials =
+    (await serverFetch<Testimonial[]>('/wholesale/testimonials', { revalidate: 300 })) ?? [];
+
   return (
     <>
       <JsonLd
@@ -178,8 +186,26 @@ export default async function AboutPage() {
         </Container>
       </section>
 
+      {/* What our customers say. Rendered only when there is something to
+          show — an empty band with a heading and no quotes reads as broken
+          rather than as "no testimonials yet". */}
+      {testimonials.length > 0 && (
+        <section className="bg-sci-pale py-16">
+          <Container className="flex flex-col gap-10">
+            <div className="flex flex-col gap-6">
+              <Eyebrow>In their words</Eyebrow>
+              <SectionHeading>
+                Trusted by the brands, salons, and formulators we supply.
+              </SectionHeading>
+            </div>
+
+            <TestimonialCarousel testimonials={testimonials} />
+          </Container>
+        </section>
+      )}
+
       {/* Contact / Request a quote — the closing band every migrated page carries. */}
-      <section className="bg-sci-pale py-16">
+      <section className={`py-16 ${testimonials.length > 0 ? 'bg-white' : 'bg-sci-pale'}`}>
         <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-6">
             <Eyebrow>Let’s move your next idea forward</Eyebrow>

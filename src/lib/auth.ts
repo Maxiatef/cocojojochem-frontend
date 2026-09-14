@@ -27,8 +27,12 @@ export function clearToken() {
 }
 
 // Decodes the JWT payload without verifying — verification happens server-side.
-// Only used here to read role/email for UI display and route gating.
-export function decodeToken(token: string): { sub: number; email: string; role: string } | null {
+// Carries only `roleId`; what that role may actually do lives in the roles
+// table and is read from /auth/me, so permissions can be changed without
+// waiting for the access token to expire.
+export function decodeToken(
+  token: string,
+): { sub: number; email: string; roleId: number | null } | null {
   try {
     const payload = token.split('.')[1];
     return JSON.parse(atob(payload));

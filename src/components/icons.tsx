@@ -292,6 +292,19 @@ export function ClockIcon({ className = base }: IconProps) {
   );
 }
 
+export function ShieldIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3l7 3v5.5c0 4.2-2.9 7.9-7 9.5-4.1-1.6-7-5.3-7-9.5V6l7-3z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.2 12.2l2 2 3.6-3.8" />
+    </svg>
+  );
+}
+
 export function GlobeIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>

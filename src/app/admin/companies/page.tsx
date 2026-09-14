@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { Company, CompanyDetail, CompanyUser, Order, QuoteRequest } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
+import { useCan } from '@/components/AdminShell';
 import {
   Badge,
   Card,
@@ -95,6 +96,9 @@ export default function CompaniesPage() {
 
 function CompanyDetailModal({ companyId, onClose }: { companyId: number; onClose: () => void }) {
   const queryClient = useQueryClient();
+  // Editing a company is its own permission; without it the detail panel is
+  // read-only rather than offering an Edit link that would be refused.
+  const canEdit = useCan('canEditCompany');
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
@@ -158,7 +162,7 @@ function CompanyDetailModal({ companyId, onClose }: { companyId: number; onClose
           <div>
             <div className="mb-2 flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Company Details</p>
-              {!editing && (
+              {!editing && canEdit && (
                 <button
                   onClick={startEditing}
                   className="text-xs font-medium text-sci-blue hover:underline"
@@ -336,7 +340,7 @@ function UserOrdersRow({
             <p className="text-sm font-medium text-slate-900">{user.fullName}</p>
             <p className="text-xs text-slate-500">{user.email}</p>
           </div>
-          <Badge status={user.role} />
+          <Badge status={user.role?.name ?? 'Customer'} />
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-500">

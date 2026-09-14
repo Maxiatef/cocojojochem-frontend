@@ -35,10 +35,13 @@ export function MessageDetailModal({
   status: 'UNREAD' | 'READ' | 'ARCHIVED';
   isReplied: boolean;
   busy?: boolean;
-  onArchiveToggle: () => void;
-  onMarkUnread: () => void;
-  onToggleReplied: () => void;
-  onDelete: () => void;
+  // Optional: omitted when the signed-in role lacks the permission behind the
+  // action, in which case the button isn't rendered at all. Replying by email
+  // is a mailto link and needs no permission.
+  onArchiveToggle?: () => void;
+  onMarkUnread?: () => void;
+  onToggleReplied?: () => void;
+  onDelete?: () => void;
 }) {
   if (!open) return null;
 
@@ -74,20 +77,26 @@ export function MessageDetailModal({
               Reply by email
             </Button>
           </a>
-          <Button variant="secondary" size="sm" icon={CheckCircleIcon} disabled={busy} onClick={onToggleReplied}>
-            {isReplied ? 'Mark not replied' : 'Mark replied'}
-          </Button>
-          {status !== 'UNREAD' && (
+          {onToggleReplied && (
+            <Button variant="secondary" size="sm" icon={CheckCircleIcon} disabled={busy} onClick={onToggleReplied}>
+              {isReplied ? 'Mark not replied' : 'Mark replied'}
+            </Button>
+          )}
+          {onMarkUnread && status !== 'UNREAD' && (
             <Button variant="secondary" size="sm" disabled={busy} onClick={onMarkUnread}>
               Mark unread
             </Button>
           )}
-          <Button variant="secondary" size="sm" icon={ArchiveIcon} disabled={busy} onClick={onArchiveToggle}>
-            {status === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
-          </Button>
-          <Button variant="danger" size="sm" icon={TrashIcon} disabled={busy} onClick={onDelete} className="ml-auto">
-            Delete
-          </Button>
+          {onArchiveToggle && (
+            <Button variant="secondary" size="sm" icon={ArchiveIcon} disabled={busy} onClick={onArchiveToggle}>
+              {status === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="danger" size="sm" icon={TrashIcon} disabled={busy} onClick={onDelete} className="ml-auto">
+              Delete
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

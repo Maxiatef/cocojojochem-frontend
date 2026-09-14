@@ -27,7 +27,7 @@ import {
   Tr,
 } from '@/components/ui';
 import { EyeIcon } from '@/components/icons';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequirePermission } from '@/components/AdminShell';
 import {
   AuditChildChanges,
   AuditDiffTable,
@@ -38,25 +38,42 @@ import {
 // Staff are grouped by role so a long list stays scannable, with anyone no
 // longer on staff kept at the bottom rather than dropped — their entries are
 // still in the log and have to stay reachable.
-const ACTOR_GROUPS: {
-  key: string;
-  label: string;
-  match: (a: { role: string; status?: string }) => boolean;
-}[] = [
-  { key: 'ADMIN', label: 'Admins', match: (a) => a.status !== 'GONE' && a.role === 'ADMIN' },
-  { key: 'SALES', label: 'Sales', match: (a) => a.status !== 'GONE' && a.role === 'SALES' },
-  {
-    key: 'GONE',
-    label: 'No longer staff',
-    match: (a) => a.status === 'GONE' || (a.role !== 'ADMIN' && a.role !== 'SALES'),
-  },
-];
+type ActorOption = { id: number; email: string; role: string; status?: string };
+
+/**
+ * Groups the actor list by role name, built from the data rather than from a
+ * fixed list of roles — an admin can create any role they like, and one this
+ * page had never heard of used to fall through into "No longer staff".
+ * Anyone off staff stays at the bottom rather than being dropped, because
+ * their entries are still in the log and have to stay reachable.
+ */
+function groupActors(actors: ActorOption[]) {
+  const byRole = new Map<string, ActorOption[]>();
+  const gone: ActorOption[] = [];
+
+  for (const a of actors) {
+    if (a.status === 'GONE' || !a.role) {
+      gone.push(a);
+      continue;
+    }
+    const list = byRole.get(a.role) ?? [];
+    list.push(a);
+    byRole.set(a.role, list);
+  }
+
+  const groups = [...byRole.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([role, members]) => ({ key: role, label: role, members }));
+
+  if (gone.length) groups.push({ key: '__gone', label: 'No longer staff', members: gone });
+  return groups;
+}
 
 export default function AuditLogPage() {
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canViewAuditLog">
       <AuditLog />
-    </RequireAdmin>
+    </RequirePermission>
   );
 }
 
@@ -187,12 +204,10 @@ function AuditLog() {
             onChange={(e) => resetPageAnd(setActorId)(e.target.value)}
           >
             <option value="">Anyone</option>
-            {ACTOR_GROUPS.map(({ key, label, match }) => {
-              const group = (filters?.actors || []).filter(match);
-              if (group.length === 0) return null;
+            {groupActors(filters?.actors || []).map(({ key, label, members }) => {
               return (
                 <optgroup key={key} label={label}>
-                  {group.map((a) => (
+                  {members.map((a) => (
                     <option key={a.id} value={String(a.id)}>
                       {a.email}
                       {a.status === 'DELETED' ? ' (deactivated)' : ''}

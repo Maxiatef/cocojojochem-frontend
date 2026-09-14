@@ -169,7 +169,8 @@ export interface CompanyUser {
   email: string;
   fullName: string;
   phone: string | null;
-  role: UserRole;
+  roleId: number | null;
+  role: Role | null;
   createdAt: string;
 }
 
@@ -200,8 +201,13 @@ export interface Testimonial {
   authorName: string;
   company: string | null;
   quote: string;
+  /** Short outcome line, e.g. "300% operational scaling". */
   result: string | null;
   imageUrl: string | null;
+  // Present on the admin list; the public endpoint only ever returns
+  // published rows, so the storefront never needs to branch on these.
+  isPublished: boolean;
+  sortOrder: number;
 }
 
 export interface CustomerProfile {
@@ -209,7 +215,8 @@ export interface CustomerProfile {
   email: string;
   fullName: string;
   phone: string | null;
-  role: string;
+  roleId: number | null;
+  role: Role | null;
   companyId: number | null;
   company: Company | null;
   createdAt: string;
@@ -567,7 +574,31 @@ export interface SiteSettingsResponse {
 
 // --- Users ----------------------------------------------------------------------
 
-export type UserRole = 'CUSTOMER' | 'ADMIN' | 'SALES';
+// Roles are rows in the database now, created and named by an admin, so there
+// is no fixed union of role names any more. A user with no role is a customer.
+export interface Role {
+  id: number;
+  name: string;
+  description: string | null;
+  permissions: Record<string, boolean>;
+  isSystem: boolean;
+  createdAt: string;
+  /** Only present on the list endpoint. */
+  userCount?: number;
+}
+
+export interface PermissionDef {
+  key: string;
+  label: string;
+}
+
+export interface PermissionGroup {
+  group: string;
+  permissions: PermissionDef[];
+}
+
+/** Legacy alias — the display name of a role, or null for a customer. */
+export type UserRole = string;
 
 // DELETED users sit in the admin Recycle Bin: they can't sign in, and are
 // either restored or permanently deleted from there.
@@ -584,7 +615,8 @@ export interface UserListItem {
   firstName?: string | null;
   lastName?: string | null;
   phone: string | null;
-  role: UserRole;
+  roleId: number | null;
+  role: Role | null;
   status: UserStatus;
   // Only set when status is DELETED — shown as the "Deleted" column in the
   // Recycle Bin. Never branch on this; `status` is the authoritative gate.

@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
 import { Category, Paginated, SeoPage } from '@/lib/types';
 import { JsonLd, organizationSchema, webSiteSchema } from '@/components/seo/JsonLd';
+import { ValueMarquee } from '@/components/scientific/ValueMarquee';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
 import { Hero } from '@/components/scientific/Hero';
 import {
@@ -140,14 +141,11 @@ export default async function ScientificHomePage() {
 
       <Hero />
 
-      {/* Value strip */}
+      {/* Value strip — scrolling ticker. Container keeps the page gutters and
+          the band its border; the marquee handles its own overflow inside. */}
       <div className="border-y border-sci-border bg-white">
-        <Container className="flex flex-wrap gap-x-12 gap-y-2 py-6">
-          {VALUE_STRIP.map((item) => (
-            <p key={item} className="font-sci-body text-sci-label font-medium text-sci-blue">
-              {item}
-            </p>
-          ))}
+        <Container className="py-6">
+          <ValueMarquee items={VALUE_STRIP} />
         </Container>
       </div>
 

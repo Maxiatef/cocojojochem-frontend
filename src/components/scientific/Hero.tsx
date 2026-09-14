@@ -19,11 +19,15 @@ import { ArrowLink, Container, Eyebrow, SciButton } from '@/components/scientifi
  * frame, expressed as percentages so the composition holds as the viewport
  * changes.
  *
- * Below `lg` the backdrop is dropped — at phone widths the molecules would sit
- * behind the headline and cost legibility for decoration — and the artwork is
- * re-laid as a block underneath the copy, which is where the mobile design
- * puts it (Figma 8:219). The film is cropped to its right side there, since a
- * 2:1 frame shown whole on a phone would be mostly empty navy.
+ * Below `md` the desktop backdrop is replaced by the phone composition from
+ * Figma 33:353 (page "Scientific edition — complete duplicate" → 02 — Homepage
+ * / Mobile): the same artwork, but oversized and anchored so it bleeds off the
+ * left and bottom edges with only the molecule cluster in frame. See the block
+ * near the end of this file for the offsets and where they come from.
+ *
+ * It previously rendered a rounded aspect-[4/3] crop stacked under the copy,
+ * which is not what the mobile frame shows — that read as a photo card rather
+ * than as the section's backdrop.
  */
 export function Hero() {
   return (
@@ -37,14 +41,14 @@ export function Hero() {
         muted
         playsInline
         preload="auto"
-        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover motion-safe:lg:block"
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover motion-safe:md:block"
       >
         <source src="/scientific/hero-molecular.mp4" type="video/mp4" />
       </video>
 
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 hidden motion-reduce:lg:block"
+        className="pointer-events-none absolute inset-0 hidden motion-reduce:md:block"
       >
         <img
           src="/scientific/hero-teal-glow.svg"
@@ -73,7 +77,11 @@ export function Hero() {
         />
       </div>
 
-      <Container className="relative flex min-h-[520px] flex-col justify-center py-10 md:min-h-[650px] md:py-[88px]">
+      {/* The mobile frame top-aligns its copy (Hero copy at y=52 of an 800
+          tall hero); centring it is what let the text drift down into the
+          artwork as the copy got shorter at wider phone widths. Desktop keeps
+          the centred composition it was built with. */}
+      <Container className="relative flex min-h-[min(800px,205vw)] flex-col justify-start py-10 md:min-h-[650px] md:justify-center md:py-[88px]">
         <div className="flex max-w-[760px] flex-col gap-6">
           <Eyebrow tone="accent">Your next formula starts here</Eyebrow>
 
@@ -105,53 +113,93 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Mobile artwork — the same layers, re-anchored to the orbit's own
-            box so the cluster is self-contained instead of bleeding off the
-            right edge the way the desktop backdrop deliberately does. */}
-        {/* Cropped to the right of the frame, where the molecules are. */}
-        <video
-          aria-hidden
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="mt-10 hidden aspect-[4/3] w-full rounded-xl object-cover object-[78%_50%] motion-safe:block lg:motion-safe:hidden"
-        >
-          <source src="/scientific/hero-molecular.mp4" type="video/mp4" />
-        </video>
-
-        <div
-          aria-hidden
-          className="relative mt-10 hidden aspect-[918/871] w-full overflow-hidden motion-reduce:block lg:motion-reduce:hidden"
-        >
-          <img
-            src="/scientific/hero-teal-glow.svg"
-            alt=""
-            className="absolute left-[24.3%] top-[12.6%] w-[60%] max-w-none opacity-90"
-          />
-          <img
-            src="/scientific/hero-orbit-1.svg"
-            alt=""
-            className="absolute inset-0 h-full w-full max-w-none"
-          />
-          <img
-            src="/scientific/hero-orbit-2.svg"
-            alt=""
-            className="absolute left-[11.4%] top-[18.6%] h-[59%] w-[61.4%] max-w-none"
-          />
-          <img
-            src="/scientific/hero-molecule-distant.svg"
-            alt=""
-            className="absolute left-[2.9%] top-[64.2%] w-[37.1%] max-w-none"
-          />
-          <img
-            src="/scientific/hero-molecule-front.svg"
-            alt=""
-            className="absolute left-[14.4%] top-[22.4%] w-[67.2%] max-w-none"
-          />
-        </div>
       </Container>
+
+      {/* Mobile artwork (Figma 33:353, "Scientific edition — complete
+          duplicate" → 02 — Homepage / Mobile).
+
+          The design does NOT put a boxed image under the copy, which is what
+          this used to render — a rounded aspect-[4/3] crop that read as a
+          photo card and swamped the section. The artwork is a background:
+          1100x550 on a 390x800 frame, anchored at x=-650 / y=430, so it bleeds
+          off the left and bottom edges and only the molecule cluster shows.
+
+          Sizes come from the frame, as a share of the artwork's own box so the
+          caps below can't break the alignment:
+            width  1100/390 = 282.05% of the section, capped at the frame's
+                              own 1100px
+            right  60/1100  =   5.45% of the artwork  (the frame crops the art
+                              at x=1040 of 1100, i.e. 60px past the right edge)
+            over   180/550  =  32.72% of the artwork  (the 980 - 800 bottom
+                              overhang)
+
+          Anchored from the RIGHT, not the left. Left-anchoring reproduces the
+          frame at 390px too, but once the width cap bites it pins a fixed
+          1100px of artwork to the left edge, so everything past 390px opens up
+          dead navy on the right. Anchoring right keeps the molecule cluster
+          where the frame puts it and reveals more of the artwork's left side
+          as the viewport grows, which is also the direction the desktop
+          composition goes. At 390px both give left = -650, the frame's value.
+
+          The height cap matters too: the section caps at 800px, so without a
+          matching cap the artwork outgrows it and the molecules climb over the
+          body copy — which is what went wrong between 500px and 767px. Both
+          cap at 390px, so from there up the artwork stays 1100x550 with its
+          visible top at y=430 in an 800px section.
+
+          The mask exists because the asset is a video with its background
+          baked in, while the frame's artwork is transparent vector sitting on
+          the hero's navy. Covering only the lower part of the section, the
+          video's top edge would otherwise draw a hard horizontal seam across
+          the copy. Fading its first quarter blends it into the gradient. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 right-0 w-[282.05%] max-w-[1100px] translate-x-[5.45%] translate-y-[32.72%] md:hidden"
+      >
+        <div className="relative aspect-[2/1] w-full [mask-image:linear-gradient(to_bottom,transparent_0%,#000_24%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,#000_24%)]">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+          >
+            <source src="/scientific/hero-molecular.mp4" type="video/mp4" />
+          </video>
+
+          {/* Reduced-motion fallback. The box is 2:1 like the desktop frame,
+              so the layers keep their original percentage offsets. */}
+          <div className="absolute inset-0 hidden motion-reduce:block">
+            <img
+              src="/scientific/hero-teal-glow.svg"
+              alt=""
+              className="absolute left-[61%] top-0 w-[42%] max-w-none opacity-90"
+            />
+            <img
+              src="/scientific/hero-orbit-1.svg"
+              alt=""
+              className="absolute left-[44%] top-[-17%] h-[134%] w-[70%] max-w-none"
+            />
+            <img
+              src="/scientific/hero-orbit-2.svg"
+              alt=""
+              className="absolute left-[52%] top-[8%] h-[79%] w-[43%] max-w-none"
+            />
+            <img
+              src="/scientific/hero-molecule-distant.svg"
+              alt=""
+              className="absolute left-[46%] top-[69%] w-[26%] max-w-none"
+            />
+            <img
+              src="/scientific/hero-molecule-front.svg"
+              alt=""
+              className="absolute left-[54%] top-[13%] w-[47%] max-w-none"
+            />
+          </div>
+        </div>
+      </div>
+
     </section>
   );
 }

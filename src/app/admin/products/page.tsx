@@ -28,7 +28,7 @@ import {
 } from '@/components/ui';
 import { ImagePlaceholderIcon, PlusIcon } from '@/components/icons';
 import { StatusCard } from '@/components/admin/StatusCard';
-import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
+import { RequireStaff, useCan } from '@/components/AdminShell';
 import { ProductEditLink } from '@/components/admin/ProductEditLink';
 
 type ProductAdminSort =
@@ -81,7 +81,10 @@ function productStockBadge(p: Product): string {
 type PageTab = 'catalog' | 'analytics';
 
 function ProductsPageContent() {
-  const isAdmin = useIsAdmin();
+  // Adding is its own permission; row editing and the publish toggle both go
+  // through the product update endpoint, so they share canEditProduct.
+  const canCreate = useCan('canCreateProduct');
+  const isAdmin = useCan('canEditProduct');
   const [pageTab, setPageTab] = useState<PageTab>('catalog');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -187,7 +190,7 @@ function ProductsPageContent() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Products" description="The full wholesale ingredient catalog." />
-        {isAdmin && (
+        {canCreate && (
           <Link href="/admin/products/new">
             <Button icon={PlusIcon}>Add Product</Button>
           </Link>
@@ -361,7 +364,7 @@ function ProductsPageContent() {
                   // The row IS the link now — there is no separate read-only
                   // product page any more, so opening a product means opening
                   // its editor. Only admins can go there (the editor is
-                  // RequireAdmin), so a sales user's rows stay inert rather
+                  // RequirePermission), so a sales user's rows stay inert rather
                   // than leading to an access-denied screen.
                   <Tr
                     key={p.id}

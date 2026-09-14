@@ -4,7 +4,7 @@ import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
+import { RequireStaff, useCan } from '@/components/AdminShell';
 import {
   BulkSaleDiscount,
   Category,
@@ -516,6 +516,7 @@ function StringCheckboxPicker({
 // --- Page -----------------------------------------------------------------
 
 export default function CouponsAdminPage() {
+  const canViewBulkSales = useCan('canViewBulkSales');
   const [tab, setTab] = useState<Tab>('coupons');
 
   return (
@@ -528,7 +529,9 @@ export default function CouponsAdminPage() {
             [
               ['coupons', 'Coupons'],
               ['analytics', 'Analytics'],
-              ['bulk-sales', 'Bulk Sales'],
+              // Bulk sales are a separate resource with their own view
+              // permission — coupon access doesn't grant sight of them.
+              ...(canViewBulkSales ? ([['bulk-sales', 'Bulk Sales']] as [Tab, string][]) : []),
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
@@ -547,7 +550,7 @@ export default function CouponsAdminPage() {
 
         {tab === 'coupons' && <CouponsTab />}
         {tab === 'analytics' && <AnalyticsTab />}
-        {tab === 'bulk-sales' && <BulkSalesTab />}
+        {tab === 'bulk-sales' && canViewBulkSales && <BulkSalesTab />}
       </div>
     </RequireStaff>
   );
@@ -637,7 +640,10 @@ function CouponListSection({
   isError: boolean;
   extraFilters?: React.ReactNode;
 }) {
-  const isAdmin = useIsAdmin();
+  // One permission per action, matching what each endpoint checks.
+  const canCreate = useCan('canCreateCoupon');
+  const canEdit = useCan('canEditCoupon');
+  const canDelete = useCan('canDeleteCoupon');
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<CouponFormState>(EMPTY_COUPON_FORM);
@@ -715,7 +721,7 @@ function CouponListSection({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {extraFilters}
-          {isAdmin && (
+          {canCreate && (
             <Button onClick={openCreateModal} icon={PlusIcon} size="sm">
               Add Coupon
             </Button>
@@ -762,16 +768,16 @@ function CouponListSection({
                     <Td align="right">
                       <div className="flex justify-end gap-1.5">
                         <IconButton icon={EyeIcon} label="View" onClick={() => setViewingCoupon(c)} />
-                        {isAdmin && (
-                          <>
-                            <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
-                            <IconButton
-                              icon={TrashIcon}
-                              label="Delete"
-                              variant="danger"
-                              onClick={() => setPendingDelete(c)}
-                            />
-                          </>
+                        {canEdit && (
+                          <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(c)} />
+                        )}
+                        {canDelete && (
+                          <IconButton
+                            icon={TrashIcon}
+                            label="Delete"
+                            variant="danger"
+                            onClick={() => setPendingDelete(c)}
+                          />
                         )}
                       </div>
                     </Td>
@@ -1324,7 +1330,12 @@ function AnalyticsTab() {
 // --- Bulk sales tab ----------------------------------------------------------
 
 function BulkSalesTab() {
-  const isAdmin = useIsAdmin();
+  // Bulk sales are their own resource with their own permissions — this
+  // section was previously gated on the coupon permission, which let an
+  // account with coupon access reach bulk-sale controls it would be refused.
+  const canCreate = useCan('canCreateBulkSale');
+  const canEdit = useCan('canEditBulkSale');
+  const canDelete = useCan('canDeleteBulkSale');
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-bulk-sales'],
@@ -1404,7 +1415,7 @@ function BulkSalesTab() {
           <h2 className="text-sm font-semibold text-slate-900">Bulk Sales</h2>
           <p className="text-xs text-slate-500">Time-boxed percentage discounts across categories, products, or variants.</p>
         </div>
-        {isAdmin && (
+        {canCreate && (
           <Button onClick={openCreateModal} icon={PlusIcon} size="sm">
             Add Bulk Sale
           </Button>
@@ -1442,16 +1453,16 @@ function BulkSalesTab() {
                     </Td>
                     <Td align="right">
                       <div className="flex justify-end gap-1.5">
-                        {isAdmin && (
-                          <>
-                            <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(b)} />
-                            <IconButton
-                              icon={TrashIcon}
-                              label="Delete"
-                              variant="danger"
-                              onClick={() => setPendingDelete(b)}
-                            />
-                          </>
+                        {canEdit && (
+                          <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(b)} />
+                        )}
+                        {canDelete && (
+                          <IconButton
+                            icon={TrashIcon}
+                            label="Delete"
+                            variant="danger"
+                            onClick={() => setPendingDelete(b)}
+                          />
                         )}
                       </div>
                     </Td>

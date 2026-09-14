@@ -20,6 +20,7 @@ import {
   Th,
 } from '@/components/ui';
 import { ArchiveIcon, EyeIcon, TrashIcon } from '@/components/icons';
+import { useCan } from '@/components/AdminShell';
 import { MessageDetailModal } from '@/components/admin/MessageDetailModal';
 
 const TABS: { label: string; value: ContactMessageStatus | 'ALL' }[] = [
@@ -62,6 +63,11 @@ export default function AdminMessagesPage() {
     queryClient.invalidateQueries({ queryKey: ['contact-messages'] });
     queryClient.invalidateQueries({ queryKey: ['contact-messages-stats'] });
   }
+
+  // Archiving, marking read/replied all go through the update endpoint;
+  // deleting has its own permission.
+  const canEdit = useCan('canEditContactMessage');
+  const canDelete = useCan('canDeleteContactMessage');
 
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: number; status: ContactMessageStatus }) =>
@@ -164,14 +170,18 @@ export default function AdminMessagesPage() {
                     <Td align="right">
                       <div className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <IconButton icon={EyeIcon} label="View" onClick={() => setOpenId(m.id)} />
-                        <IconButton
-                          icon={ArchiveIcon}
-                          label={m.status === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
-                          onClick={() =>
-                            updateStatus.mutate({ id: m.id, status: m.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED' })
-                          }
-                        />
-                        <IconButton icon={TrashIcon} label="Delete" variant="danger" onClick={() => setPendingDelete(m)} />
+                        {canEdit && (
+                          <IconButton
+                            icon={ArchiveIcon}
+                            label={m.status === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
+                            onClick={() =>
+                              updateStatus.mutate({ id: m.id, status: m.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED' })
+                            }
+                          />
+                        )}
+                        {canDelete && (
+                          <IconButton icon={TrashIcon} label="Delete" variant="danger" onClick={() => setPendingDelete(m)} />
+                        )}
                       </div>
                     </Td>
                   </tr>
@@ -195,15 +205,24 @@ export default function AdminMessagesPage() {
           status={openMessage.status}
           isReplied={!!openMessage.repliedAt}
           busy={busy}
-          onArchiveToggle={() =>
-            updateStatus.mutate({
-              id: openMessage.id,
-              status: openMessage.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED',
-            })
+          onArchiveToggle={
+            canEdit
+              ? () =>
+                  updateStatus.mutate({
+                    id: openMessage.id,
+                    status: openMessage.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED',
+                  })
+              : undefined
           }
-          onMarkUnread={() => updateStatus.mutate({ id: openMessage.id, status: 'UNREAD' })}
-          onToggleReplied={() => setReplied.mutate({ id: openMessage.id, replied: !openMessage.repliedAt })}
-          onDelete={() => setPendingDelete(openMessage)}
+          onMarkUnread={
+            canEdit ? () => updateStatus.mutate({ id: openMessage.id, status: 'UNREAD' }) : undefined
+          }
+          onToggleReplied={
+            canEdit
+              ? () => setReplied.mutate({ id: openMessage.id, replied: !openMessage.repliedAt })
+              : undefined
+          }
+          onDelete={canDelete ? () => setPendingDelete(openMessage) : undefined}
         />
       )}
 

@@ -5,10 +5,11 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { RequireAdmin } from '@/components/AdminShell';
-import { Company, UserDetail, UserRole } from '@/lib/types';
+import { RequirePermission, useCan } from '@/components/AdminShell';
+import { Company, Role, UserDetail } from '@/lib/types';
 import { WEAK_PASSWORD_THRESHOLD, generatePassword, scorePassword } from '@/lib/passwordStrength';
 import {
+  Badge,
   Button,
   Card,
   ConfirmDialog,
@@ -93,11 +94,19 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     queryFn: () => api.get<Company[]>('/companies'),
   });
 
+  const { data: roles } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: () => api.get<Role[]>('/roles'),
+  });
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<UserRole>('CUSTOMER');
+  // '' means no role at all, which is what a customer is.
+  const canResetPassword = useCan('canResetUserPassword');
+  const canAssignRoles = useCan('canManageUserRoles');
+  const [roleId, setRoleId] = useState<string>('');
   const [companyId, setCompanyId] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -120,7 +129,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     setLastName(user.lastName ?? fallbackRest.join(' '));
     setEmail(user.email);
     setPhone(user.phone || '');
-    setRole(user.role);
+    setRoleId(user.roleId != null ? String(user.roleId) : '');
     setCompanyId(user.companyId != null ? String(user.companyId) : '');
   }, [user]);
 
@@ -214,7 +223,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       lastName: lastName.trim() || null,
       email,
       phone: phone || null,
-      role,
+      roleId: roleId ? Number(roleId) : null,
       companyId: companyId ? Number(companyId) : null,
     });
   }
@@ -251,7 +260,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const isRecycled = user?.status === 'DELETED';
 
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canEditUser">
       <PageHeader title="Edit User" description="Update profile details, role, and account access." />
 
       {isLoading && <LoadingState />}
@@ -311,12 +320,21 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               </SectionCard>
 
               <SectionCard title="Account">
-                <FieldRow label="Role">
-                  <SelectField label="" value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
-                    <option value="CUSTOMER">Customer</option>
-                    <option value="SALES">Sales</option>
-                    <option value="ADMIN">Admin</option>
-                  </SelectField>
+                <FieldRow label="Role" help="Roles and their permissions are managed under Roles.">
+                  {/* Assigning a role is its own permission — editing a user's
+                      details doesn't imply being able to change their access. */}
+                  {canAssignRoles ? (
+                    <SelectField label="" value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+                      <option value="">Customer (no staff role)</option>
+                      {roles?.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </SelectField>
+                  ) : (
+                    <Badge status={user.role?.name ?? 'Customer'} />
+                  )}
                 </FieldRow>
                 <FieldRow label="Company" help="Links this user to a wholesale account.">
                   <SelectField label="" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
@@ -350,133 +368,138 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               </div>
             </form>
 
-            <SectionCard title="Account Management">
-              {/* --- New password ------------------------------------------ */}
-              <FieldRow
-                label="New Password"
-                help={
-                  passwordOpen
-                    ? 'Saving this signs the user out of every device.'
-                    : 'Set a password directly. The user is not notified by email.'
-                }
-              >
-                {!passwordOpen ? (
+            {/* Setting a password, mailing a reset link and revoking sessions
+                are all the same permission — every control in this card is a
+                credential action, so the whole card is hidden without it. */}
+            {canResetPassword && (
+              <SectionCard title="Account Management">
+                {/* --- New password ------------------------------------------ */}
+                <FieldRow
+                  label="New Password"
+                  help={
+                    passwordOpen
+                      ? 'Saving this signs the user out of every device.'
+                      : 'Set a password directly. The user is not notified by email.'
+                  }
+                >
+                  {!passwordOpen ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={isRecycled}
+                      onClick={openPasswordEditor}
+                    >
+                      Set New Password
+                    </Button>
+                  ) : (
+                    <form onSubmit={handleSetPassword} className="space-y-3">
+                      {/* Input on its own row with the two controls beneath —
+                          the column is too narrow to fit them inline without
+                          one of them wrapping unpredictably. */}
+                      <TextField
+                        label=""
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          setConfirmWeak(false);
+                        }}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? 'Hide' : 'Show'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setNewPassword(generatePassword());
+                            setShowPassword(true);
+                            setConfirmWeak(false);
+                          }}
+                        >
+                          Regenerate
+                        </Button>
+                      </div>
+
+                      <StrengthMeter password={newPassword} />
+
+                      {isWeak && newPassword.length > 0 && (
+                        <label className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+                          <input
+                            type="checkbox"
+                            checked={confirmWeak}
+                            onChange={(e) => setConfirmWeak(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600"
+                          />
+                          <span>Confirm use of weak password</span>
+                        </label>
+                      )}
+
+                      {passwordError && (
+                        <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{passwordError}</div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="submit"
+                          size="sm"
+                          loading={passwordMutation.isPending}
+                          disabled={newPassword.length < 8 || (isWeak && !confirmWeak)}
+                        >
+                          Save Password
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={cancelPasswordEditor}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </FieldRow>
+
+                {/* --- Reset link ------------------------------------------- */}
+                <FieldRow
+                  label="Send Password Reset"
+                  help={`Emails ${user.email} a link to choose their own password. The link expires in 24 hours and can only be used once.`}
+                >
                   <Button
                     type="button"
                     variant="secondary"
                     size="sm"
+                    loading={resetLinkMutation.isPending}
                     disabled={isRecycled}
-                    onClick={openPasswordEditor}
+                    onClick={() => setResetConfirmOpen(true)}
                   >
-                    Set New Password
+                    Send Reset Link
                   </Button>
-                ) : (
-                  <form onSubmit={handleSetPassword} className="space-y-3">
-                    {/* Input on its own row with the two controls beneath —
-                        the column is too narrow to fit them inline without
-                        one of them wrapping unpredictably. */}
-                    <TextField
-                      label=""
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      value={newPassword}
-                      onChange={(e) => {
-                        setNewPassword(e.target.value);
-                        setConfirmWeak(false);
-                      }}
-                    />
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setShowPassword((v) => !v)}
-                      >
-                        {showPassword ? 'Hide' : 'Show'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setNewPassword(generatePassword());
-                          setShowPassword(true);
-                          setConfirmWeak(false);
-                        }}
-                      >
-                        Regenerate
-                      </Button>
-                    </div>
+                </FieldRow>
 
-                    <StrengthMeter password={newPassword} />
-
-                    {isWeak && newPassword.length > 0 && (
-                      <label className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
-                        <input
-                          type="checkbox"
-                          checked={confirmWeak}
-                          onChange={(e) => setConfirmWeak(e.target.checked)}
-                          className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600"
-                        />
-                        <span>Confirm use of weak password</span>
-                      </label>
-                    )}
-
-                    {passwordError && (
-                      <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{passwordError}</div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="submit"
-                        size="sm"
-                        loading={passwordMutation.isPending}
-                        disabled={newPassword.length < 8 || (isWeak && !confirmWeak)}
-                      >
-                        Save Password
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={cancelPasswordEditor}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                )}
-              </FieldRow>
-
-              {/* --- Reset link ------------------------------------------- */}
-              <FieldRow
-                label="Send Password Reset"
-                help={`Emails ${user.email} a link to choose their own password. The link expires in 24 hours and can only be used once.`}
-              >
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  loading={resetLinkMutation.isPending}
-                  disabled={isRecycled}
-                  onClick={() => setResetConfirmOpen(true)}
+                {/* --- Sessions --------------------------------------------- */}
+                <FieldRow
+                  label="Sessions"
+                  help="Signs this user out on every device without changing their password. Useful if they've lost a device or left it signed in somewhere."
                 >
-                  Send Reset Link
-                </Button>
-              </FieldRow>
-
-              {/* --- Sessions --------------------------------------------- */}
-              <FieldRow
-                label="Sessions"
-                help="Signs this user out on every device without changing their password. Useful if they've lost a device or left it signed in somewhere."
-              >
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="sm"
-                  loading={revokeSessionsMutation.isPending}
-                  disabled={isRecycled}
-                  onClick={() => setSessionsConfirmOpen(true)}
-                >
-                  Log Out Everywhere
-                </Button>
-              </FieldRow>
-            </SectionCard>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    loading={revokeSessionsMutation.isPending}
+                    disabled={isRecycled}
+                    onClick={() => setSessionsConfirmOpen(true)}
+                  >
+                    Log Out Everywhere
+                  </Button>
+                </FieldRow>
+              </SectionCard>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -514,6 +537,6 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         onConfirm={() => revokeSessionsMutation.mutate()}
         onCancel={() => setSessionsConfirmOpen(false)}
       />
-    </RequireAdmin>
+    </RequirePermission>
   );
 }

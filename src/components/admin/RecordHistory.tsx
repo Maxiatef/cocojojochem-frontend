@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { AuditLogEntry, Paginated } from '@/lib/types';
 import { Badge, ErrorState, LoadingState, Pagination } from '@/components/ui';
-import { useIsAdmin } from '@/components/AdminShell';
+import { useCan } from '@/components/AdminShell';
 import {
   AuditChildChanges,
   AuditDiffTable,
@@ -43,7 +43,7 @@ export function RecordHistory({
   entityId: number | string;
   pageSize?: number;
 }) {
-  const isAdmin = useIsAdmin();
+  const isAdmin = useCan('canViewAuditLog');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 

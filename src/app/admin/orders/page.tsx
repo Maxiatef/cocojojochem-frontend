@@ -23,6 +23,7 @@ import {
 import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
 import { EyeIcon, ShippingIcon } from '@/components/icons';
 import { OrderStatusStepper } from '@/components/OrderStatusStepper';
+import { useCan } from '@/components/AdminShell';
 import { formatUsd } from '@/lib/pricing';
 import { StatusCard } from '@/components/admin/StatusCard';
 
@@ -362,6 +363,14 @@ function ManageShippingModal({
     },
   });
 
+  // Three separate permissions: advancing the status, cancelling (its own,
+  // because it loses a sale and can't be undone from here), and tracking.
+  // Controls the account can't use aren't shown — a button that always 403s
+  // reads as a broken page rather than a restriction.
+  const canEditStatus = useCan('canEditOrderStatus');
+  const canCancel = useCan('canCancelOrder');
+  const canEditTracking = useCan('canEditOrderTracking');
+
   const cancelOrder = useMutation({
     mutationFn: () => api.patch(`/orders/${order.id}/status`, { status: 'CANCELLED' }),
     onSuccess: () => {
@@ -376,7 +385,7 @@ function ManageShippingModal({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Order Status</p>
-            {order.status !== 'CANCELLED' && (
+            {order.status !== 'CANCELLED' && canCancel && (
               <Button
                 type="button"
                 variant="danger"
@@ -395,7 +404,7 @@ function ManageShippingModal({
             <OrderStatusStepper
               currentStatus={order.status}
               onSelect={onStatusSelect}
-              disabled={statusPending}
+              disabled={statusPending || !canEditStatus}
             />
           )}
         </div>
@@ -435,17 +444,19 @@ function ManageShippingModal({
             <p className="mt-3 text-xs font-medium text-emerald-700">Tracking info saved.</p>
           )}
 
-          <div className="mt-3 flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              loading={saveTracking.isPending}
-              disabled={!trackingNumber.trim()}
-              onClick={() => saveTracking.mutate()}
-            >
-              Save Tracking
-            </Button>
-          </div>
+          {canEditTracking && (
+            <div className="mt-3 flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                loading={saveTracking.isPending}
+                disabled={!trackingNumber.trim()}
+                onClick={() => saveTracking.mutate()}
+              >
+                Save Tracking
+              </Button>
+            </div>
+          )}
         </div>
 
         {order.trackingNumber && (
