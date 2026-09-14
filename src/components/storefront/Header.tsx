@@ -11,7 +11,8 @@ const NAV = [
   { href: '/categories', label: 'Categories' },
   { href: '/products', label: 'Products' },
   { href: '/functions', label: 'Functions' },
-  { href: '/a-z', label: 'A-Z' },
+  // A-Z index taken offline — restore this entry when /a-z comes back.
+  // { href: '/a-z', label: 'A-Z' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];

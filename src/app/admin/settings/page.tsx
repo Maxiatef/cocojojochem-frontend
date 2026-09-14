@@ -136,7 +136,7 @@ export default function SettingsAdminPage() {
               onClick={() => setTab(key)}
               className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition ${
                 tab === key
-                  ? 'border-brand-600 text-brand-700'
+                  ? 'border-sci-blue text-sci-blue'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -193,7 +193,7 @@ function ToggleSwitch({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
-          checked ? 'bg-brand-600' : 'bg-slate-300'
+          checked ? 'bg-sci-blue' : 'bg-slate-300'
         }`}
       >
         <span
@@ -894,7 +894,7 @@ function ShippingZoneRateTable({
                   return (
                     <tr key={row.breakpoint} className="group">
                       <td
-                        className={`sticky left-0 z-10 border-b border-r border-slate-100 px-4 py-2 text-xs font-medium text-slate-700 ${rowBg} group-hover:bg-brand-50`}
+                        className={`sticky left-0 z-10 border-b border-r border-slate-100 px-4 py-2 text-xs font-medium text-slate-700 ${rowBg} group-hover:bg-sci-pale`}
                       >
                         {rowLabel(row.breakpoint)}
                       </td>
@@ -922,7 +922,7 @@ function ShippingZoneRateTable({
                         return (
                           <td
                             key={zone}
-                            className={`border-b border-slate-100 px-2 py-1 ${rowBg} group-hover:bg-brand-50`}
+                            className={`border-b border-slate-100 px-2 py-1 ${rowBg} group-hover:bg-sci-pale`}
                           >
                             {/* Fills the cell (w-full) rather than sitting as a
                                 narrow box in a sea of padding, and stays
@@ -940,7 +940,7 @@ function ShippingZoneRateTable({
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') e.currentTarget.blur();
                               }}
-                              className={`w-full rounded border bg-transparent px-2 py-1 text-center text-sm tabular-nums text-slate-700 outline-none transition hover:border-slate-300 hover:bg-white focus:border-brand-500 focus:bg-white focus:text-slate-900 focus:ring-2 focus:ring-brand-100 disabled:opacity-40 ${
+                              className={`w-full rounded border bg-transparent px-2 py-1 text-center text-sm tabular-nums text-slate-700 outline-none transition hover:border-slate-300 hover:bg-white focus:border-sci-blue focus:bg-white focus:text-slate-900 focus:ring-2 focus:ring-sci-blue/15 disabled:opacity-40 ${
                                 drafts[key] !== undefined ? 'border-amber-300 bg-amber-50' : 'border-transparent'
                               }`}
                             />

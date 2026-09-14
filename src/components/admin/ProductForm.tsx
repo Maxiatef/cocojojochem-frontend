@@ -645,7 +645,7 @@ export function ProductForm({
                 <button
                   type="button"
                   onClick={() => setSlugEditing(true)}
-                  className="text-xs font-medium text-brand-600 hover:underline"
+                  className="text-xs font-medium text-sci-blue hover:underline"
                 >
                   Edit
                 </button>
@@ -814,7 +814,7 @@ export function ProductForm({
               {/* The count stays visible while collapsed, so the section can be
                   closed without losing track of what is selected. */}
               {functionIds.length > 0 && (
-                <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                <span className="ml-2 rounded-full bg-sci-pale px-2 py-0.5 text-xs font-medium text-sci-blue">
                   {functionIds.length}
                 </span>
               )}
@@ -830,7 +830,7 @@ export function ProductForm({
                   onClick={() => toggleId(functionIds, f.id, setFunctionIds)}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                     functionIds.includes(f.id)
-                      ? 'border-brand-600 bg-brand-50 text-brand-700'
+                      ? 'border-sci-blue bg-sci-pale text-sci-blue'
                       : 'border-slate-200 text-slate-600 hover:border-slate-300'
                   }`}
                 >
@@ -880,13 +880,13 @@ export function ProductForm({
                   placeholder="Key (e.g. pH)"
                   value={s.key}
                   onChange={(e) => updateSpec(i, { key: e.target.value })}
-                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
                 />
                 <input
                   placeholder="Value (e.g. 6.5)"
                   value={s.value}
                   onChange={(e) => updateSpec(i, { value: e.target.value })}
-                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
                 />
                 <button
                   type="button"
@@ -971,7 +971,7 @@ export function ProductForm({
               type="checkbox"
               checked={isFeatured}
               onChange={(e) => setIsFeatured(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              className="h-4 w-4 rounded border-slate-300 text-sci-blue focus:ring-sci-blue"
             />
             Featured
           </label>
@@ -999,7 +999,7 @@ export function ProductForm({
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleTagInputKeyDown}
               placeholder="e.g. emollient"
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
             />
             <Button type="button" variant="secondary" size="sm" onClick={() => addTag(tagInput)}>
               Add
@@ -1012,14 +1012,14 @@ export function ProductForm({
               {tags.map((t) => (
                 <span
                   key={t}
-                  className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                  className="flex items-center gap-1 rounded-full bg-sci-pale px-2.5 py-1 text-xs font-medium text-sci-blue"
                 >
                   {t}
                   <button
                     type="button"
                     onClick={() => removeTag(t)}
                     aria-label={`Remove tag ${t}`}
-                    className="text-brand-500 hover:text-brand-800"
+                    className="text-sci-blue hover:text-sci-navy"
                   >
                     ×
                   </button>
@@ -1315,7 +1315,7 @@ function DocumentsField({
                     updateAt(i, { type: value as ProductDocType, certificationId: null });
                   }
                 }}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-sci-blue focus:outline-none"
               >
                 <optgroup label="Document">
                   {DOC_TYPE_OPTIONS.map(([value, label]) => (
@@ -1343,7 +1343,7 @@ function DocumentsField({
                 value={doc.label}
                 onChange={(e) => updateAt(i, { label: e.target.value })}
                 placeholder="Label shown to customers"
-                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-900 focus:border-sci-blue focus:outline-none"
               />
 
               {/* Opens the stored file so an admin can confirm they attached
@@ -1352,7 +1352,7 @@ function DocumentsField({
                 href={doc.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 text-xs font-medium text-brand-700 underline hover:no-underline"
+                className="shrink-0 text-xs font-medium text-sci-blue underline hover:no-underline"
               >
                 View
               </a>
@@ -1377,7 +1377,7 @@ function DocumentsField({
         accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"
         onChange={handleFilesChange}
         disabled={uploading}
-        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
       />
       {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
@@ -1487,7 +1487,7 @@ function GalleryField({ images, onChange }: { images: string[]; onChange: (urls:
         accept="image/jpeg,image/png,image/webp,image/gif"
         onChange={handleFilesChange}
         disabled={uploading}
-        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
       />
       {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
@@ -1546,7 +1546,7 @@ function VariantImagePanel({
           accept="image/jpeg,image/png,image/webp,image/gif"
           onChange={handleFileChange}
           disabled={uploading}
-          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
         />
         {value && (
           <button

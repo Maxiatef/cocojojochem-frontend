@@ -102,12 +102,12 @@ export function ProductMediaGallery({
 
   return (
     <div>
-      <div className="group relative flex aspect-square items-center justify-center overflow-hidden bg-sand-100">
+      <div className="group relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-sci-border bg-sci-pale">
         {mainImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
         ) : (
-          <ImagePlaceholderIcon className="h-14 w-14 text-sand-400" />
+          <ImagePlaceholderIcon className="h-14 w-14 text-sci-border" />
         )}
 
         {showArrows && (
@@ -129,7 +129,7 @@ export function ProductMediaGallery({
               <ChevronRightIcon className="h-5 w-5" />
             </button>
 
-            <span className="absolute bottom-2 right-2 rounded-full bg-white/85 px-2 py-0.5 text-xs text-ink-soft">
+            <span className="absolute bottom-2 right-2 rounded-full bg-white/85 px-2.5 py-0.5 font-sci-body text-xs text-sci-muted">
               {activeIndex + 1} / {images.length}
             </span>
           </>
@@ -148,7 +148,7 @@ export function ProductMediaGallery({
                 aria-label={`View image ${i + 1} of ${images.length}`}
                 aria-current={isActive}
                 className={`aspect-square overflow-hidden border transition ${
-                  isActive ? 'border-olive-600' : 'border-sand-300 hover:border-olive-400'
+                  isActive ? 'border-sci-blue' : 'border-sci-border hover:border-sci-blue/60'
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -164,21 +164,21 @@ export function ProductMediaGallery({
               target="_blank"
               rel="noopener noreferrer"
               title={`${documentTitle(doc)} — ${documentKind(doc)} (opens in a new tab)`}
-              className="flex aspect-square flex-col items-center justify-center gap-1 border border-sand-300 bg-white px-1 text-center transition hover:border-olive-400 hover:bg-sand-50"
+              className="flex aspect-square flex-col items-center justify-center gap-1 rounded-md border border-sci-border bg-white px-1 text-center transition hover:border-sci-blue hover:bg-sci-pale"
             >
-              <FileIcon className="h-5 w-5 text-olive-600" />
+              <FileIcon className="h-5 w-5 text-sci-blue" />
               <span className="text-[10px] font-semibold uppercase tracking-wide text-ink">
                 {DOC_TYPE_BADGE[doc.type]}
               </span>
-              <span className="text-[9px] uppercase text-ink-soft/60">{fileExtension(doc.url)}</span>
+              <span className="font-sci-body text-[9px] uppercase text-sci-muted">{fileExtension(doc.url)}</span>
             </a>
           ))}
         </div>
       )}
 
       {documents.length > 0 && (
-        <div className="mt-4 border-t border-sand-300 pt-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-ink-soft">
+        <div className="mt-4 border-t border-sci-border pt-4">
+          <p className="font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
             Documents &amp; Certificates
           </p>
           <ul className="mt-2 space-y-1.5">
@@ -188,13 +188,13 @@ export function ProductMediaGallery({
                   href={doc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-2 text-sm text-ink hover:text-olive-700"
+                  className="group flex items-center gap-2 font-sci-body text-sci-label text-sci-navy transition hover:text-sci-blue"
                 >
-                  <FileIcon className="h-4 w-4 shrink-0 text-olive-600" />
-                  <span className="underline decoration-sand-400 group-hover:decoration-olive-600">
+                  <FileIcon className="h-4 w-4 shrink-0 text-sci-blue" />
+                  <span className="underline decoration-sci-border underline-offset-2 group-hover:decoration-sci-blue">
                     {documentTitle(doc)}
                   </span>
-                  <span className="text-xs text-ink-soft/70">
+                  <span className="font-sci-body text-xs text-sci-muted">
                     {documentKind(doc)} &middot; {fileExtension(doc.url)}
                   </span>
                 </a>

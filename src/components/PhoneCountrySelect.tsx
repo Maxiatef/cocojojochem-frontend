@@ -50,25 +50,25 @@ export function PhoneCountrySelect({
         onClick={() => setOpen((v) => !v)}
         aria-label="Select country code"
         aria-expanded={open}
-        className="flex h-full items-center gap-1.5 border border-sand-300 px-2.5 py-2.5 text-sm text-ink outline-none focus:border-olive-600"
+        className="flex h-full items-center gap-1.5 border border-sci-border px-2.5 py-2.5 text-sm text-sci-navy outline-none focus:border-sci-blue"
       >
         <span className={`fi fi-${selected.iso2}`} />
         <span>+{selected.dialCode}</span>
-        <span className="text-ink-soft/60">▾</span>
+        <span className="text-sci-muted">▾</span>
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 w-72 border border-sand-300 bg-white shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-1 w-72 border border-sci-border bg-white shadow-lg">
           <input
             ref={searchRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search country or code…"
-            className="w-full border-b border-sand-200 px-3 py-2 text-sm text-ink outline-none"
+            className="w-full border-b border-sci-border px-3 py-2 text-sm text-sci-navy outline-none"
           />
           <div className="max-h-64 overflow-y-auto">
             {filtered.length === 0 && (
-              <p className="px-3 py-3 text-sm text-ink-soft">No matches.</p>
+              <p className="px-3 py-3 text-sm text-sci-muted">No matches.</p>
             )}
             {filtered.map((c) => (
               <button
@@ -78,13 +78,13 @@ export function PhoneCountrySelect({
                   onChange(c.iso2);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-sand-50 ${
-                  c.iso2 === selected.iso2 ? 'bg-sand-50' : ''
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-sci-pale ${
+                  c.iso2 === selected.iso2 ? 'bg-sci-pale' : ''
                 }`}
               >
                 <span className={`fi fi-${c.iso2}`} />
-                <span className="flex-1 truncate text-ink">{c.name}</span>
-                <span className="text-ink-soft">+{c.dialCode}</span>
+                <span className="flex-1 truncate text-sci-navy">{c.name}</span>
+                <span className="text-sci-muted">+{c.dialCode}</span>
               </button>
             ))}
           </div>

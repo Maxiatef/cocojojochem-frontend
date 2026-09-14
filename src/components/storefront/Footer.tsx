@@ -34,7 +34,8 @@ export function StorefrontFooter() {
               <li><Link href="/categories" className="hover:text-white">Categories</Link></li>
               <li><Link href="/products" className="hover:text-white">All Products</Link></li>
               <li><Link href="/functions" className="hover:text-white">Functions</Link></li>
-              <li><Link href="/a-z" className="hover:text-white">A-Z Index</Link></li>
+              {/* A-Z index taken offline — restore when /a-z comes back. */}
+              {/* <li><Link href="/a-z" className="hover:text-white">A-Z Index</Link></li> */}
             </ul>
           </div>
 

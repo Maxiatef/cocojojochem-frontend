@@ -240,12 +240,12 @@ export default function UsersAdminPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or email…"
-            className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sci-blue"
           />
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
           >
             <option value="">All roles</option>
             <option value="CUSTOMER">Customer</option>

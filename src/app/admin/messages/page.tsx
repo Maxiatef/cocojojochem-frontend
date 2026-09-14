@@ -100,7 +100,7 @@ export default function AdminMessagesPage() {
             key={t.value}
             onClick={() => setTab(t.value)}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              tab === t.value ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              tab === t.value ? 'bg-sci-blue text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             {t.label}
@@ -138,7 +138,7 @@ export default function AdminMessagesPage() {
                     <Td>
                       <div className="flex items-center gap-2">
                         {m.status === 'UNREAD' && (
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-brand-600" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-sci-blue" />
                         )}
                         <div className="min-w-0">
                           <p className={`truncate ${m.status === 'UNREAD' ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>

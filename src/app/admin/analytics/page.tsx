@@ -66,7 +66,7 @@ export default function AnalyticsAdminPage() {
               onClick={() => setTab(key)}
               className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
                 tab === key
-                  ? 'border-brand-600 text-brand-700'
+                  ? 'border-sci-blue text-sci-blue'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -116,7 +116,7 @@ function SalesProductsTab() {
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
         >
           {DAY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -146,20 +146,20 @@ function SalesProductsTab() {
                 <AreaChart data={revenueData}>
                   <defs>
                     <linearGradient id="analyticsRevenueFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3a9640" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#3a9640" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#1465bb" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="#1465bb" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d7e5f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#536b7e' }} axisLine={false} tickLine={false} />
                   <YAxis
-                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    tick={{ fontSize: 12, fill: '#536b7e' }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={(v) => `$${v}`}
                   />
-                  <Tooltip formatter={(v: number) => formatUsd(v)} cursor={{ stroke: '#3a9640', strokeWidth: 1 }} />
-                  <Area type="monotone" dataKey="revenue" stroke="#2b7a30" strokeWidth={2} fill="url(#analyticsRevenueFill)" />
+                  <Tooltip formatter={(v: number) => formatUsd(v)} cursor={{ stroke: '#1465bb', strokeWidth: 1 }} />
+                  <Area type="monotone" dataKey="revenue" stroke="#0b2945" strokeWidth={2} fill="url(#analyticsRevenueFill)" />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -208,11 +208,11 @@ function SalesProductsTab() {
             ) : (
               <ResponsiveContainer width="100%" height={Math.max(180, categoryData.length * 36)}>
                 <BarChart data={categoryData} layout="vertical" margin={{ left: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                  <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
-                  <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(v: number) => formatUsd(v)} cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="revenue" fill="#3a9640" radius={[0, 4, 4, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#d7e5f0" />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: '#536b7e' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 12, fill: '#536b7e' }} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(v: number) => formatUsd(v)} cursor={{ fill: '#f1f7fb' }} />
+                  <Bar dataKey="revenue" fill="#1465bb" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -309,7 +309,7 @@ function VisitorsTab() {
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
         >
           {DAY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -341,19 +341,19 @@ function VisitorsTab() {
                 <AreaChart data={seriesData}>
                   <defs>
                     <linearGradient id="analyticsVisitorsFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3a9640" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#3a9640" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#1465bb" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="#1465bb" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip cursor={{ stroke: '#3a9640', strokeWidth: 1 }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#d7e5f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#536b7e' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#536b7e' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ stroke: '#1465bb', strokeWidth: 1 }} />
                   <Area
                     type="monotone"
                     dataKey="uniqueVisitors"
                     name="Unique Visitors"
-                    stroke="#2b7a30"
+                    stroke="#0b2945"
                     strokeWidth={2}
                     fill="url(#analyticsVisitorsFill)"
                   />

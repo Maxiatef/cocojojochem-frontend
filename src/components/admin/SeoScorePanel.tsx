@@ -137,7 +137,7 @@ export function SeoScorePanel({
           single click. Hidden once a keyphrase is set, or once it matches. */}
       {data.suggestedKeyphrase &&
         normaliseKeyphrase(draft.focusKeyphrase) !== normaliseKeyphrase(data.suggestedKeyphrase) && (
-          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-sci-pale px-3 py-2 text-xs text-sci-navy">
             <span>
               {draft.focusKeyphrase?.trim() ? 'Suggested keyphrase:' : 'Use this keyphrase:'}{' '}
               <strong className="font-semibold">{data.suggestedKeyphrase}</strong>
@@ -146,7 +146,7 @@ export function SeoScorePanel({
               <button
                 type="button"
                 onClick={() => onApplyKeyphrase(data.suggestedKeyphrase as string)}
-                className="ml-auto rounded-md border border-brand-300 bg-white px-2 py-1 font-medium text-brand-700 transition hover:bg-brand-100"
+                className="ml-auto rounded-md border border-sci-border bg-white px-2 py-1 font-medium text-sci-blue transition hover:bg-sci-blue/15"
               >
                 {draft.focusKeyphrase?.trim() ? 'Replace' : 'Use it'}
               </button>

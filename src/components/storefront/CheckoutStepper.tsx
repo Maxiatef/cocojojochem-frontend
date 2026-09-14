@@ -15,24 +15,24 @@ export function CheckoutStepper({ current }: { current: 0 | 1 | 2 }) {
               <span
                 className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition ${
                   done
-                    ? 'border-olive-700 bg-olive-700 text-white'
+                    ? 'border-sci-blue bg-sci-blue text-white'
                     : active
-                      ? 'border-olive-700 bg-white text-olive-700'
-                      : 'border-sand-300 bg-white text-ink-soft'
+                      ? 'border-sci-blue bg-white text-sci-blue'
+                      : 'border-sci-border bg-white text-sci-muted'
                 }`}
               >
                 {done ? '✓' : idx + 1}
               </span>
               <span
                 className={`whitespace-nowrap text-[11px] font-medium uppercase tracking-wide ${
-                  done || active ? 'text-ink' : 'text-ink-soft/70'
+                  done || active ? 'text-sci-navy' : 'text-sci-muted'
                 }`}
               >
                 {step}
               </span>
             </div>
             {idx < STEPS.length - 1 && (
-              <div className={`mx-2 h-px flex-1 ${done ? 'bg-olive-700' : 'bg-sand-300'}`} />
+              <div className={`mx-2 h-px flex-1 ${done ? 'bg-sci-blue' : 'bg-sci-border'}`} />
             )}
           </div>
         );

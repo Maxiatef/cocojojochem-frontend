@@ -64,7 +64,7 @@ export default function CompaniesPage() {
                         href={/^https?:\/\//i.test(c.website) ? c.website : `https://${c.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-brand-600 hover:underline"
+                        className="text-xs text-sci-blue hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {c.website}
@@ -161,7 +161,7 @@ function CompanyDetailModal({ companyId, onClose }: { companyId: number; onClose
               {!editing && (
                 <button
                   onClick={startEditing}
-                  className="text-xs font-medium text-brand-600 hover:underline"
+                  className="text-xs font-medium text-sci-blue hover:underline"
                 >
                   Edit
                 </button>
@@ -213,7 +213,7 @@ function CompanyDetailModal({ companyId, onClose }: { companyId: number; onClose
                         href={/^https?:\/\//i.test(company.website) ? company.website : `https://${company.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-brand-600 hover:underline"
+                        className="text-sci-blue hover:underline"
                       >
                         {company.website}
                       </a>

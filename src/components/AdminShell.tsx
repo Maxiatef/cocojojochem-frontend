@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -61,8 +62,8 @@ function AccessDenied({
   backLabel?: string;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-sci-pale px-4">
+      <div className="w-full max-w-sm border border-sci-border bg-white p-8 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-red-600">
             <path
@@ -74,8 +75,8 @@ function AccessDenied({
             />
           </svg>
         </div>
-        <h1 className="text-base font-semibold text-slate-900">Access denied</h1>
-        <p className="mt-1.5 text-sm text-slate-500">
+        <h1 className="font-sci-heading text-[20px] font-semibold text-sci-navy">Access denied</h1>
+        <p className="mt-2 font-sci-body text-sci-label text-sci-muted">
           {message ||
             (reason === 'not-logged-in'
               ? 'You need to sign in with a staff account to view the admin dashboard.'
@@ -83,7 +84,7 @@ function AccessDenied({
         </p>
         <a
           href={reason === 'not-logged-in' ? '/admin/login' : backHref}
-          className="mt-6 inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+          className="mt-6 inline-flex items-center justify-center rounded-md bg-sci-accent px-5 py-3 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95"
         >
           {reason === 'not-logged-in' ? 'Go to login' : backLabel}
         </a>
@@ -115,23 +116,27 @@ function SidebarContent({
 
   return (
     <>
-      <div className="flex items-center gap-2.5 border-b border-slate-200 px-6 py-5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-          CJ
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-900">CocoJojoChem</p>
-          <p className="text-xs text-slate-500">Wholesale Admin</p>
-        </div>
+      <div className="flex flex-col gap-2 border-b border-white/10 px-6 py-6">
+        <Link href="/" aria-label="COCOJOJO Chemical — storefront home" className="w-fit">
+          <Image
+            src="/brand/cocojojo-logo.png"
+            alt="COCOJOJO Chemical"
+            width={999}
+            height={400}
+            sizes="300px"
+            className="h-11 w-auto brightness-0 invert"
+          />
+        </Link>
+
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+      <nav className="scrollbar-slim flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {nav.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
 
           let badgeCount = 0;
-          const badgeColor = 'bg-brand-600';
+          const badgeColor = 'bg-sci-accent text-sci-navy';
           if (item.href === '/admin/messages') {
             badgeCount = messageStats?.unread ?? 0;
           }
@@ -141,20 +146,24 @@ function SidebarContent({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+              className={`group relative flex items-center gap-3 rounded-md px-3 py-2.5 font-sci-body text-sci-label font-medium transition ${
                 active
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-white/10 text-white'
+                  : 'text-[#adc6d8] hover:bg-white/5 hover:text-white'
               }`}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-brand-600" />
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-sci-accent" />
               )}
-              <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
+              <Icon
+                className={`h-[18px] w-[18px] shrink-0 ${
+                  active ? 'text-sci-accent' : 'text-[#7e9cb4] group-hover:text-[#adc6d8]'
+                }`}
+              />
               <span className="flex-1">{item.label}</span>
               {badgeCount > 0 && (
                 <span
-                  className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold text-white ${badgeColor}`}
+                  className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${badgeColor}`}
                 >
                   {badgeCount}
                 </span>
@@ -164,19 +173,19 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="border-t border-slate-200 p-4">
+      <div className="border-t border-white/10 p-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-sci-accent">
             {email ? initialsFromEmail(email) : ''}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-slate-700">{email}</p>
-            {role && <p className="text-[11px] text-slate-400">{role}</p>}
+            <p className="truncate font-sci-body text-xs font-medium text-white">{email}</p>
+            {role && <p className="font-sci-body text-[11px] uppercase tracking-wide text-[#7e9cb4]">{role}</p>}
           </div>
           <button
             onClick={onLogout}
             aria-label="Sign out"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#7e9cb4] transition hover:bg-white/10 hover:text-white"
           >
             <LogoutIcon className="h-[18px] w-[18px]" />
           </button>
@@ -233,26 +242,28 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-sci-pale">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
+    <div className="flex min-h-screen flex-col bg-sci-pale font-sci-body text-sci-navy md:flex-row">
       {/* Mobile top bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
-            CJ
-          </div>
-          <p className="text-sm font-semibold text-slate-900">CocoJojoChem</p>
-        </div>
+      <div className="flex items-center justify-between bg-sci-navy px-4 py-3 md:hidden">
+        <Image
+          src="/brand/cocojojo-logo.png"
+          alt="COCOJOJO Chemical"
+          width={991}
+          height={396}
+          sizes="130px"
+          className="h-7 w-auto brightness-0 invert"
+        />
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open menu"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-white/20 text-white"
         >
           <MenuIcon className="h-5 w-5" />
         </button>
@@ -261,12 +272,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {/* Mobile off-canvas drawer + backdrop */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[80vw] flex-col bg-white shadow-xl">
+          <div className="absolute inset-0 bg-sci-deep/60" onClick={() => setDrawerOpen(false)} />
+          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[80vw] flex-col bg-sci-navy shadow-xl">
             <button
               onClick={() => setDrawerOpen(false)}
               aria-label="Close menu"
-              className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100"
+              className="absolute right-3 top-5 flex h-8 w-8 items-center justify-center rounded-md text-[#7e9cb4] hover:bg-white/10 hover:text-white"
             >
               <CloseIcon className="h-[18px] w-[18px]" />
             </button>
@@ -283,7 +294,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop sidebar — sticky to the viewport so the logout button stays
           reachable without scrolling, no matter how tall the page content is. */}
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-r md:border-slate-200 md:bg-white">
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:bg-sci-navy">
         <SidebarContent
           email={email}
           role={role}
@@ -347,7 +358,7 @@ function RoleGate({
   if (!allowed) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
       </div>
     );
   }

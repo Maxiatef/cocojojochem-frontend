@@ -24,7 +24,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 const TOAST_VARIANT_STYLES: Record<ToastVariant, string> = {
   success: 'border-green-200 bg-green-50 text-green-800',
   error: 'border-red-200 bg-red-50 text-red-800',
-  info: 'border-slate-200 bg-white text-slate-800',
+  info: 'border-sci-border bg-white text-sci-navy',
 };
 
 const TOAST_VARIANT_ICON: Record<ToastVariant, string> = {
@@ -58,7 +58,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium shadow-lg ${TOAST_VARIANT_STYLES[t.variant]}`}
+            className={`pointer-events-auto flex items-center gap-2 rounded-lg border px-4 py-2.5 font-sci-body text-sci-label font-medium shadow-lg ${TOAST_VARIANT_STYLES[t.variant]}`}
           >
             <span aria-hidden>{TOAST_VARIANT_ICON[t.variant]}</span>
             {t.message}
@@ -89,22 +89,24 @@ export function StatCard({
   icon?: (props: { className?: string }) => React.ReactElement;
 }) {
   const accents: Record<string, string> = {
-    brand: 'bg-brand-50 text-brand-700',
+    brand: 'bg-sci-blue/10 text-sci-blue',
     amber: 'bg-amber-50 text-amber-700',
     red: 'bg-red-50 text-red-700',
-    slate: 'bg-slate-100 text-slate-700',
+    slate: 'bg-sci-pale text-sci-muted',
   };
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-sci-border bg-white p-5">
       <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="font-sci-body text-sci-label font-medium text-sci-muted">{label}</p>
         {Icon && (
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${accents[accent]}`}>
             <Icon className="h-4 w-4" />
           </div>
         )}
       </div>
-      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+      <p className="mt-2 font-sci-heading text-[28px] font-semibold leading-9 text-sci-navy">
+        {value}
+      </p>
       {sublabel && (
         <span className={`mt-3 inline-block rounded-full px-2.5 py-1 text-xs font-medium ${accents[accent]}`}>
           {sublabel}
@@ -157,7 +159,7 @@ export function Badge({ status }: { status: string }) {
   return (
     <span
       className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${
-        STATUS_STYLES[status] || 'bg-slate-100 text-slate-600'
+        STATUS_STYLES[status] || 'bg-sci-pale text-sci-muted'
       }`}
     >
       {status.replace(/_/g, ' ')}
@@ -168,8 +170,10 @@ export function Badge({ status }: { status: string }) {
 export function PageHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-6">
-      <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-      {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+      <h1 className="font-sci-heading text-[26px] font-semibold leading-9 text-sci-navy">{title}</h1>
+      {description && (
+        <p className="mt-1 font-sci-body text-sci-label text-sci-muted">{description}</p>
+      )}
     </div>
   );
 }
@@ -177,7 +181,7 @@ export function PageHeader({ title, description }: { title: string; description?
 export function LoadingState() {
   return (
     <div className="flex items-center justify-center py-24">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
     </div>
   );
 }
@@ -192,7 +196,7 @@ export function ErrorState({ message }: { message: string }) {
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-12 text-center text-sm text-slate-500">
+    <div className="rounded-xl border border-dashed border-sci-border bg-white px-4 py-12 text-center font-sci-body text-sci-label text-sci-muted">
       {message}
     </div>
   );
@@ -200,7 +204,7 @@ export function EmptyState({ message }: { message: string }) {
 
 export function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <div className={`rounded-xl border border-sci-border bg-white ${className}`}>
       {children}
     </div>
   );
@@ -223,14 +227,14 @@ export function Modal({
   const maxWidth = size === 'xl' ? 'max-w-4xl' : size === 'lg' ? 'max-w-2xl' : 'max-w-md';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-sci-deep/50" onClick={onClose} />
       <div className={`relative z-10 flex max-h-full w-full ${maxWidth} flex-col rounded-xl bg-white shadow-xl`}>
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
-          <h2 className="pr-8 text-sm font-semibold text-slate-900">{title}</h2>
+        <div className="flex shrink-0 items-center justify-between border-b border-sci-border px-6 py-4">
+          <h2 className="pr-8 font-sci-heading text-[17px] font-semibold text-sci-navy">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sci-muted transition hover:bg-sci-pale hover:text-sci-navy"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -251,10 +255,10 @@ export function TextField({
           already labelled by its surrounding layout (see the admin user
           editor's two-column FieldRow) — rendering the element anyway would
           leave a stray gap above the input. */}
-      {label && <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>}
+      {label && <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">{label}</label>}
       <input
         {...props}
-        className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full rounded-lg border border-sci-border px-3.5 py-2 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
       />
     </div>
   );
@@ -266,10 +270,10 @@ export function TextAreaField({
 }: { label: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>
+      <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">{label}</label>
       <textarea
         {...props}
-        className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full rounded-lg border border-sci-border px-3.5 py-2 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
       />
     </div>
   );
@@ -283,10 +287,10 @@ export function SelectField({
   return (
     <div>
       {/* Empty label = labelled by the surrounding layout; see TextField. */}
-      {label && <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>}
+      {label && <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">{label}</label>}
       <select
         {...props}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full rounded-lg border border-sci-border bg-white px-3.5 py-2 font-sci-body text-sci-label text-sci-navy outline-none transition focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
       >
         {children}
       </select>
@@ -300,10 +304,10 @@ type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-60',
-  secondary: 'border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-60',
+  primary: 'bg-sci-navy text-white hover:bg-sci-deep disabled:opacity-60',
+  secondary: 'border border-sci-border text-sci-navy hover:bg-sci-pale disabled:opacity-60',
   danger: 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-60',
-  ghost: 'text-slate-600 hover:bg-slate-100 disabled:opacity-60',
+  ghost: 'text-sci-muted hover:bg-sci-pale hover:text-sci-navy disabled:opacity-60',
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -331,7 +335,7 @@ export function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-sci-body font-medium transition ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${className}`}
       {...props}
     >
       {loading ? (
@@ -356,8 +360,8 @@ export function IconButton({
   variant?: 'ghost' | 'danger';
 } & React.ButtonHTMLAttributes<HTMLButtonElement> & { className?: string }) {
   const variants = {
-    ghost: 'text-slate-500 hover:bg-slate-100 hover:text-slate-800',
-    danger: 'text-slate-500 hover:bg-red-50 hover:text-red-600',
+    ghost: 'text-sci-muted hover:bg-sci-pale hover:text-sci-navy',
+    danger: 'text-sci-muted hover:bg-red-50 hover:text-red-600',
   };
   return (
     <button
@@ -387,7 +391,7 @@ export function Pagination({
 }) {
   if (totalPages <= 1 && totalItems == null) return null;
   return (
-    <div className="flex flex-col gap-2 border-t border-slate-100 px-5 py-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 border-t border-sci-border px-5 py-3 font-sci-body text-xs text-sci-muted sm:flex-row sm:items-center sm:justify-between">
       {totalItems != null && (
         <span>
           {totalItems} {itemLabel}
@@ -399,7 +403,7 @@ export function Pagination({
           <button
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            className="rounded-lg border border-slate-200 px-2.5 py-1 disabled:opacity-40"
+            className="rounded-lg border border-sci-border px-2.5 py-1 transition hover:bg-sci-pale disabled:opacity-40 disabled:hover:bg-transparent"
           >
             Previous
           </button>
@@ -409,7 +413,7 @@ export function Pagination({
           <button
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
-            className="rounded-lg border border-slate-200 px-2.5 py-1 disabled:opacity-40"
+            className="rounded-lg border border-sci-border px-2.5 py-1 transition hover:bg-sci-pale disabled:opacity-40 disabled:hover:bg-transparent"
           >
             Next
           </button>
@@ -424,7 +428,7 @@ export function Pagination({
 export function Table({ children, minWidth = 640 }: { children: React.ReactNode; minWidth?: number }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm" style={{ minWidth }}>
+      <table className="w-full text-left font-sci-body text-sci-label" style={{ minWidth }}>
         {children}
       </table>
     </div>
@@ -434,7 +438,7 @@ export function Table({ children, minWidth = 640 }: { children: React.ReactNode;
 export function TableHead({ children }: { children: React.ReactNode }) {
   return (
     <thead>
-      <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+      <tr className="border-b border-sci-border text-xs uppercase tracking-wide text-sci-muted">
         {children}
       </tr>
     </thead>
@@ -467,8 +471,8 @@ export function Th({
       <button
         type="button"
         onClick={onSort}
-        className={`inline-flex items-center gap-1 hover:text-slate-800 ${
-          sortDirection ? 'text-slate-800' : 'text-slate-500'
+        className={`inline-flex items-center gap-1 hover:text-sci-navy ${
+          sortDirection ? 'text-sci-navy' : 'text-sci-muted'
         } ${align === 'right' ? 'flex-row-reverse' : ''}`}
       >
         {children}
@@ -505,7 +509,7 @@ export function Tr({
   onClick?: () => void;
 }) {
   if (!onClick) {
-    return <tr className="border-b border-slate-100 last:border-0">{children}</tr>;
+    return <tr className="border-b border-sci-border/60 last:border-0">{children}</tr>;
   }
 
   // role="link" + tabIndex + Enter/Space keeps a clickable row reachable
@@ -523,7 +527,7 @@ export function Tr({
       }}
       role="link"
       tabIndex={0}
-      className="cursor-pointer border-b border-slate-100 transition last:border-0 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+      className="cursor-pointer border-b border-sci-border/60 transition last:border-0 hover:bg-sci-pale focus:bg-sci-pale focus:outline-none"
     >
       {children}
     </tr>
@@ -554,7 +558,7 @@ export function ConfirmDialog({
   if (!open) return null;
   return (
     <Modal open={open} onClose={onCancel} title={title}>
-      <p className="text-sm text-slate-600">{message}</p>
+      <p className="font-sci-body text-sci-label text-sci-muted">{message}</p>
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="secondary" size="sm" onClick={onCancel}>
           Cancel

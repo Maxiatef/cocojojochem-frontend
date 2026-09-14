@@ -63,7 +63,7 @@ export default async function CategoriesPage() {
 
   const introParagraphs = [
     `We organize our wholesale ingredient catalog into ${categories.length} categories, covering everything from actives and acids to botanical extracts, oils, butters, emulsifiers, preservatives, and specialty additives. Browsing by category is the quickest way to compare materials within the same functional class — for example, weighing different humectants against each other, or reviewing every preservative system we stock before choosing one for a new formulation.`,
-    'Each category page lists every product currently available in that group, along with live stock status and wholesale pricing. Categories are updated as we add new ingredients, so the count above reflects our current live catalog. Select a category below to see the full product list, or use the A-Z index or product search if you already know the specific ingredient you need.',
+    'Each category page lists every product currently available in that group, along with live stock status and wholesale pricing. Categories are updated as we add new ingredients, so the count above reflects our current live catalog. Select a category below to see the full product list, or use product search if you already know the specific ingredient you need.',
     `Categories group materials by what they physically are, which is usually how procurement and inventory think about them: oils with oils, waxes with waxes, surfactants with surfactants. That makes categories the right way in when you are stocking a shelf, comparing grades of the same material type, or checking what else you could add to an order to consolidate freight.`,
     `If you are solving a formulation problem rather than restocking, browsing by function is often faster, because it groups materials by the job they do instead of by their chemistry. Most buyers use both: category to see the range of a material type and its available pack sizes, function to find alternatives that behave the same way in a batch.`,
     `Pack sizes vary by material. Fast-moving liquids such as carrier oils and glycerin are typically offered from a gallon up to a drum, while actives and peptides are sold in far smaller weights because typical use levels are a fraction of a percent. Where a material is sold by drum, the listing prices it per drum rather than per kilo, since freight on drum shipments is quoted on pallet space rather than parcel weight.`,
@@ -145,16 +145,17 @@ export default async function CategoriesPage() {
             </h2>
             <p className="max-w-[900px] font-sci-body text-sci-body">
               Categories group materials by what they are. Browse by function to find them by the
-              job they do in a formulation, or work straight down the A-Z if you already know the
+              job they do in a formulation, or search by name if you already know the
               INCI name.
             </p>
             <div className="flex flex-wrap gap-x-8 gap-y-3">
               <ArrowLink href="/functions" tone="white">
                 Browse by function
               </ArrowLink>
-              <ArrowLink href="/a-z" tone="white">
+              {/* A-Z index taken offline — restore when /a-z comes back. */}
+              {/* <ArrowLink href="/a-z" tone="white">
                 A-Z ingredient index
-              </ArrowLink>
+              </ArrowLink> */}
               <ArrowLink href="/products" tone="white">
                 Full product catalog
               </ArrowLink>

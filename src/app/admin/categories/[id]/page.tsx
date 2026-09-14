@@ -40,7 +40,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
     <RequireStaff>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title={category ? category.name : 'View Category'} description="Category details and its products." />
-        <Link href="/admin/categories" className="text-sm font-medium text-brand-700 hover:underline">
+        <Link href="/admin/categories" className="text-sm font-medium text-sci-blue hover:underline">
           &larr; Back to Categories
         </Link>
       </div>
@@ -122,7 +122,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
                     {products.map((p) => (
                       <Tr key={p.id}>
                         <Td className="font-medium text-slate-900">
-                          <ProductEditLink productId={p.id} className="hover:text-brand-700 hover:underline">
+                          <ProductEditLink productId={p.id} className="hover:text-sci-blue hover:underline">
                             {p.name}
                           </ProductEditLink>
                         </Td>

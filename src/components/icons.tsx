@@ -465,3 +465,49 @@ export function LogoutIcon({ className = base }: IconProps) {
     </svg>
   );
 }
+
+// --- Social brand marks -----------------------------------------------------
+// Filled glyphs on a 24x24 box, unlike the stroked icons above: brand marks
+// are recognised by their solid silhouette and read as wrong when outlined.
+
+export function FacebookIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M14.5 8.5V6.9c0-.7.5-.9.8-.9h2V3h-2.7C11.6 3 11 5.2 11 6.6v1.9H9V12h2v9h3.5v-9h2.4l.3-3.5h-2.7z" />
+    </svg>
+  );
+}
+
+export function InstagramIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="3.8" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function PinterestIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M12 2a10 10 0 00-3.6 19.3c-.1-.8-.2-2 0-2.9l1.2-5.1s-.3-.6-.3-1.5c0-1.4.8-2.5 1.9-2.5.9 0 1.3.7 1.3 1.5 0 .9-.6 2.2-.9 3.5-.2 1 .5 1.9 1.6 1.9 1.9 0 3.2-2.4 3.2-5.3 0-2.2-1.5-3.8-4.1-3.8-3 0-4.9 2.2-4.9 4.7 0 .9.3 1.5.7 2 .2.2.2.3.1.6l-.2.9c-.1.3-.3.4-.5.3-1.4-.6-2-2.1-2-3.8 0-2.8 2.4-6.2 7.1-6.2 3.8 0 6.3 2.7 6.3 5.7 0 3.9-2.2 6.8-5.4 6.8-1.1 0-2.1-.6-2.4-1.3l-.7 2.6c-.2.9-.8 1.9-1.2 2.6A10 10 0 1012 2z" />
+    </svg>
+  );
+}
+
+export function TikTokIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M16.6 5.8a4.8 4.8 0 01-1-2.8h-3v12.1a2.5 2.5 0 11-1.8-2.4V9.6a5.6 5.6 0 105 5.5V9.8a7.8 7.8 0 004.2 1.3V8a4.8 4.8 0 01-3.4-2.2z" />
+    </svg>
+  );
+}
+
+export function TwitterIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M21 5.9a7 7 0 01-2 .6 3.5 3.5 0 001.5-1.9c-.7.4-1.4.7-2.2.9a3.5 3.5 0 00-6 3.2A9.9 9.9 0 013.1 4.9a3.5 3.5 0 001.1 4.7c-.6 0-1.1-.2-1.6-.4a3.5 3.5 0 002.8 3.4c-.5.2-1.1.2-1.6.1a3.5 3.5 0 003.3 2.4A7 7 0 012 16.6a9.9 9.9 0 005.4 1.6c6.4 0 9.9-5.3 9.9-9.9v-.5c.7-.5 1.3-1.1 1.7-1.9z" />
+    </svg>
+  );
+}

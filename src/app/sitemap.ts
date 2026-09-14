@@ -29,7 +29,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/products`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/categories`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/functions`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${SITE_URL}/a-z`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    // A-Z index taken offline — listing a 404 in the sitemap is a crawl error,
+    // so this stays commented until the page is restored.
+    // { url: `${SITE_URL}/a-z`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/quote-request`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },

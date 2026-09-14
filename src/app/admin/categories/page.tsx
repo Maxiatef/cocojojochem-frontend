@@ -27,7 +27,13 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { EditIcon, EyeIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import {
+  EditIcon,
+  EyeIcon,
+  ImagePlaceholderIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@/components/icons';
 import Link from 'next/link';
 import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
 
@@ -39,7 +45,8 @@ interface CategoryFormState {
   slug: string;
   description: string;
   imageUrl: string;
-  sortOrder: string;
+  // '' means "top-level category"; a select cannot hold null.
+  parentId: string;
 }
 
 const EMPTY_FORM: CategoryFormState = {
@@ -48,7 +55,7 @@ const EMPTY_FORM: CategoryFormState = {
   slug: '',
   description: '',
   imageUrl: '',
-  sortOrder: '0',
+  parentId: '',
 };
 
 function CategoriesAdminPageContent() {
@@ -58,6 +65,7 @@ function CategoriesAdminPageContent() {
   const [form, setForm] = useState<CategoryFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<CategorySort>('name_asc');
   const [page, setPage] = useState(1);
@@ -74,6 +82,13 @@ function CategoriesAdminPageContent() {
     },
   });
 
+  // The picker needs every root, not the 20 on the current page — `tree`
+  // returns exactly the roots and nothing else.
+  const { data: roots } = useQuery({
+    queryKey: ['admin-category-roots'],
+    queryFn: () => api.get<Category[]>('/wholesale/categories/tree'),
+  });
+
   function resetPageAnd<T>(setter: (v: T) => void) {
     return (v: T) => {
       setter(v);
@@ -81,7 +96,11 @@ function CategoriesAdminPageContent() {
     };
   }
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+    // A new or re-parented category changes who the available roots are.
+    queryClient.invalidateQueries({ queryKey: ['admin-category-roots'] });
+  };
 
   const createMutation = useMutation({
     mutationFn: (body: Record<string, unknown>) => api.post('/wholesale/categories', body),
@@ -107,7 +126,11 @@ function CategoriesAdminPageContent() {
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);
+      setDeleteError(null);
     },
+    // Deleting a category that still has subcategories is refused by the API
+    // with an explanation. Without this the dialog just sat there.
+    onError: (err) => setDeleteError(getFriendlyErrorMessage(err)),
   });
 
   function openCreateModal() {
@@ -123,7 +146,7 @@ function CategoriesAdminPageContent() {
       slug: c.slug,
       description: c.description || '',
       imageUrl: c.imageUrl || '',
-      sortOrder: String(c.sortOrder ?? 0),
+      parentId: c.parentId ? String(c.parentId) : '',
     });
     setError(null);
     setModalOpen(true);
@@ -141,7 +164,9 @@ function CategoriesAdminPageContent() {
       slug: form.slug,
       description: form.description || undefined,
       imageUrl: form.imageUrl || undefined,
-      sortOrder: Number(form.sortOrder) || 0,
+      // Sent as null, not omitted: clearing the parent has to be able to
+      // promote a subcategory back to the top level.
+      parentId: form.parentId ? Number(form.parentId) : null,
     };
     if (form.id) {
       updateMutation.mutate({ id: form.id, body });
@@ -193,21 +218,42 @@ function CategoriesAdminPageContent() {
 
       {data && categories.length > 0 && (
         <Card>
-          <Table minWidth={640}>
+          <Table minWidth={780}>
             <TableHead>
+              <Th>Image</Th>
               <Th>Name</Th>
+              <Th>Parent</Th>
               <Th>Slug</Th>
               <Th>Products</Th>
-              <Th>Sort Order</Th>
               <Th align="right">Actions</Th>
             </TableHead>
             <tbody>
               {categories.map((c) => (
                 <Tr key={c.id}>
+                  <Td>
+                    <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                      {c.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.imageUrl}
+                          alt={c.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <ImagePlaceholderIcon className="h-5 w-5 text-slate-400" />
+                      )}
+                    </div>
+                  </Td>
                   <Td className="font-medium text-slate-900">{c.name}</Td>
+                  <Td className="text-slate-600">
+                    {c.parent ? (
+                      c.parent.name
+                    ) : (
+                      <span className="text-slate-400">Top level</span>
+                    )}
+                  </Td>
                   <Td className="text-slate-500">{c.slug}</Td>
                   <Td className="text-slate-600">{c.productCount ?? 0}</Td>
-                  <Td className="text-slate-600">{c.sortOrder}</Td>
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
                       <Link href={`/admin/categories/${c.id}`}>
@@ -261,17 +307,28 @@ function CategoriesAdminPageContent() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
+          <SelectField
+            label="Parent Category"
+            value={form.parentId}
+            onChange={(e) => setForm({ ...form, parentId: e.target.value })}
+          >
+            <option value="">Top level (no parent)</option>
+            {(roots || [])
+              // A category cannot be its own parent, and nesting stops at one
+              // level — so only roots other than this one are offered.
+              .filter((r) => r.id !== form.id)
+              .map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+          </SelectField>
+
           <ImageUploadField
             label="Category Image"
             value={form.imageUrl}
             onChange={(url) => setForm({ ...form, imageUrl: url })}
             upload={uploadCategoryImage}
-          />
-          <TextField
-            label="Sort Order"
-            type="number"
-            value={form.sortOrder}
-            onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
           />
 
           {error && (
@@ -292,11 +349,17 @@ function CategoriesAdminPageContent() {
       <ConfirmDialog
         open={!!pendingDelete}
         title="Delete category"
-        message={`Delete category "${pendingDelete?.name}"? This cannot be undone.`}
+        message={
+          deleteError ||
+          `Delete category "${pendingDelete?.name}"? This cannot be undone.`
+        }
         confirmLabel="Delete"
         loading={deleteMutation.isPending}
         onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
-        onCancel={() => setPendingDelete(null)}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
       />
     </div>
   );

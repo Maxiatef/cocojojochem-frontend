@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Container, SciButton } from '@/components/scientific/primitives';
 import { useStorefrontSession } from '@/lib/useStorefrontSession';
 import { CartIcon, QuoteIcon, UserCircleIcon } from '@/components/icons';
+import { CategoryMenu } from '@/components/scientific/CategoryMenu';
 
 /**
  * COCOJOJO "Scientific edition" header — utility bar, wordmark + search, and
@@ -26,7 +27,8 @@ const NAV = [
   { label: 'Categories', href: '/categories' },
   { label: 'Products', href: '/products' },
   { label: 'Functions', href: '/functions' },
-  { label: 'A-Z', href: '/a-z' },
+  // A-Z index taken offline — restore this entry when /a-z comes back.
+  // { label: 'A-Z', href: '/a-z' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -196,6 +198,30 @@ export function ScientificHeader() {
         <Container className="flex flex-col gap-4 py-3.5 md:flex-row md:items-center md:gap-9">
           {NAV.map((item) => {
             const active = isNavItemActive(pathname, item.href);
+
+            // Categories gets a panel of its own on desktop. Below `md` this
+            // whole nav is the burger disclosure, where a hover panel has
+            // nowhere to open and nothing to hover with, so it stays a link.
+            if (item.href === '/categories') {
+              return (
+                <div key={item.href} className="contents">
+                  <div className="hidden md:block">
+                    <CategoryMenu active={active} />
+                  </div>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    onClick={() => setOpen(false)}
+                    className={`font-sci-body text-sci-label font-medium leading-5 transition md:hidden ${
+                      active ? 'text-sci-blue' : 'text-sci-navy hover:text-sci-blue'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.href}

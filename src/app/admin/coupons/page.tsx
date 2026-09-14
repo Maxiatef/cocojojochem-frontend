@@ -252,17 +252,17 @@ function ChipInput({
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
       />
       {values.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {values.map((t) => (
             <span
               key={t}
-              className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+              className="flex items-center gap-1 rounded-full bg-sci-pale px-2.5 py-1 text-xs font-medium text-sci-blue"
             >
               {t}
-              <button type="button" onClick={() => remove(t)} className="text-brand-400 hover:text-brand-700">
+              <button type="button" onClick={() => remove(t)} className="text-sci-blue hover:text-sci-blue">
                 ×
               </button>
             </span>
@@ -291,17 +291,17 @@ function CouponToggle({
   return (
     <label
       className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-3.5 py-2.5 transition ${
-        checked ? 'border-brand-300 bg-brand-50/60' : 'border-slate-200 hover:border-slate-300'
+        checked ? 'border-sci-border bg-sci-pale/60' : 'border-slate-200 hover:border-slate-300'
       }`}
     >
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-sci-blue focus:ring-sci-blue"
       />
       <span>
-        <span className={`block text-sm font-medium ${checked ? 'text-brand-800' : 'text-slate-700'}`}>
+        <span className={`block text-sm font-medium ${checked ? 'text-sci-navy' : 'text-slate-700'}`}>
           {label}
         </span>
         {description && <span className="mt-0.5 block text-xs text-slate-400">{description}</span>}
@@ -419,14 +419,14 @@ function IdCheckboxPicker({
     <div className="rounded-lg border border-slate-200">
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-1.5">
         <span className="text-xs font-medium text-slate-600">{label}</span>
-        {selected.length > 0 && <span className="text-[11px] text-brand-600">{selected.length} selected</span>}
+        {selected.length > 0 && <span className="text-[11px] text-sci-blue">{selected.length} selected</span>}
       </div>
       <div className="p-2">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search…"
-          className="mb-1.5 w-full rounded-md border border-slate-200 px-2 py-1 text-xs outline-none focus:border-brand-500"
+          className="mb-1.5 w-full rounded-md border border-slate-200 px-2 py-1 text-xs outline-none focus:border-sci-blue"
         />
         <div className="max-h-36 space-y-1 overflow-y-auto pr-1">
           {filtered.length === 0 && <p className="py-1 text-xs text-slate-400">No matches.</p>}
@@ -485,7 +485,7 @@ function StringCheckboxPicker({
     <div className="rounded-lg border border-slate-200">
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-1.5">
         <span className="text-xs font-medium text-slate-600">{label}</span>
-        {selected.length > 0 && <span className="text-[11px] text-brand-600">{selected.length} selected</span>}
+        {selected.length > 0 && <span className="text-[11px] text-sci-blue">{selected.length} selected</span>}
       </div>
       <div className="p-2">
         {options.length > 4 && (
@@ -493,7 +493,7 @@ function StringCheckboxPicker({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search…"
-            className="mb-1.5 w-full rounded-md border border-slate-200 px-2 py-1 text-xs outline-none focus:border-brand-500"
+            className="mb-1.5 w-full rounded-md border border-slate-200 px-2 py-1 text-xs outline-none focus:border-sci-blue"
           />
         )}
         <div className="max-h-36 space-y-1 overflow-y-auto pr-1">
@@ -536,7 +536,7 @@ export default function CouponsAdminPage() {
               onClick={() => setTab(key)}
               className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
                 tab === key
-                  ? 'border-brand-600 text-brand-700'
+                  ? 'border-sci-blue text-sci-blue'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -591,12 +591,12 @@ function CouponsTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search code…"
-            className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sci-blue"
           />
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
           >
             <option value="">All types</option>
             <option value="PERCENTAGE_CART">Percentage (Cart)</option>
@@ -607,7 +607,7 @@ function CouponsTab() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
           >
             <option value="">All statuses</option>
             <option value="ACTIVE">Active</option>

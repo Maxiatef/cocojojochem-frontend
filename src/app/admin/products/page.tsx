@@ -206,7 +206,7 @@ function ProductsPageContent() {
             onClick={() => setPageTab(key)}
             className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
               pageTab === key
-                ? 'border-brand-600 text-brand-700'
+                ? 'border-sci-blue text-sci-blue'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -486,7 +486,7 @@ function ProductsAnalyticsTab() {
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
         >
           {PRODUCT_ANALYTICS_DAY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -578,7 +578,7 @@ function ProductsAnalyticsTab() {
                       .join(', ')}
                   </Td>
                   <Td align="right">
-                    <ProductEditLink productId={p.id} className="text-xs font-medium text-brand-600 hover:underline">
+                    <ProductEditLink productId={p.id} className="text-xs font-medium text-sci-blue hover:underline">
                       Restock
                     </ProductEditLink>
                   </Td>
@@ -623,7 +623,7 @@ function ProductsAnalyticsTab() {
                       <Td className="text-slate-600">{v.label}</Td>
                       <Td align="right" className="font-medium text-amber-700">{v.stockQuantity}</Td>
                       <Td align="right">
-                        <ProductEditLink productId={p.id} className="text-xs font-medium text-brand-600 hover:underline">
+                        <ProductEditLink productId={p.id} className="text-xs font-medium text-sci-blue hover:underline">
                           Restock
                         </ProductEditLink>
                       </Td>

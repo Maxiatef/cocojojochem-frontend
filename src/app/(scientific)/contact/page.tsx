@@ -4,8 +4,9 @@ import { FormEvent, useRef, useState } from 'react';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { CheckCircleIcon, ClockIcon, GlobeIcon, MailIcon } from '@/components/icons';
+import { CheckCircleIcon, GlobeIcon, MailIcon, PhoneIcon } from '@/components/icons';
 import { Container, Eyebrow, SciButton, SectionHeading } from '@/components/scientific/primitives';
+import { FollowUs } from '@/components/scientific/FollowUs';
 
 /**
  * Contact, rebuilt to the "Scientific edition" design
@@ -26,21 +27,40 @@ import { Container, Eyebrow, SciButton, SectionHeading } from '@/components/scie
  * placeholder, which is where it is actually useful anyway.
  */
 
-const INFO_CARDS = [
+/**
+ * The contact details, matching the ones published on the retail site.
+ *
+ * A line may be marked `strong` to render in the navy body colour rather than
+ * the muted one — the address card needs "Locations:" to read as a label for
+ * the regions under it, and a second heading level inside a card would be a
+ * lie about the document outline.
+ */
+const INFO_CARDS: {
+  icon: (props: { className?: string }) => React.ReactElement;
+  title: string;
+  lines: (string | { text: string; strong?: true })[];
+}[] = [
   {
-    icon: MailIcon,
-    title: 'Email',
-    lines: ['sales@cocojojo.com', "We'll respond within 1 business day."],
+    icon: PhoneIcon,
+    title: 'Call Us',
+    lines: [
+      { text: '(+1) 949-610-7164', strong: true },
+      'Monday - Friday, 9:00 AM - 6:00 PM PST',
+    ],
   },
   {
-    icon: ClockIcon,
-    title: 'Support hours',
-    lines: ['Monday – Friday', '9:00 AM – 6:00 PM PST'],
+    icon: MailIcon,
+    title: 'Email Address',
+    lines: [{ text: 'support@cocojojo.com', strong: true }, "We'll respond within 24 hours"],
   },
   {
     icon: GlobeIcon,
-    title: 'Shipping coverage',
-    lines: ['Shipping nationwide', 'across the United States'],
+    title: 'Our Locations',
+    lines: [
+      { text: 'Locations:', strong: true },
+      'USA, EUROPE, ASIA, AFRICA',
+      'California, United States',
+    ],
   },
 ];
 
@@ -298,15 +318,40 @@ export default function ContactPage() {
                 <h3 className="font-sci-body text-[17px] font-medium leading-6 text-sci-navy">
                   {card.title}
                 </h3>
-                <div className="flex flex-col">
-                  {card.lines.map((line) => (
-                    <p key={line} className="font-sci-body text-sci-label text-sci-muted">
-                      {line}
-                    </p>
-                  ))}
+                <div className="flex flex-col gap-0.5">
+                  {card.lines.map((line) => {
+                    const text = typeof line === 'string' ? line : line.text;
+                    const strong = typeof line !== 'string' && line.strong;
+                    // A phone number and an email address on a contact page
+                    // exist to be acted on — on a phone especially, a tel:
+                    // link is the difference between one tap and retyping.
+                    const href = text.includes('@')
+                      ? `mailto:${text}`
+                      : text.startsWith('(+')
+                        ? `tel:${text.replace(/[^+\d]/g, '')}`
+                        : null;
+
+                    const className = `font-sci-body text-sci-label ${
+                      strong ? 'font-medium text-sci-navy' : 'text-sci-muted'
+                    }`;
+
+                    return (
+                      <p key={text} className={className}>
+                        {href ? (
+                          <a href={href} className="transition hover:text-sci-blue">
+                            {text}
+                          </a>
+                        ) : (
+                          text
+                        )}
+                      </p>
+                    );
+                  })}
                 </div>
               </div>
             ))}
+
+            <FollowUs />
           </div>
         </Container>
       </section>

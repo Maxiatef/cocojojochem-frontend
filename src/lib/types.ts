@@ -18,6 +18,10 @@ export interface Category {
   imageUrl: string | null;
   sortOrder: number;
   productCount?: number;
+  // Categories nest exactly one level: a root, or a subcategory of a root.
+  parentId: number | null;
+  parent?: Category | null;
+  children?: Category[];
 }
 
 export interface ProductVariant {

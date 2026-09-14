@@ -196,16 +196,17 @@ export default async function FunctionsPage() {
             </h2>
             <p className="max-w-[900px] font-sci-body text-sci-body">
               Functions group materials by the job they do in a formulation. Browse by category to
-              find them by what they physically are, or work straight down the A-Z if you already
+              find them by what they physically are, or search by name if you already
               know the INCI name.
             </p>
             <div className="flex flex-wrap gap-x-8 gap-y-3">
               <ArrowLink href="/categories" tone="white">
                 Browse by category
               </ArrowLink>
-              <ArrowLink href="/a-z" tone="white">
+              {/* A-Z index taken offline — restore when /a-z comes back. */}
+              {/* <ArrowLink href="/a-z" tone="white">
                 A-Z ingredient index
-              </ArrowLink>
+              </ArrowLink> */}
               <ArrowLink href="/products" tone="white">
                 Full product catalog
               </ArrowLink>

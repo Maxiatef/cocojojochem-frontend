@@ -1,7 +1,7 @@
-import localFont from 'next/font/local';
 import { ScientificHeader } from '@/components/scientific/ScientificHeader';
 import { ScientificFooter } from '@/components/scientific/ScientificFooter';
 import { VisitorTracker } from '@/components/storefront/VisitorTracker';
+import { SCI_FONT_VARS } from '@/lib/fonts';
 
 /**
  * Route group for pages migrated to the COCOJOJO "Scientific edition" design.
@@ -12,29 +12,14 @@ import { VisitorTracker } from '@/components/storefront/VisitorTracker';
  * across. Both groups map to the same URL space, so nothing about the site's
  * routing changes as pages migrate.
  *
- * Both faces are variable fonts — one file each, covering every weight the
- * design uses (Manrope ExtraBold 800 for the wordmark down to DM Sans Regular
- * 400 for body copy).
+ * The typefaces themselves live in `@/lib/fonts` — the admin dashboard is
+ * outside this group and needs the same two families.
  */
-
-const sciHeading = localFont({
-  src: '../../fonts/Manrope-Variable.ttf',
-  weight: '200 800',
-  variable: '--font-sci-heading',
-  display: 'swap',
-});
-
-const sciBody = localFont({
-  src: '../../fonts/DMSans-Variable.ttf',
-  weight: '100 900',
-  variable: '--font-sci-body',
-  display: 'swap',
-});
 
 export default function ScientificLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${sciHeading.variable} ${sciBody.variable} flex min-h-screen flex-col bg-white font-sci-body text-sci-navy`}
+      className={`${SCI_FONT_VARS} flex min-h-screen flex-col bg-white font-sci-body text-sci-navy`}
     >
       <VisitorTracker />
       <ScientificHeader />

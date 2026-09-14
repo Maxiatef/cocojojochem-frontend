@@ -45,7 +45,7 @@ export default function QuoteRequestsPage() {
             onClick={() => setStatusFilter(s)}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
               statusFilter === s
-                ? 'bg-brand-600 text-white'
+                ? 'bg-sci-blue text-white'
                 : 'bg-white text-slate-600 hover:bg-slate-100'
             } border border-slate-200`}
           >

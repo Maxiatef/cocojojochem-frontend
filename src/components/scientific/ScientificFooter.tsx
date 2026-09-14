@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@/components/scientific/primitives';
+import { FooterNewsletter } from '@/components/scientific/FooterNewsletter';
 
 /** COCOJOJO "Scientific edition" footer (Figma 33:322). */
 
@@ -11,7 +12,8 @@ const COLUMNS = [
       { label: 'All ingredients', href: '/products' },
       { label: 'Industries', href: '/functions' },
       { label: 'Solutions & services', href: '/about' },
-      { label: 'Technical resources', href: '/a-z' },
+      // A-Z index taken offline — restore this entry when /a-z comes back.
+      // { label: 'Technical resources', href: '/a-z' },
     ],
   },
   {
@@ -22,13 +24,36 @@ const COLUMNS = [
       { label: 'Request a quote', href: '/quote-request' },
     ],
   },
+  {
+    // The four policies people look for by name, plus the index that holds
+    // the other twenty-one. Listing all twenty-five here would bury the
+    // ones anybody actually comes to the footer for.
+    heading: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/legal/privacy-policy' },
+      { label: 'Terms of Service', href: '/legal/terms-of-service' },
+      { label: 'Cookie Policy', href: '/legal/cookie-policy' },
+      {
+        label: 'Do Not Sell or Share My Personal Information',
+        href: '/legal/do-not-sell-or-share',
+      },
+      { label: 'Legal Center', href: '/legal' },
+    ],
+  },
 ];
 
 export function ScientificFooter() {
   return (
     <footer className="bg-sci-deep text-white">
       <Container className="flex flex-col gap-10 py-16">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+        {/* Full width across the top: it is the only thing in the footer that
+            asks for something back, so it leads rather than sitting as a
+            fifth column competing with the link lists. */}
+        <div className="border-b border-white/10 pb-10">
+          <FooterNewsletter />
+        </div>
+
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-6">
             <Link href="/" aria-label="COCOJOJO Chemical — home" className="w-fit">
               {/* Rendered as a solid white silhouette: the artwork is dark

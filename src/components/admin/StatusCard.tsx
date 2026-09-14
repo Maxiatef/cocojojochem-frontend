@@ -1,5 +1,5 @@
 export const STATUS_CARD_TONES: Record<string, { ring: string; value: string }> = {
-  brand: { ring: 'border-brand-500 ring-brand-100', value: 'text-brand-700' },
+  brand: { ring: 'border-sci-blue ring-sci-blue/15', value: 'text-sci-blue' },
   green: { ring: 'border-green-500 ring-green-100', value: 'text-green-700' },
   red: { ring: 'border-red-500 ring-red-100', value: 'text-red-700' },
   amber: { ring: 'border-amber-500 ring-amber-100', value: 'text-amber-700' },
