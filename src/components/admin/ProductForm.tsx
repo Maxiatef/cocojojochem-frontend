@@ -152,7 +152,16 @@ export function ProductForm({
   const [casNumber, setCasNumber] = useState(product?.casNumber || '');
   const [shortDescription, setShortDescription] = useState(product?.shortDescription || '');
   const [chemicalDescriptions, setChemicalDescriptions] = useState(product?.chemicalDescriptions || '');
-  const [categoryId, setCategoryId] = useState(product?.category?.id ? String(product.category.id) : '');
+  // A product is stored against exactly one category — the most specific one
+  // it belongs to. The form splits that into two controls: the main category
+  // and, where the main has children, a subcategory. `categoryId` below is
+  // always the value that gets submitted.
+  const [mainCategoryId, setMainCategoryId] = useState(
+    product?.category ? String(product.category.parentId ?? product.category.id) : '',
+  );
+  const [subCategoryId, setSubCategoryId] = useState(
+    product?.category?.parentId ? String(product.category.id) : '',
+  );
   const [functionIds, setFunctionIds] = useState<number[]>(product?.functions?.map((f) => f.id) || []);
   const [certificationIds, setCertificationIds] = useState<number[]>(
     product?.certifications?.map((c) => c.id) || [],
@@ -406,6 +415,12 @@ export function ProductForm({
       setError('Please choose a category.');
       return null;
     }
+    // Guards against a stale subcategory left over from a main-category change
+    // racing the query — the id must still belong under the chosen main.
+    if (subCategoryId && !subCategories.some((c) => String(c.id) === subCategoryId)) {
+      setError('That subcategory does not belong to the selected main category.');
+      return null;
+    }
     if (variants.length === 0 || variants.some((v) => !v.sku || !v.label || !v.price)) {
       setError('Every variant needs at least a SKU, size label, and price.');
       return null;
@@ -518,6 +533,14 @@ export function ProductForm({
   }
 
   const categories = categoriesRes?.data || [];
+  const rootCategories = categories.filter((c) => c.parentId == null);
+  const subCategories = mainCategoryId
+    ? categories.filter((c) => String(c.parentId ?? '') === mainCategoryId)
+    : [];
+  // The subcategory wins when there is one; otherwise the product sits on the
+  // main category directly, which is legitimate — not every category is
+  // subdivided.
+  const categoryId = subCategoryId || mainCategoryId;
 
   // Stock alerts — evaluated the same way the backend derives status: a
   // tracked quantity of 0 (and not on backorder) is Out of Stock; anything
@@ -604,13 +627,38 @@ export function ProductForm({
             <TextField label="Name" required value={name} onChange={(e) => setName(e.target.value)} />
             <TextField label="SKU" required value={sku} onChange={(e) => setSku(e.target.value)} />
             <SelectField
-              label="Category"
+              label="Main Category"
               required
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              value={mainCategoryId}
+              onChange={(e) => {
+                setMainCategoryId(e.target.value);
+                // The old subcategory belongs to the old parent; keeping it
+                // would silently file the product under the wrong branch.
+                setSubCategoryId('');
+              }}
             >
               <option value="">Select a category…</option>
-              {categories.map((c) => (
+              {rootCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </SelectField>
+
+            <SelectField
+              label="Subcategory"
+              value={subCategoryId}
+              disabled={subCategories.length === 0}
+              onChange={(e) => setSubCategoryId(e.target.value)}
+            >
+              <option value="">
+                {!mainCategoryId
+                  ? 'Choose a main category first'
+                  : subCategories.length === 0
+                    ? 'No subcategories'
+                    : 'None — file under the main category'}
+              </option>
+              {subCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

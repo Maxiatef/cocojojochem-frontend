@@ -107,13 +107,26 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
       {/* Category introduction — 21:380 */}
       <section className="bg-sci-pale py-16">
         <Container className="flex flex-col gap-6">
-          <nav aria-label="Breadcrumb">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2">
             <Link
               href="/categories"
               className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
             >
               ← All ingredient categories
             </Link>
+            {category.parent && (
+              <>
+                <span aria-hidden className="text-sci-border">
+                  ›
+                </span>
+                <Link
+                  href={`/categories/${category.parent.slug}`}
+                  className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
+                >
+                  {category.parent.name}
+                </Link>
+              </>
+            )}
           </nav>
 
           <Eyebrow>Ingredient directory</Eyebrow>
@@ -130,6 +143,26 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
             {category.description ||
               `Every ${category.name.toLowerCase()} record we list, with pack sizes, wholesale pricing and live stock status. Certificates of Analysis and Safety Data Sheets are available on request — confirm grade, availability and documentation during quotation.`}
           </p>
+
+          {(category.children?.length ?? 0) > 0 && (
+            <div className="flex flex-col gap-3">
+              <p className="font-sci-body text-sci-eyebrow font-semibold uppercase tracking-wide text-sci-muted">
+                Subcategories
+              </p>
+              <ul className="flex flex-wrap gap-2">
+                {category.children!.map((child) => (
+                  <li key={child.id}>
+                    <Link
+                      href={`/categories/${child.slug}`}
+                      className="inline-block rounded-full border border-sci-border bg-white px-4 py-2 font-sci-body text-sci-label text-sci-navy transition hover:border-sci-blue hover:text-sci-blue"
+                    >
+                      {child.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* The faceted view lives on /products; this page is the full index. */}
           <ArrowLink href={`/products?category=${category.slug}`}>

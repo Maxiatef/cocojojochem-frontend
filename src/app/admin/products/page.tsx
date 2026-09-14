@@ -384,7 +384,18 @@ function ProductsPageContent() {
                       )}
                     </Td>
                     <Td className="text-slate-600">{p.sku}</Td>
-                    <Td className="text-slate-600">{p.category?.name || '—'}</Td>
+                    <Td className="text-slate-600">
+                      {p.category ? (
+                        <>
+                          {p.category.parent && (
+                            <span className="text-slate-400">{p.category.parent.name} › </span>
+                          )}
+                          {p.category.name}
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </Td>
                     <Td className="text-slate-600">{p.variants.length}</Td>
                     <Td className="text-slate-600">
                       {min != null ? (min === max ? `$${min}` : `$${min} – $${max}`) : '—'}

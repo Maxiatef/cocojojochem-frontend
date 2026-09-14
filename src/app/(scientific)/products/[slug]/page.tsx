@@ -113,6 +113,14 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const breadcrumbTrail = [
     { name: 'Home', path: '/' },
     { name: 'Products', path: '/products' },
+    ...(product.category?.parent
+      ? [
+          {
+            name: product.category.parent.name,
+            path: `/categories/${product.category.parent.slug}`,
+          },
+        ]
+      : []),
     ...(product.category
       ? [{ name: product.category.name, path: `/categories/${product.category.slug}` }]
       : []),
@@ -137,6 +145,17 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             <Link href="/products" className="text-sci-blue hover:underline">
               Products
             </Link>
+            {product.category?.parent && (
+              <>
+                <span aria-hidden>/</span>
+                <Link
+                  href={`/categories/${product.category.parent.slug}`}
+                  className="text-sci-blue hover:underline"
+                >
+                  {product.category.parent.name}
+                </Link>
+              </>
+            )}
             {product.category && (
               <>
                 <span aria-hidden>/</span>

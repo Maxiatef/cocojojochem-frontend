@@ -54,7 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function CategoriesPage() {
   const [res, productsRes] = await Promise.all([
-    serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100'),
+    serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100&rootsOnly=true'),
     // Only the total is wanted — `limit=1` keeps it to a count, not a payload.
     serverFetch<Paginated<Product>>('/wholesale/products?page=1&limit=1'),
   ]);

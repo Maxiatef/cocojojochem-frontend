@@ -169,7 +169,7 @@ function ProductCatalogInner({ fixedCategoryId }: { fixedCategoryId?: number }) 
   // the facet is hidden, so the request would be pure waste.
   const { data: categoriesRes } = useQuery({
     queryKey: ['storefront-categories'],
-    queryFn: () => customerApi.get<Paginated<Category>>('/wholesale/categories?page=1&limit=200'),
+    queryFn: () => customerApi.get<Paginated<Category>>('/wholesale/categories?page=1&limit=200&rootsOnly=true'),
     enabled: !fixedCategoryId,
   });
   const categories = categoriesRes?.data;

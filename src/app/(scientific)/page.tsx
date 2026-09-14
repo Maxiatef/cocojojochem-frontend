@@ -123,7 +123,7 @@ const DOCUMENTS = [
 
 export default async function ScientificHomePage() {
   const categoriesRes = await serverFetch<Paginated<Category>>(
-    '/wholesale/categories?page=1&limit=6',
+    '/wholesale/categories?page=1&limit=6&rootsOnly=true',
   );
 
   const categories = categoriesRes?.data?.length
