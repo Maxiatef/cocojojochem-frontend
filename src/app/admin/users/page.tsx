@@ -111,8 +111,11 @@ export default function UsersAdminPage() {
   };
 
   const { data: roles } = useQuery({
-    queryKey: ['admin-roles'],
-    queryFn: () => api.get<Role[]>('/roles'),
+    // The picker list, not the full roles resource: /roles needs canViewRoles,
+    // which an account granted only canManageUserRoles does not have — it saw
+    // an empty dropdown and could never assign anything.
+    queryKey: ['admin-role-options'],
+    queryFn: () => api.get<Role[]>('/roles/options'),
   });
 
   const roleMutation = useMutation({

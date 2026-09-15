@@ -2,6 +2,7 @@
 
 import { Fragment, FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequirePermission, useCan } from '@/components/AdminShell';
@@ -13,6 +14,7 @@ import {
   ErrorState,
   LoadingState,
   PageHeader,
+  SelectField,
   Table,
   TableHead,
   Td,
@@ -23,9 +25,11 @@ import {
 } from '@/components/ui';
 import { ChevronDownIcon, PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
+import { RolesTab } from '@/components/admin/RolesTab';
+import { TIMEZONE_OPTIONS, timeZoneLabel } from '@/lib/siteTimezone';
 import { TestimonialsTab } from '@/components/admin/TestimonialsTab';
 
-type Tab = 'shipping' | 'tax' | 'notifications' | 'staff' | 'testimonials';
+type Tab = 'general' | 'shipping' | 'tax' | 'notifications' | 'staff' | 'roles' | 'testimonials';
 
 // Site-settings is a generic key/value store on the backend — these are the
 // keys this admin UI has adopted for the fields the plan calls for.
@@ -44,13 +48,16 @@ const KEYS = {
   contactMessageNotificationEmail: 'contactMessageNotificationEmail',
   senderName: 'senderName',
   senderEmail: 'senderEmail',
+  timezone: 'SITE_TIMEZONE',
 };
 
 const TABS: [Tab, string][] = [
+  ['general', 'General'],
   ['shipping', 'Wholesale & Shipping'],
   ['tax', 'Tax'],
   ['notifications', 'Notifications'],
   ['staff', 'Staff'],
+  ['roles', 'Roles'],
   ['testimonials', 'Testimonials'],
 ];
 
@@ -121,15 +128,19 @@ function Collapsible({
 }
 
 export default function SettingsAdminPage() {
-  const [tab, setTab] = useState<Tab>('shipping');
+  const [tab, setTab] = useState<Tab>('general');
   // The Staff tab lists users and the rate tables read shipping rates — both
   // are separate permissions from viewing settings, so a role can reach this
   // page without being entitled to either.
+  const canViewSettings = useCan('canViewSiteSettings');
   const canViewStaff = useCan('canViewUsers');
+  const canViewRoles = useCan('canViewRoles');
   const canViewTestimonials = useCan('canViewTestimonials');
   const canViewRates = useCan('canViewShippingRates');
   const tabs = TABS.filter(([key]) => {
+    if (key === 'general') return canViewSettings;
     if (key === 'staff') return canViewStaff;
+    if (key === 'roles') return canViewRoles;
     if (key === 'testimonials') return canViewTestimonials;
     return true;
   });
@@ -139,7 +150,7 @@ export default function SettingsAdminPage() {
       <div>
         <PageHeader
           title="Settings"
-          description="Wholesale, shipping, tax, notifications, and staff."
+          description="Wholesale, shipping, tax, notifications, staff, and roles."
         />
 
         <div className="mb-6 flex flex-wrap gap-x-1 gap-y-2 border-b border-slate-200">
@@ -182,7 +193,9 @@ export default function SettingsAdminPage() {
         )}
         {tab === 'tax' && <TaxTab />}
         {tab === 'notifications' && <NotificationsTab />}
+        {tab === 'general' && canViewSettings && <GeneralTab />}
         {tab === 'staff' && canViewStaff && <StaffTab />}
+        {tab === 'roles' && canViewRoles && <RolesTab />}
         {tab === 'testimonials' && canViewTestimonials && <TestimonialsTab />}
       </div>
     </RequirePermission>
@@ -229,6 +242,100 @@ function useSiteSettings() {
     queryKey: ['site-settings'],
     queryFn: () => api.get<SiteSettingsResponse>('/site-settings'),
   });
+}
+
+function GeneralTab() {
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError } = useSiteSettings();
+  const canEditSettings = useCan('canEditSiteSettings');
+  const [timezone, setTimezone] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!data) return;
+    setTimezone(data.settings[KEYS.timezone] || 'America/Los_Angeles');
+  }, [data]);
+
+  const mutation = useMutation({
+    mutationFn: (body: Record<string, string>) => api.patch<SiteSettingsResponse>('/site-settings', body),
+    onSuccess: (res) => {
+      queryClient.setQueryData(['site-settings'], res);
+      // The storefront and the rest of the admin read this through its own
+      // cached query — drop it so dates re-render in the new zone without a
+      // full reload.
+      queryClient.invalidateQueries({ queryKey: ['public-site-settings'] });
+      setSaved(true);
+      setError(null);
+      setTimeout(() => setSaved(false), 2000);
+    },
+    onError: (err) => setError(getFriendlyErrorMessage(err)),
+  });
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    mutation.mutate({ [KEYS.timezone]: timezone });
+  }
+
+  if (isLoading) return <LoadingState />;
+  if (isError) return <ErrorState message="Couldn't load site settings." />;
+
+  return (
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Timezone</h2>
+          <p className="text-xs text-slate-500">
+            The clock the whole site runs on. Sale and coupon dates are entered and shown in this
+            zone, whoever is looking and wherever the server runs.
+          </p>
+        </div>
+
+        <SelectField
+          label="Site timezone"
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
+          disabled={!canEditSettings}
+        >
+          {/* A saved zone outside the shortlist still has to show correctly —
+              otherwise the select would silently snap to its first option and
+              a save would change the setting the admin never touched. */}
+          {!TIMEZONE_OPTIONS.some((o) => o.value === timezone) && timezone && (
+            <option value={timezone}>{timezone}</option>
+          )}
+          {TIMEZONE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </SelectField>
+
+        {timezone && (
+          <p className="text-xs text-slate-500">
+            Right now that reads{' '}
+            <span className="font-medium text-slate-700">
+              {new Date().toLocaleString('en-US', {
+                timeZone: timezone,
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}{' '}
+              {timeZoneLabel(timezone)}
+            </span>
+            .
+          </p>
+        )}
+
+        {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
+        {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
+
+        <div className="flex justify-end pt-2">
+          <Button type="submit" loading={mutation.isPending} disabled={!canEditSettings}>
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
 }
 
 function TaxTab() {
@@ -613,7 +720,11 @@ function NotificationsTab() {
 
 function StaffTab() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const canCreateStaff = useCan('canCreateUser');
+  // The row only becomes a link for someone who can actually save the change —
+  // without canEditUser the editor loads and then refuses every write.
+  const canEditStaff = useCan('canEditUser');
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<StaffFormState>(EMPTY_STAFF_FORM);
   const [error, setError] = useState<string | null>(null);
@@ -686,7 +797,10 @@ function StaffTab() {
             </TableHead>
             <tbody>
               {staff.map((u) => (
-                <Tr key={u.id}>
+                <Tr
+                  key={u.id}
+                  onClick={canEditStaff ? () => router.push(`/admin/users/${u.id}/edit`) : undefined}
+                >
                   <Td>
                     <div className="font-medium text-slate-900">{u.fullName}</div>
                     <div className="text-xs text-slate-500">{u.email}</div>

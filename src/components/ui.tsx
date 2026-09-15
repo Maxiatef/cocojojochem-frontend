@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { CloseIcon } from '@/components/icons';
 
 // --- Toast ------------------------------------------------------------------
@@ -428,12 +428,98 @@ export function Pagination({
 
 // --- Table (thin semantic wrappers for consistent styling) ------------------
 
+// Tall enough that the scrollbar has somewhere to draw on every platform.
+const BAR_HEIGHT = 16;
+
 export function Table({ children, minWidth = 640 }: { children: React.ReactNode; minWidth?: number }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const proxyRef = useRef<HTMLDivElement>(null);
+  const [scrollWidth, setScrollWidth] = useState(0);
+  const [bar, setBar] = useState<{ left: number; width: number } | null>(null);
+
+  // A wide table's own scrollbar sits at the bottom of the table, which on a
+  // long list is far below the fold — so to scroll sideways you first had to
+  // scroll all the way down, losing the rows you were reading. This adds a
+  // second scrollbar along the bottom of the screen for as long as the real
+  // one is out of view, and drops it once the real one is reachable, so there
+  // are never two visible at once.
+  //
+  // Fixed and measured rather than `position: sticky`: the admin shell's
+  // <main> is an overflow-y-auto container, which makes it the sticky
+  // ancestor, so a sticky bar pins to the bottom of that element — well below
+  // the viewport — and is never seen.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const sync = () => {
+      const overflows = el.scrollWidth > el.clientWidth + 1;
+      const box = el.getBoundingClientRect();
+      const viewportH = window.innerHeight || document.documentElement.clientHeight;
+      const needed = overflows && box.bottom > viewportH - BAR_HEIGHT && box.top < viewportH;
+      setBar(needed ? { left: box.left, width: box.width } : null);
+      setScrollWidth(el.scrollWidth);
+      // Deliberately does NOT push el.scrollLeft onto the proxy. This runs on
+      // the capture phase, so dragging the proxy reaches it BEFORE the proxy's
+      // own onScroll has told the table to follow — it would read the table's
+      // old position and snap the bar straight back, making the bar look dead.
+      // The two onScroll handlers already keep the pair in step.
+    };
+
+    sync();
+    // Capture phase: the page may not be what scrolls — the admin shell scrolls
+    // an inner element, whose scroll events never reach window on the bubble
+    // phase.
+    window.addEventListener('scroll', sync, { passive: true, capture: true });
+    window.addEventListener('resize', sync);
+    // Rows arriving, a filter shrinking the table, or columns changing width
+    // all change whether this is needed.
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+
+    return () => {
+      window.removeEventListener('scroll', sync, { capture: true });
+      window.removeEventListener('resize', sync);
+      observer.disconnect();
+    };
+  }, [children]);
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left font-sci-body text-sci-label" style={{ minWidth }}>
-        {children}
-      </table>
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto"
+        onScroll={(e) => {
+          // Guarded against feeding each other in a loop: assigning scrollLeft
+          // fires the other element's scroll handler too.
+          const proxy = proxyRef.current;
+          if (proxy && proxy.scrollLeft !== e.currentTarget.scrollLeft) {
+            proxy.scrollLeft = e.currentTarget.scrollLeft;
+          }
+        }}
+      >
+        <table className="w-full text-left font-sci-body text-sci-label" style={{ minWidth }}>
+          {children}
+        </table>
+      </div>
+
+      {bar && (
+        <div
+          ref={proxyRef}
+          onScroll={(e) => {
+            const main = scrollRef.current;
+            if (main && main.scrollLeft !== e.currentTarget.scrollLeft) {
+              main.scrollLeft = e.currentTarget.scrollLeft;
+            }
+          }}
+          className="fixed bottom-0 z-30 overflow-x-auto overflow-y-hidden border-t border-sci-border bg-white/95 shadow-[0_-2px_6px_rgba(15,23,42,0.06)] backdrop-blur"
+          style={{ left: bar.left, width: bar.width, height: BAR_HEIGHT }}
+          aria-hidden
+        >
+          {/* Nothing to show — this element exists only for its scrollbar. */}
+          <div style={{ width: scrollWidth, height: 1 }} />
+        </div>
+      )}
     </div>
   );
 }

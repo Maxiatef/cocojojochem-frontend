@@ -84,11 +84,11 @@ export function NewsletterForm() {
         />
         <span>
           I agree to the{' '}
-          <Link href="/terms-of-service" target="_blank" className="underline hover:text-white">
+          <Link href="/legal/terms-of-service" target="_blank" className="underline hover:text-white">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy-policy" target="_blank" className="underline hover:text-white">
+          <Link href="/legal/privacy-policy" target="_blank" className="underline hover:text-white">
             Privacy Policy
           </Link>
           .

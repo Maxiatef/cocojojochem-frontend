@@ -1,10 +1,17 @@
 'use client';
 
+/**
+ * Role CRUD, rendered as a tab on the Settings page rather than as its own
+ * admin route — roles are configuration, and they sit next to the Staff tab
+ * that assigns them. Moved here from /admin/roles.
+ */
+
 import { FormEvent, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { PermissionGroup, Role } from '@/lib/types';
+import { Paginated, PermissionGroup, Role, UserListItem } from '@/lib/types';
 import {
   Badge,
   Button,
@@ -14,7 +21,6 @@ import {
   ErrorState,
   LoadingState,
   Modal,
-  PageHeader,
   Table,
   TableHead,
   Td,
@@ -25,8 +31,8 @@ import {
   IconButton,
   useToast,
 } from '@/components/ui';
-import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
-import { RequirePermission, useCan } from '@/components/AdminShell';
+import { EditIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icons';
+import { useCan } from '@/components/AdminShell';
 
 interface RoleFormState {
   id: number | null;
@@ -37,8 +43,10 @@ interface RoleFormState {
 
 const EMPTY_FORM: RoleFormState = { id: null, name: '', description: '', permissions: {} };
 
-function RolesAdminPageContent() {
+export function RolesTab() {
   const canManage = useCan('canManageRoles');
+  const canViewUsers = useCan('canViewUsers');
+  const canEditUser = useCan('canEditUser');
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -46,6 +54,25 @@ function RolesAdminPageContent() {
   const [form, setForm] = useState<RoleFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Role | null>(null);
+  // Which role's members are being inspected; null closes the dialog.
+  const [membersOf, setMembersOf] = useState<Role | null>(null);
+
+  // Reuses the existing admin users list rather than adding a roles/:id/users
+  // endpoint — it already filters by roleId and is gated on canViewUsers.
+  //
+  // status=ACTIVE,DELETED on purpose: the Users count on this page, and the
+  // server's "can't delete a role that's still assigned" check, both count
+  // every holder regardless of status. Listing only active users here would
+  // show 0 members next to a count of 1 and make a blocked delete look like a
+  // bug.
+  const { data: members, isLoading: membersLoading, isError: membersError } = useQuery({
+    queryKey: ['role-members', membersOf?.id],
+    queryFn: () =>
+      api.get<Paginated<UserListItem>>(
+        `/users?roleId=${membersOf!.id}&status=ACTIVE,DELETED&limit=100&page=1`,
+      ),
+    enabled: membersOf !== null,
+  });
 
   const {
     data: roles,
@@ -70,6 +97,9 @@ function RolesAdminPageContent() {
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    // The user/staff role pickers read a separate, thinner query — a rename or
+    // a new role has to reach them too.
+    queryClient.invalidateQueries({ queryKey: ['admin-role-options'] });
     // A permission change alters what the current account may see, so the
     // sidebar and every page gate have to re-read /auth/me.
     queryClient.invalidateQueries({ queryKey: ['auth-me'] });
@@ -108,7 +138,13 @@ function RolesAdminPageContent() {
   });
 
   function openCreate() {
-    setForm(EMPTY_FORM);
+    // The catalog decides which boxes start ticked (`defaultOn`), so a new
+    // default added on the server shows up here without a frontend change.
+    const defaults: Record<string, boolean> = {};
+    for (const group of groups ?? []) {
+      for (const p of group.permissions) if (p.defaultOn) defaults[p.key] = true;
+    }
+    setForm({ ...EMPTY_FORM, permissions: defaults });
     setError(null);
     setModalOpen(true);
   }
@@ -154,18 +190,20 @@ function RolesAdminPageContent() {
 
   return (
     <>
-      <PageHeader
-        title="Roles"
-        description="Create roles and choose exactly what each one can do. Changes apply to everyone holding the role on their next request."
-      />
-
-      {canManage && (
-        <div className="mb-4 flex justify-end">
-          <Button icon={PlusIcon} onClick={openCreate}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Roles</h2>
+          <p className="text-xs text-slate-500">
+            Create roles and choose exactly what each one can do. Changes apply to everyone holding
+            the role on their next request.
+          </p>
+        </div>
+        {canManage && (
+          <Button icon={PlusIcon} onClick={openCreate} size="sm">
             New role
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Couldn't load roles." />}
@@ -200,7 +238,24 @@ function RolesAdminPageContent() {
                       <span className="text-slate-400"> / {totalPermissions}</span>
                     )}
                   </Td>
-                  <Td className="text-slate-600">{role.userCount ?? 0}</Td>
+                  <Td className="text-slate-600">
+                    {/* Only clickable when there's something to show and the
+                        account may read users — the endpoint behind it needs
+                        canViewUsers, so otherwise this would just 403. */}
+                    {canViewUsers && (role.userCount ?? 0) > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setMembersOf(role)}
+                        className="inline-flex items-center gap-1.5 rounded font-medium text-sci-blue underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sci-blue"
+                        title={`See who has the ${role.name} role`}
+                      >
+                        <UsersIcon className="h-4 w-4" />
+                        {role.userCount}
+                      </button>
+                    ) : (
+                      (role.userCount ?? 0)
+                    )}
+                  </Td>
                   <Td align="right">
                     <div className="flex items-center justify-end gap-1">
                       <IconButton
@@ -297,6 +352,11 @@ function RolesAdminPageContent() {
                         <span>
                           <span className="block text-slate-800">{p.label}</span>
                           <span className="block font-mono text-[11px] text-slate-400">{p.key}</span>
+                          {p.defaultOn && (
+                            <span className="mt-0.5 block text-[11px] text-slate-400">
+                              On by default — staff land on the dashboard after signing in.
+                            </span>
+                          )}
                         </span>
                       </label>
                     ))}
@@ -319,6 +379,63 @@ function RolesAdminPageContent() {
         </form>
       </Modal>
 
+      {/* Who holds this role */}
+      <Modal
+        open={membersOf !== null}
+        onClose={() => setMembersOf(null)}
+        title={membersOf ? `Users with the ${membersOf.name} role` : ''}
+        size="lg"
+      >
+        {membersLoading && <LoadingState />}
+        {membersError && <ErrorState message="Couldn't load the users for this role." />}
+
+        {!membersLoading && !membersError && (members?.data.length ?? 0) === 0 && (
+          <EmptyState message="Nobody holds this role." />
+        )}
+
+        {!membersLoading && (members?.data.length ?? 0) > 0 && (
+          <div className="divide-y divide-slate-100">
+            {members!.data.map((u) => (
+              <div key={u.id} className="flex items-center justify-between gap-4 py-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium text-slate-900">{u.fullName}</span>
+                    {/* Recycled accounts still hold the role and still block
+                        deleting it, so they're listed and marked rather than
+                        hidden. */}
+                    {u.status === 'DELETED' && <Badge status="DELETED" />}
+                  </div>
+                  <div className="truncate text-xs text-slate-500">{u.email}</div>
+                </div>
+
+                {canEditUser && (
+                  <Link
+                    href={`/admin/users/${u.id}/edit`}
+                    className="shrink-0 text-xs font-medium text-sci-blue hover:underline"
+                  >
+                    Open
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* The request caps at 100; say so rather than silently truncating. */}
+        {(members?.pagination.total ?? 0) > (members?.data.length ?? 0) && (
+          <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+            Showing the first {members!.data.length} of {members!.pagination.total}. Use the Users
+            page to see the rest.
+          </p>
+        )}
+
+        <div className="mt-5 flex justify-end">
+          <Button variant="secondary" onClick={() => setMembersOf(null)}>
+            Close
+          </Button>
+        </div>
+      </Modal>
+
       <ConfirmDialog
         open={pendingDelete !== null}
         title="Delete role"
@@ -333,12 +450,4 @@ function RolesAdminPageContent() {
 
 function isSystemRole(roles: Role[] | undefined, id: number) {
   return roles?.find((r) => r.id === id)?.isSystem === true;
-}
-
-export default function RolesAdminPage() {
-  return (
-    <RequirePermission permission="canViewRoles">
-      <RolesAdminPageContent />
-    </RequirePermission>
-  );
 }

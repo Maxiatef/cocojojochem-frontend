@@ -59,8 +59,8 @@ export function StorefrontFooter() {
             <ul className="space-y-2.5 text-sm text-sand-100/70">
               <li><Link href="/about" className="hover:text-white">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
-              <li><Link href="/terms-of-service" className="hover:text-white">Terms of Service</Link></li>
-              <li><Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
+              <li><Link href="/legal/terms-of-service" className="hover:text-white">Terms of Service</Link></li>
+              <li><Link href="/legal/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

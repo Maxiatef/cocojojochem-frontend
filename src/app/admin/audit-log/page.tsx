@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 import {
   AuditFilterOptions,
   AuditLogEntry,
@@ -78,6 +79,7 @@ export default function AuditLogPage() {
 }
 
 function AuditLog() {
+  const tz = useSiteTimezone();
   const [search, setSearch] = useState('');
   const [entityName, setEntityName] = useState('');
   const [action, setAction] = useState('');
@@ -274,7 +276,7 @@ function AuditLog() {
               {entries.map((entry) => (
                 <Tr key={entry.id}>
                   <Td className="whitespace-nowrap text-slate-500">
-                    <span title={entry.occurredAt}>{new Date(entry.occurredAt).toLocaleString()}</span>
+                    <span title={entry.occurredAt}>{formatDateTime(entry.occurredAt, tz)}</span>
                   </Td>
                   <Td>
                     <div className="flex items-center gap-2">
@@ -338,6 +340,7 @@ function AuditLog() {
 }
 
 function AuditDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
+  const tz = useSiteTimezone();
   const { data: entry, isLoading, isError } = useQuery({
     queryKey: ['admin-audit-log-detail', id],
     queryFn: () => api.get<AuditLogEntry>(`/audit-logs/${id}`),
@@ -351,7 +354,7 @@ function AuditDetailModal({ id, onClose }: { id: string; onClose: () => void }) 
       {entry && (
         <div className="space-y-6">
           <div className="rounded-lg bg-slate-50 px-4 py-3">
-            <DetailRow label="When" value={new Date(entry.occurredAt).toLocaleString()} />
+            <DetailRow label="When" value={formatDateTime(entry.occurredAt, tz)} />
             <DetailRow
               label="Who"
               value={`${entry.actorEmail || entry.actorSource || 'System'}${

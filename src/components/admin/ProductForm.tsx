@@ -18,6 +18,7 @@ import {
 } from '@/lib/types';
 import { uploadMultipleProductImages, uploadProductDocument, uploadVariantImage } from '@/lib/uploads';
 import { useCan } from '@/components/AdminShell';
+import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 import {
   Button,
   Card,
@@ -56,6 +57,9 @@ interface VariantFormRow {
   availableFrom: string;
   weightLb: string;
   isSoldByDrum: boolean;
+  // Display only — never sent back. Absent on a row the admin just added,
+  // which is exactly what "not saved yet" should look like.
+  createdAt?: string;
 }
 
 const EMPTY_VARIANT: VariantFormRow = {
@@ -92,6 +96,7 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     availableFrom: v.availableFrom ? v.availableFrom.slice(0, 16) : '',
     weightLb: v.weightLb != null ? String(v.weightLb) : '',
     isSoldByDrum: v.isSoldByDrum ?? false,
+    createdAt: v.createdAt,
   };
 }
 
@@ -144,6 +149,7 @@ export function ProductForm({
   const queryClient = useQueryClient();
   const toast = useToast();
   const isEdit = !!product;
+  const tz = useSiteTimezone();
 
   const [name, setName] = useState(product?.name || '');
   const [slug, setSlug] = useState(product?.slug || '');
@@ -615,6 +621,11 @@ export function ProductForm({
       {/* Sticky so Save stays reachable on a form this long — the bottom bar
           is a scroll away once the variants section fills out. */}
       <div className="sticky top-0 z-20 -mx-1 flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 bg-slate-50/95 px-1 py-3 backdrop-blur lg:col-span-3">
+        {product?.createdAt && (
+          <p className="mr-auto text-xs text-slate-500">
+            Created {formatDateTime(product.createdAt, tz)}
+          </p>
+        )}
         <Button type="submit" loading={saveMutation.isPending}>
           {isEdit ? 'Save Changes' : 'Create Product'}
         </Button>
@@ -1094,6 +1105,15 @@ export function ProductForm({
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Variant {i + 1}
+                  {v.createdAt ? (
+                    <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">
+                      added {formatDateTime(v.createdAt, tz)}
+                    </span>
+                  ) : (
+                    <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">
+                      not saved yet
+                    </span>
+                  )}
                 </p>
                 {variants.length > 1 && (
                   <button

@@ -25,7 +25,6 @@ import {
   SettingsIcon,
   GlobeIcon,
   ClockIcon,
-  ShieldIcon,
 } from '@/components/icons';
 
 // Each entry names the permission that its page's own list endpoint requires,
@@ -45,10 +44,9 @@ const NAV: {
   { href: '/admin/functions', label: 'Functions', icon: TagIcon, permission: 'canViewFunctions' },
   { href: '/admin/orders', label: 'Orders', icon: BoxIcon, permission: 'canViewOrders' },
   { href: '/admin/companies', label: 'Companies', icon: BuildingIcon, permission: 'canViewCompanies' },
-  { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon, permission: 'canViewCoupons' },
+  { href: '/admin/coupons', label: 'Sales & Coupons', icon: TicketIcon, permission: 'canViewCoupons' },
   { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon, permission: 'canViewAnalytics' },
   { href: '/admin/users', label: 'Users', icon: UsersIcon, permission: 'canViewUsers' },
-  { href: '/admin/roles', label: 'Roles', icon: ShieldIcon, permission: 'canViewRoles' },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, permission: 'canViewAuditLog' },
   { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, permission: 'canViewSeoPages' },
   { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, permission: 'canViewSiteSettings' },

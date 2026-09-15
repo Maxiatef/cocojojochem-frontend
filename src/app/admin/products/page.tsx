@@ -14,6 +14,7 @@ import {
   Card,
   EmptyState,
   ErrorState,
+  IconButton,
   LoadingState,
   PageHeader,
   Pagination,
@@ -26,7 +27,7 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { ImagePlaceholderIcon, PlusIcon } from '@/components/icons';
+import { EyeIcon, ImagePlaceholderIcon, PlusIcon } from '@/components/icons';
 import { StatusCard } from '@/components/admin/StatusCard';
 import { RequireStaff, useCan } from '@/components/AdminShell';
 import { ProductEditLink } from '@/components/admin/ProductEditLink';
@@ -85,6 +86,10 @@ function ProductsPageContent() {
   // through the product update endpoint, so they share canEditProduct.
   const canCreate = useCan('canCreateProduct');
   const isAdmin = useCan('canEditProduct');
+  // Read-only detail is its own permission and its own page: an account with
+  // canViewProducts but not canEditProduct can open a product, it just can't
+  // change one.
+  const canViewProduct = useCan('canViewProducts');
   const [pageTab, setPageTab] = useState<PageTab>('catalog');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -351,6 +356,7 @@ function ProductsPageContent() {
               <Th {...sortHeaderProps('price')}>Price range</Th>
               <Th {...sortHeaderProps('stock')}>Stock</Th>
               <Th {...sortHeaderProps('status')}>Status</Th>
+              {canViewProduct && <Th align="right">View</Th>}
             </TableHead>
             <tbody>
               {data.data.map((p) => {
@@ -361,14 +367,19 @@ function ProductsPageContent() {
                   togglePublishedMutation.isPending && togglePublishedMutation.variables?.id === p.id;
                 const thumbUrl = p.imageUrl || p.variants.find((v) => v.imageUrl)?.imageUrl || null;
                 return (
-                  // The row IS the link now — there is no separate read-only
-                  // product page any more, so opening a product means opening
-                  // its editor. Only admins can go there (the editor is
-                  // RequirePermission), so a sales user's rows stay inert rather
-                  // than leading to an access-denied screen.
+                  // Clicking the row opens the product. Where that goes depends
+                  // on what the account may do: the editor for someone who can
+                  // change it, the read-only view for someone who can only look.
+                  // Neither leads to an access-denied screen.
                   <Tr
                     key={p.id}
-                    onClick={isAdmin ? () => router.push(`/admin/products/${p.id}/edit`) : undefined}
+                    onClick={
+                      isAdmin
+                        ? () => router.push(`/admin/products/${p.id}/edit`)
+                        : canViewProduct
+                          ? () => router.push(`/admin/products/${p.id}/view`)
+                          : undefined
+                    }
                   >
                     <Td>
                       <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
@@ -429,6 +440,22 @@ function ProductsPageContent() {
                         {p.isPublished ? 'Published' : 'Draft'}
                       </button>
                     </Td>
+                    {canViewProduct && (
+                      <Td align="right">
+                        {/* An explicit way in for an account that can only read,
+                            and a way for an editor to look without risking an
+                            accidental change. stopPropagation so it doesn't
+                            also fire the row's own navigation. */}
+                        <IconButton
+                          icon={EyeIcon}
+                          label={`View ${p.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/admin/products/${p.id}/view`);
+                          }}
+                        />
+                      </Td>
+                    )}
                   </Tr>
                 );
               })}

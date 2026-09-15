@@ -269,7 +269,7 @@ export default function ContactPage() {
                   <span>
                     I agree to the{' '}
                     <Link
-                      href="/terms-of-service"
+                      href="/legal/terms-of-service"
                       target="_blank"
                       className="font-medium text-sci-blue hover:underline"
                     >
@@ -277,7 +277,7 @@ export default function ContactPage() {
                     </Link>{' '}
                     and{' '}
                     <Link
-                      href="/privacy-policy"
+                      href="/legal/privacy-policy"
                       target="_blank"
                       className="font-medium text-sci-blue hover:underline"
                     >

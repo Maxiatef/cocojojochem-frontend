@@ -289,11 +289,11 @@ function RegisterForm() {
           />
           <span>
             I agree to the{' '}
-            <Link href="/terms-of-service" target="_blank" className="font-medium text-sci-blue hover:underline">
+            <Link href="/legal/terms-of-service" target="_blank" className="font-medium text-sci-blue hover:underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy-policy" target="_blank" className="font-medium text-sci-blue hover:underline">
+            <Link href="/legal/privacy-policy" target="_blank" className="font-medium text-sci-blue hover:underline">
               Privacy Policy
             </Link>
             .

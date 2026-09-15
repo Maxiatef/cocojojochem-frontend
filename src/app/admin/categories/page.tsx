@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { formatDate, formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { Category, Paginated } from '@/lib/types';
 import { uploadCategoryImage } from '@/lib/uploads';
@@ -41,6 +42,8 @@ type CategorySort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
 interface CategoryFormState {
   id: number | null;
+  // Display only — the form never sends this back.
+  createdAt?: string;
   name: string;
   slug: string;
   description: string;
@@ -64,6 +67,7 @@ function CategoriesAdminPageContent() {
   // is always going to 403 shouldn't be offered.
   const canCreate = useCan('canCreateCategory');
   const canEdit = useCan('canEditCategory');
+  const tz = useSiteTimezone();
   const canDelete = useCan('canDeleteCategory');
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
@@ -152,6 +156,7 @@ function CategoriesAdminPageContent() {
       description: c.description || '',
       imageUrl: c.imageUrl || '',
       parentId: c.parentId ? String(c.parentId) : '',
+      createdAt: c.createdAt,
     });
     setError(null);
     setModalOpen(true);
@@ -230,6 +235,7 @@ function CategoriesAdminPageContent() {
               <Th>Parent</Th>
               <Th>Slug</Th>
               <Th>Products</Th>
+              <Th>Created</Th>
               <Th align="right">Actions</Th>
             </TableHead>
             <tbody>
@@ -259,6 +265,7 @@ function CategoriesAdminPageContent() {
                   </Td>
                   <Td className="text-slate-500">{c.slug}</Td>
                   <Td className="text-slate-600">{c.productCount ?? 0}</Td>
+                  <Td className="whitespace-nowrap text-slate-600">{formatDate(c.createdAt, tz)}</Td>
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
                       <Link href={`/admin/categories/${c.id}`}>
@@ -294,6 +301,9 @@ function CategoriesAdminPageContent() {
 
       <Modal open={modalOpen} onClose={closeModal} title={form.id ? 'Edit Category' : 'Add Category'}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {form.createdAt && (
+            <p className="text-xs text-slate-500">Created {formatDateTime(form.createdAt, tz)}</p>
+          )}
           <TextField
             label="Name"
             required

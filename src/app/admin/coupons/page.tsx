@@ -3,6 +3,14 @@
 import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import {
+  formatDate as formatSiteDate,
+  formatDateTime as formatSiteDateTime,
+  inputToIso,
+  isoToInput,
+  timeZoneLabel,
+  useSiteTimezone,
+} from '@/lib/siteTimezone';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequireStaff, useCan } from '@/components/AdminShell';
 import {
@@ -70,9 +78,10 @@ function couponStatus(c: Coupon): { label: string; tone: string } {
   return { label: 'ACTIVE', tone: 'APPROVED' };
 }
 
-function fmtDate(d: string | null) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString();
+// Site time, not the viewer's — two admins in different countries must read
+// the same date off the same row.
+function fmtDate(d: string | null, tz: string) {
+  return formatSiteDate(d, tz);
 }
 
 // --- Coupon form state ----------------------------------------------------
@@ -139,7 +148,7 @@ const EMPTY_COUPON_FORM: CouponFormState = {
   excludedBrands: [],
 };
 
-function couponToForm(c: Coupon): CouponFormState {
+function couponToForm(c: Coupon, tz: string): CouponFormState {
   return {
     id: c.id,
     code: c.code,
@@ -149,8 +158,8 @@ function couponToForm(c: Coupon): CouponFormState {
     minOrderAmount: c.minOrderAmount || '',
     maxOrderAmount: c.maxOrderAmount || '',
     maxDiscount: c.maxDiscount || '',
-    startDate: c.startDate ? c.startDate.slice(0, 10) : '',
-    endDate: c.endDate ? c.endDate.slice(0, 10) : '',
+    startDate: isoToInput(c.startDate, tz),
+    endDate: isoToInput(c.endDate, tz),
     usageLimit: c.usageLimit != null ? String(c.usageLimit) : '',
     maxUsagePerUser: c.maxUsagePerUser != null ? String(c.maxUsagePerUser) : '',
     isActive: c.isActive,
@@ -176,7 +185,7 @@ function nonNegative(n: number): number {
   return Math.max(0, n);
 }
 
-function formToBody(f: CouponFormState): Record<string, unknown> {
+function formToBody(f: CouponFormState, tz: string): Record<string, unknown> {
   return {
     code: f.code.trim().toUpperCase(),
     description: f.description || undefined,
@@ -185,8 +194,9 @@ function formToBody(f: CouponFormState): Record<string, unknown> {
     minOrderAmount: f.minOrderAmount ? nonNegative(Number(f.minOrderAmount)) : undefined,
     maxOrderAmount: f.maxOrderAmount ? nonNegative(Number(f.maxOrderAmount)) : undefined,
     maxDiscount: f.maxDiscount ? nonNegative(Number(f.maxDiscount)) : undefined,
-    startDate: f.startDate ? new Date(f.startDate).toISOString() : undefined,
-    endDate: f.endDate ? new Date(f.endDate).toISOString() : undefined,
+    // Read as the site's wall-clock time, whatever zone the admin is in.
+    startDate: inputToIso(f.startDate, tz) ?? undefined,
+    endDate: inputToIso(f.endDate, tz) ?? undefined,
     usageLimit: f.usageLimit ? nonNegative(Number(f.usageLimit)) : undefined,
     maxUsagePerUser: f.maxUsagePerUser ? nonNegative(Number(f.maxUsagePerUser)) : undefined,
     isActive: f.isActive,
@@ -338,13 +348,13 @@ const EMPTY_BULK_FORM: BulkSaleFormState = {
   applyToAllVariants: false,
 };
 
-function bulkSaleToForm(b: BulkSaleDiscount): BulkSaleFormState {
+function bulkSaleToForm(b: BulkSaleDiscount, tz: string): BulkSaleFormState {
   return {
     id: b.id,
     name: b.name,
     discountPercent: b.discountPercent,
-    startDate: b.startDate ? b.startDate.slice(0, 16) : '',
-    endDate: b.endDate ? b.endDate.slice(0, 16) : '',
+    startDate: isoToInput(b.startDate, tz),
+    endDate: isoToInput(b.endDate, tz),
     isActive: b.isActive,
     categoryIds: idsToArray(b.categoryIds),
     productIds: idsToArray(b.productIds),
@@ -353,12 +363,12 @@ function bulkSaleToForm(b: BulkSaleDiscount): BulkSaleFormState {
   };
 }
 
-function bulkFormToBody(f: BulkSaleFormState): Record<string, unknown> {
+function bulkFormToBody(f: BulkSaleFormState, tz: string): Record<string, unknown> {
   return {
     name: f.name,
     discountPercent: Number(f.discountPercent) || 0,
-    startDate: f.startDate ? new Date(f.startDate).toISOString() : undefined,
-    endDate: f.endDate ? new Date(f.endDate).toISOString() : undefined,
+    startDate: inputToIso(f.startDate, tz) ?? undefined,
+    endDate: inputToIso(f.endDate, tz) ?? undefined,
     isActive: f.isActive,
     categoryIds: f.categoryIds.length ? f.categoryIds : undefined,
     productIds: f.productIds.length ? f.productIds : undefined,
@@ -522,7 +532,7 @@ export default function CouponsAdminPage() {
   return (
     <RequireStaff>
       <div>
-        <PageHeader title="Coupons & Promotions" description="Manage discount codes, bulk sales, and view redemption analytics." />
+        <PageHeader title="Sales & Coupons" description="Manage discount codes, bulk sales, and view redemption analytics." />
 
         <div className="mb-6 flex gap-1 border-b border-slate-200">
           {(
@@ -650,6 +660,7 @@ function CouponListSection({
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Coupon | null>(null);
   const [viewingCoupon, setViewingCoupon] = useState<Coupon | null>(null);
+  const tz = useSiteTimezone();
   const categoryOptions = useCategoryOptions();
   const { productOptions, variantOptions } = useProductAndVariantOptions();
   const brandOptions = useBrandOptions();
@@ -690,7 +701,7 @@ function CouponListSection({
   }
 
   function openEditModal(c: Coupon) {
-    setForm(couponToForm(c));
+    setForm(couponToForm(c, tz));
     setError(null);
     setModalOpen(true);
   }
@@ -702,7 +713,7 @@ function CouponListSection({
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    const body = formToBody(form);
+    const body = formToBody(form, tz);
     if (form.id) {
       updateMutation.mutate({ id: form.id, body });
     } else {
@@ -760,7 +771,7 @@ function CouponListSection({
                       {c.usageCount}/{c.usageLimit ?? '∞'}
                     </Td>
                     <Td className="text-slate-500">
-                      {fmtDate(c.startDate)} – {fmtDate(c.endDate)}
+                      {fmtDate(c.startDate, tz)} – {fmtDate(c.endDate, tz)}
                     </Td>
                     <Td>
                       <Badge status={status.tone} />
@@ -872,14 +883,14 @@ function CouponListSection({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <TextField
-              label="Start Date"
-              type="date"
+              label={`Start Date (${timeZoneLabel(tz)})`}
+              type="datetime-local"
               value={form.startDate}
               onChange={(e) => setForm({ ...form, startDate: e.target.value })}
             />
             <TextField
-              label="End Date"
-              type="date"
+              label={`End Date (${timeZoneLabel(tz)})`}
+              type="datetime-local"
               value={form.endDate}
               onChange={(e) => setForm({ ...form, endDate: e.target.value })}
             />
@@ -1065,6 +1076,7 @@ function CouponDetailModal({
   variantOptions: { id: number; label: string }[];
   onClose: () => void;
 }) {
+  const tz = useSiteTimezone();
   const status = couponStatus(coupon);
 
   function namesFor(ids: string | null, options: { id: number; label: string }[]): string {
@@ -1095,8 +1107,8 @@ function CouponDetailModal({
         <div className="flex items-center justify-between">
           <Badge status={status.tone} />
           <p className="text-xs text-slate-500">
-            Created {fmtDate(coupon.createdAt)}
-            {coupon.updatedAt && coupon.updatedAt !== coupon.createdAt && <> · Updated {fmtDate(coupon.updatedAt)}</>}
+            Created {fmtDate(coupon.createdAt, tz)}
+            {coupon.updatedAt && coupon.updatedAt !== coupon.createdAt && <> · Updated {fmtDate(coupon.updatedAt, tz)}</>}
           </p>
         </div>
 
@@ -1152,11 +1164,11 @@ function CouponDetailModal({
             />
             <CouponDetailRow
               label="Valid From"
-              value={coupon.startDate ? new Date(coupon.startDate).toLocaleString() : 'Immediately'}
+              value={coupon.startDate ? formatSiteDateTime(coupon.startDate, tz) : 'Immediately'}
             />
             <CouponDetailRow
               label="Valid Until"
-              value={coupon.endDate ? new Date(coupon.endDate).toLocaleString() : 'No expiry'}
+              value={coupon.endDate ? formatSiteDateTime(coupon.endDate, tz) : 'No expiry'}
             />
             <CouponDetailRow
               label="Restricted to Emails"
@@ -1336,6 +1348,7 @@ function BulkSalesTab() {
   const canCreate = useCan('canCreateBulkSale');
   const canEdit = useCan('canEditBulkSale');
   const canDelete = useCan('canDeleteBulkSale');
+  const tz = useSiteTimezone();
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-bulk-sales'],
@@ -1385,7 +1398,7 @@ function BulkSalesTab() {
   }
 
   function openEditModal(b: BulkSaleDiscount) {
-    setForm(bulkSaleToForm(b));
+    setForm(bulkSaleToForm(b, tz));
     setError(null);
     setModalOpen(true);
   }
@@ -1397,7 +1410,7 @@ function BulkSalesTab() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    const body = bulkFormToBody(form);
+    const body = bulkFormToBody(form, tz);
     if (form.id) {
       updateMutation.mutate({ id: form.id, body });
     } else {
@@ -1446,7 +1459,7 @@ function BulkSalesTab() {
                     <Td className="font-medium text-slate-900">{b.name}</Td>
                     <Td className="text-slate-600">{b.discountPercent}%</Td>
                     <Td className="text-slate-500">
-                      {fmtDate(b.startDate)} – {fmtDate(b.endDate)}
+                      {fmtDate(b.startDate, tz)} – {fmtDate(b.endDate, tz)}
                     </Td>
                     <Td>
                       <Badge status={active ? 'APPROVED' : 'SUSPENDED'} />
@@ -1494,14 +1507,14 @@ function BulkSalesTab() {
           />
           <div className="grid grid-cols-2 gap-3">
             <TextField
-              label="Start"
+              label={`Start (${timeZoneLabel(tz)})`}
               type="datetime-local"
               required
               value={form.startDate}
               onChange={(e) => setForm({ ...form, startDate: e.target.value })}
             />
             <TextField
-              label="End"
+              label={`End (${timeZoneLabel(tz)})`}
               type="datetime-local"
               required
               value={form.endDate}

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { formatDate, formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { Paginated, Product, ProductFunction } from '@/lib/types';
 import {
@@ -36,6 +37,8 @@ interface FunctionFormState {
   name: string;
   slug: string;
   description: string;
+  // Display only, and null on rows created before the column existed.
+  createdAt?: string | null;
 }
 
 const EMPTY_FORM: FunctionFormState = { id: null, name: '', slug: '', description: '' };
@@ -44,6 +47,7 @@ function FunctionsAdminPageContent() {
   // One permission per action, matching what each endpoint checks.
   const canCreate = useCan('canCreateFunction');
   const canEdit = useCan('canEditFunction');
+  const tz = useSiteTimezone();
   const canDelete = useCan('canDeleteFunction');
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
@@ -110,7 +114,13 @@ function FunctionsAdminPageContent() {
   }
 
   function openEditModal(f: ProductFunction) {
-    setForm({ id: f.id, name: f.name, slug: f.slug, description: f.description || '' });
+    setForm({
+      id: f.id,
+      name: f.name,
+      slug: f.slug,
+      description: f.description || '',
+      createdAt: f.createdAt,
+    });
     setError(null);
     setModalOpen(true);
   }
@@ -182,6 +192,7 @@ function FunctionsAdminPageContent() {
               <Th>Name</Th>
               <Th>Slug</Th>
               <Th>Products</Th>
+              <Th>Created</Th>
               <Th align="right">Actions</Th>
             </TableHead>
             <tbody>
@@ -190,6 +201,7 @@ function FunctionsAdminPageContent() {
                   <Td className="font-medium text-slate-900">{f.name}</Td>
                   <Td className="text-slate-500">{f.slug}</Td>
                   <Td className="text-slate-600">{f.productCount ?? 0}</Td>
+                  <Td className="whitespace-nowrap text-slate-600">{formatDate(f.createdAt, tz)}</Td>
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
                       <IconButton icon={EyeIcon} label="View Products" onClick={() => setViewingFunction(f)} />
@@ -223,6 +235,9 @@ function FunctionsAdminPageContent() {
 
       <Modal open={modalOpen} onClose={closeModal} title={form.id ? 'Edit Function' : 'Add Function'}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {form.id != null && (
+            <p className="text-xs text-slate-500">Created {formatDateTime(form.createdAt, tz)}</p>
+          )}
           <TextField
             label="Name"
             required
@@ -275,6 +290,7 @@ function FunctionsAdminPageContent() {
 }
 
 function FunctionProductsModal({ fn, onClose }: { fn: ProductFunction; onClose: () => void }) {
+  const tz = useSiteTimezone();
   // Uses the admin product listing (not the public /functions/:slug/products
   // endpoint) so unpublished/draft products tagged with this function still
   // show up here — an admin view of "all products" shouldn't silently hide
@@ -291,6 +307,8 @@ function FunctionProductsModal({ fn, onClose }: { fn: ProductFunction; onClose: 
 
   return (
     <Modal open onClose={onClose} title={`Products — ${fn.name}`} size="lg">
+      <p className="mb-4 text-xs text-slate-500">Created {formatDateTime(fn.createdAt, tz)}</p>
+
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Couldn't load products for this function." />}
       {data && products.length === 0 && <EmptyState message="No products are tagged with this function yet." />}

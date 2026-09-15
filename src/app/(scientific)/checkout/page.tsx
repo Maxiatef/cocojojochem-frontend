@@ -217,6 +217,9 @@ export default function CheckoutPage() {
   const taxAmount =
     shippingEstimate?.available && shippingEstimate.canShip ? shippingEstimate.taxAmount ?? 0 : 0;
   const taxLabel = shippingEstimate?.taxName || 'Tax';
+  // Only true once an estimate has actually come back saying so — a null
+  // estimate means "not calculated yet", not "under the minimum".
+  const belowMinimum = shippingEstimate != null && !shippingEstimate.meetsMinimum;
   const total = Math.max(0, subtotal - discount + shippingCost + taxAmount);
 
   async function handleSubmit(e: FormEvent) {
@@ -521,11 +524,11 @@ export default function CheckoutPage() {
             />
             <span>
               I agree to the{' '}
-              <Link href="/terms-of-service" target="_blank" className="font-medium text-sci-blue hover:underline">
+              <Link href="/legal/terms-of-service" target="_blank" className="font-medium text-sci-blue hover:underline">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy-policy" target="_blank" className="font-medium text-sci-blue hover:underline">
+              <Link href="/legal/privacy-policy" target="_blank" className="font-medium text-sci-blue hover:underline">
                 Privacy Policy
               </Link>
               .
@@ -536,12 +539,25 @@ export default function CheckoutPage() {
             <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>
           )}
 
+          {/* The minimum is enforced on the server too — this only stops the
+              customer being sent to Stripe for an order that will be refused.
+              Gated on a loaded estimate: before one arrives meetsMinimum is
+              simply unknown, and blocking on unknown would strand a valid
+              cart.
+
+              Disabled styling is a solid pair of colours, not disabled:opacity
+              — fading the accent washed it out until the white label was
+              unreadable against it. */}
           <button
             type="submit"
-            disabled={submitting || !agreedToTerms}
-            className="w-full bg-sci-accent px-4 py-3 text-sm font-medium text-white transition hover:brightness-95 disabled:opacity-60"
+            disabled={submitting || !agreedToTerms || belowMinimum}
+            className="w-full bg-sci-accent px-4 py-3 text-sm font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:hover:brightness-100"
           >
-            {submitting ? 'Redirecting to payment…' : `Continue to Payment — ${formatUsd(total)}`}
+            {submitting
+              ? 'Redirecting to payment…'
+              : belowMinimum
+                ? `Add ${formatUsd(shippingEstimate!.minimumRemaining)} to reach the minimum`
+                : `Continue to Payment — ${formatUsd(total)}`}
           </button>
         </form>
 
@@ -829,7 +845,7 @@ function InternationalShippingNotice() {
         Any import duties, taxes, or customs fees charged by the destination country are your responsibility. If those
         fees are refused, customs may return or destroy the package, and we won&apos;t be able to issue a refund in
         that case. By placing an order, you&apos;re accepting these risks — see our{' '}
-        <Link href="/terms-of-service" target="_blank" className="font-medium underline">
+        <Link href="/legal/terms-of-service" target="_blank" className="font-medium underline">
           Terms of Service
         </Link>{' '}
         for the full policy.

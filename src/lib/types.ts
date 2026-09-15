@@ -22,6 +22,7 @@ export interface Category {
   parentId: number | null;
   parent?: Category | null;
   children?: Category[];
+  createdAt?: string;
 }
 
 export interface ProductVariant {
@@ -41,6 +42,7 @@ export interface ProductVariant {
   availableFrom: string | null;
   weightLb: string | null;
   isSoldByDrum?: boolean;
+  createdAt?: string;
 }
 
 export interface ProductFunction {
@@ -49,6 +51,8 @@ export interface ProductFunction {
   slug: string;
   description?: string | null;
   productCount?: number;
+  /** Null for rows created before the column existed — see migration 1788500200000. */
+  createdAt?: string | null;
 }
 
 export interface Certification {
@@ -590,6 +594,8 @@ export interface Role {
 export interface PermissionDef {
   key: string;
   label: string;
+  /** Pre-ticked on a new role. Still fully editable. */
+  defaultOn?: boolean;
 }
 
 export interface PermissionGroup {
