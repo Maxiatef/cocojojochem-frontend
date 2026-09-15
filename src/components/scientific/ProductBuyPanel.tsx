@@ -13,7 +13,7 @@ import { useToast } from '@/components/ui';
 import { addToQuoteList } from '@/lib/quoteListStore';
 import { CheckCircleIcon, FileIcon } from '@/components/icons';
 import { WishlistButton } from '@/components/scientific/WishlistButton';
-import { ProductMediaGallery } from '@/components/storefront/ProductMediaGallery';
+import { ProductMediaGallery } from '@/components/commerce/ProductMediaGallery';
 
 /**
  * The product detail body, in the Scientific edition.

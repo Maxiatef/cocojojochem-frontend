@@ -11,7 +11,7 @@ import { Order } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { IconButton, useToast } from '@/components/ui';
 import { ShippingIcon, ImagePlaceholderIcon } from '@/components/icons';
-import { OrderShippingModal } from '@/components/storefront/OrderShippingModal';
+import { OrderShippingModal } from '@/components/commerce/OrderShippingModal';
 
 type Tab = 'ongoing' | 'completed';
 

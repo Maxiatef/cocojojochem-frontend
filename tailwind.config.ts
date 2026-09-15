@@ -17,34 +17,11 @@ const config: Config = {
           800: '#204e25',
           900: '#1b4120',
         },
-        // Storefront-only palette (references: warm cream + deep olive skincare
-        // brand aesthetic). Kept separate from `brand` so the admin dashboard's
-        // existing green identity is untouched.
-        sand: {
-          50: '#fbf9f4',
-          100: '#f4eee1',
-          200: '#eae0cb',
-          300: '#ded0b2',
-          400: '#c9b998',
-        },
-        olive: {
-          50: '#f4f1e8',
-          100: '#e3e6d3',
-          300: '#a9b389',
-          500: '#6f7f52',
-          600: '#56653e',
-          700: '#3e4a2e',
-          800: '#313b25',
-          950: '#1c2216',
-        },
-        ink: {
-          DEFAULT: '#211d16',
-          soft: '#6e6658',
-        },
         // COCOJOJO "Scientific edition" design system, from the Figma file's
-        // published variables (page 33:215). Namespaced under `sci` so it can
-        // live alongside the existing sand/olive storefront palette while the
-        // rebrand is rolled out page by page.
+        // published variables (page 33:215). The only storefront palette —
+        // the previous sand/olive design was removed once the rebrand covered
+        // every page. Still namespaced under `sci` because the admin keeps its
+        // own `brand` green.
         //
         // NOTE ON `accent`: this is `--orange` in Figma. The Scientific edition
         // re-skinned the value to teal (#53e0d0) without renaming the variable,
@@ -61,8 +38,6 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['var(--font-display)', 'serif'],
-        storefront: ['var(--font-storefront)', 'sans-serif'],
         // Scientific edition: Manrope for headings and the wordmark, DM Sans
         // for body copy, navigation, forms and labels.
         'sci-heading': ['var(--font-sci-heading)', 'system-ui', 'sans-serif'],

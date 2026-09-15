@@ -12,8 +12,6 @@ const COLUMNS = [
       { label: 'All ingredients', href: '/products' },
       { label: 'Industries', href: '/functions' },
       { label: 'Solutions & services', href: '/about' },
-      // A-Z index taken offline — restore this entry when /a-z comes back.
-      // { label: 'Technical resources', href: '/a-z' },
     ],
   },
   {

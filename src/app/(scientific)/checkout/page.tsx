@@ -12,7 +12,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { CheckoutResponse, CouponValidateResult, Paginated, Product, ServerCart, ShippingEstimate } from '@/lib/types';
 import { COUNTRY_CODES } from '@/lib/countryCodes';
 import { US_STATES } from '@/lib/usStates';
-import { CheckoutStepper } from '@/components/storefront/CheckoutStepper';
+import { CheckoutStepper } from '@/components/commerce/CheckoutStepper';
 import { ImagePlaceholderIcon } from '@/components/icons';
 import { Container, Eyebrow } from '@/components/scientific/primitives';
 

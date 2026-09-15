@@ -9,7 +9,7 @@ import { clearCustomerToken, getCustomerToken } from '@/lib/customerAuth';
 import { CustomerProfile, Order } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { OrderShippingModal } from '@/components/storefront/OrderShippingModal';
+import { OrderShippingModal } from '@/components/commerce/OrderShippingModal';
 import { ShippingIcon, ImagePlaceholderIcon } from '@/components/icons';
 import { Container } from '@/components/scientific/primitives';
 

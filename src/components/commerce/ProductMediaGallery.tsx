@@ -116,7 +116,7 @@ export function ProductMediaGallery({
               type="button"
               onClick={() => step(-1)}
               aria-label="Previous image"
-              className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sci-navy shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
             >
               <ChevronLeftIcon className="h-5 w-5" />
             </button>
@@ -124,7 +124,7 @@ export function ProductMediaGallery({
               type="button"
               onClick={() => step(1)}
               aria-label="Next image"
-              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sci-navy shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
             >
               <ChevronRightIcon className="h-5 w-5" />
             </button>
@@ -167,7 +167,7 @@ export function ProductMediaGallery({
               className="flex aspect-square flex-col items-center justify-center gap-1 rounded-md border border-sci-border bg-white px-1 text-center transition hover:border-sci-blue hover:bg-sci-pale"
             >
               <FileIcon className="h-5 w-5 text-sci-blue" />
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-sci-navy">
                 {DOC_TYPE_BADGE[doc.type]}
               </span>
               <span className="font-sci-body text-[9px] uppercase text-sci-muted">{fileExtension(doc.url)}</span>

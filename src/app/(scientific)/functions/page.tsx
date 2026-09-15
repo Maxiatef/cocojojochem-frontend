@@ -203,10 +203,6 @@ export default async function FunctionsPage() {
               <ArrowLink href="/categories" tone="white">
                 Browse by category
               </ArrowLink>
-              {/* A-Z index taken offline — restore when /a-z comes back. */}
-              {/* <ArrowLink href="/a-z" tone="white">
-                A-Z ingredient index
-              </ArrowLink> */}
               <ArrowLink href="/products" tone="white">
                 Full product catalog
               </ArrowLink>

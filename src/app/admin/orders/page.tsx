@@ -20,7 +20,7 @@ import {
   SelectField,
   TextField,
 } from '@/components/ui';
-import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
+import { TrackingTimeline } from '@/components/commerce/TrackingTimeline';
 import { EyeIcon, ShippingIcon } from '@/components/icons';
 import { OrderStatusStepper } from '@/components/OrderStatusStepper';
 import { useCan } from '@/components/AdminShell';

@@ -6,7 +6,7 @@ import { customerApi } from '@/lib/customerApi';
 import { Order } from '@/lib/types';
 import { ConfirmDialog, Modal, useToast } from '@/components/ui';
 import { OrderStatusStepper } from '@/components/OrderStatusStepper';
-import { TrackingTimeline } from '@/components/storefront/TrackingTimeline';
+import { TrackingTimeline } from '@/components/commerce/TrackingTimeline';
 import { formatUsd } from '@/lib/pricing';
 import { carrierLabel, carrierTrackingUrl } from '@/lib/carrierTracking';
 import { orderCancelEligibility } from '@/lib/orderCancel';

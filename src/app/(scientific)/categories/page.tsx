@@ -152,10 +152,6 @@ export default async function CategoriesPage() {
               <ArrowLink href="/functions" tone="white">
                 Browse by function
               </ArrowLink>
-              {/* A-Z index taken offline — restore when /a-z comes back. */}
-              {/* <ArrowLink href="/a-z" tone="white">
-                A-Z ingredient index
-              </ArrowLink> */}
               <ArrowLink href="/products" tone="white">
                 Full product catalog
               </ArrowLink>

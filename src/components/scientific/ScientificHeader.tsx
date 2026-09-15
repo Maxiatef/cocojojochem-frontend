@@ -19,7 +19,7 @@ import { CategoryMenu } from '@/components/scientific/CategoryMenu';
  * own line rather than shrinking to unusable width.
  */
 
-// The site's real routes, matching src/components/storefront/Header.tsx.
+// The site's real routes.
 // The Figma design's labels (Industries / Solutions & services / Technical
 // resources) describe pages that do not exist yet; using them would have left
 // three of six nav items pointing somewhere they don't name.
@@ -27,8 +27,6 @@ const NAV = [
   { label: 'Categories', href: '/categories' },
   { label: 'Products', href: '/products' },
   { label: 'Functions', href: '/functions' },
-  // A-Z index taken offline — restore this entry when /a-z comes back.
-  // { label: 'A-Z', href: '/a-z' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];

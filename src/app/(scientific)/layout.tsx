@@ -1,6 +1,6 @@
 import { ScientificHeader } from '@/components/scientific/ScientificHeader';
 import { ScientificFooter } from '@/components/scientific/ScientificFooter';
-import { VisitorTracker } from '@/components/storefront/VisitorTracker';
+import { VisitorTracker } from '@/components/commerce/VisitorTracker';
 import { SCI_FONT_VARS } from '@/lib/fonts';
 
 /**
