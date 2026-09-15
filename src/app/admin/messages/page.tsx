@@ -20,6 +20,7 @@ import {
   Th,
 } from '@/components/ui';
 import { ArchiveIcon, EyeIcon, TrashIcon } from '@/components/icons';
+import { useCan } from '@/components/AdminShell';
 import { MessageDetailModal } from '@/components/admin/MessageDetailModal';
 
 const TABS: { label: string; value: ContactMessageStatus | 'ALL' }[] = [
@@ -63,6 +64,11 @@ export default function AdminMessagesPage() {
     queryClient.invalidateQueries({ queryKey: ['contact-messages-stats'] });
   }
 
+  // Archiving, marking read/replied all go through the update endpoint;
+  // deleting has its own permission.
+  const canEdit = useCan('canEditContactMessage');
+  const canDelete = useCan('canDeleteContactMessage');
+
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: number; status: ContactMessageStatus }) =>
       api.patch<ContactMessage>(`/wholesale/contact-messages/${id}/status`, { status }),
@@ -100,7 +106,7 @@ export default function AdminMessagesPage() {
             key={t.value}
             onClick={() => setTab(t.value)}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              tab === t.value ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              tab === t.value ? 'bg-sci-blue text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             {t.label}
@@ -138,7 +144,7 @@ export default function AdminMessagesPage() {
                     <Td>
                       <div className="flex items-center gap-2">
                         {m.status === 'UNREAD' && (
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-brand-600" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-sci-blue" />
                         )}
                         <div className="min-w-0">
                           <p className={`truncate ${m.status === 'UNREAD' ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>
@@ -164,14 +170,18 @@ export default function AdminMessagesPage() {
                     <Td align="right">
                       <div className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <IconButton icon={EyeIcon} label="View" onClick={() => setOpenId(m.id)} />
-                        <IconButton
-                          icon={ArchiveIcon}
-                          label={m.status === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
-                          onClick={() =>
-                            updateStatus.mutate({ id: m.id, status: m.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED' })
-                          }
-                        />
-                        <IconButton icon={TrashIcon} label="Delete" variant="danger" onClick={() => setPendingDelete(m)} />
+                        {canEdit && (
+                          <IconButton
+                            icon={ArchiveIcon}
+                            label={m.status === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
+                            onClick={() =>
+                              updateStatus.mutate({ id: m.id, status: m.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED' })
+                            }
+                          />
+                        )}
+                        {canDelete && (
+                          <IconButton icon={TrashIcon} label="Delete" variant="danger" onClick={() => setPendingDelete(m)} />
+                        )}
                       </div>
                     </Td>
                   </tr>
@@ -195,15 +205,24 @@ export default function AdminMessagesPage() {
           status={openMessage.status}
           isReplied={!!openMessage.repliedAt}
           busy={busy}
-          onArchiveToggle={() =>
-            updateStatus.mutate({
-              id: openMessage.id,
-              status: openMessage.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED',
-            })
+          onArchiveToggle={
+            canEdit
+              ? () =>
+                  updateStatus.mutate({
+                    id: openMessage.id,
+                    status: openMessage.status === 'ARCHIVED' ? 'READ' : 'ARCHIVED',
+                  })
+              : undefined
           }
-          onMarkUnread={() => updateStatus.mutate({ id: openMessage.id, status: 'UNREAD' })}
-          onToggleReplied={() => setReplied.mutate({ id: openMessage.id, replied: !openMessage.repliedAt })}
-          onDelete={() => setPendingDelete(openMessage)}
+          onMarkUnread={
+            canEdit ? () => updateStatus.mutate({ id: openMessage.id, status: 'UNREAD' }) : undefined
+          }
+          onToggleReplied={
+            canEdit
+              ? () => setReplied.mutate({ id: openMessage.id, replied: !openMessage.repliedAt })
+              : undefined
+          }
+          onDelete={canDelete ? () => setPendingDelete(openMessage) : undefined}
         />
       )}
 

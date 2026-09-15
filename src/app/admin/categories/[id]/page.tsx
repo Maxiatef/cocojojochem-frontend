@@ -18,6 +18,7 @@ import {
   Tr,
 } from '@/components/ui';
 import { ProductEditLink } from '@/components/admin/ProductEditLink';
+import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 
 interface CategoryDetail extends Category {
   parent: Category | null;
@@ -28,6 +29,7 @@ interface CategoryDetail extends Category {
 // Read-only detail view (a single GET, no writes), and it's what the View
 // button on the categories list opens — so sales must be able to reach it.
 export default function ViewCategoryPage({ params }: { params: { id: string } }) {
+  const tz = useSiteTimezone();
   const { data: category, isLoading, isError } = useQuery({
     queryKey: ['admin-category-detail', params.id],
     queryFn: () => api.get<CategoryDetail>(`/wholesale/categories/id/${params.id}`),
@@ -40,7 +42,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
     <RequireStaff>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title={category ? category.name : 'View Category'} description="Category details and its products." />
-        <Link href="/admin/categories" className="text-sm font-medium text-brand-700 hover:underline">
+        <Link href="/admin/categories" className="text-sm font-medium text-sci-blue hover:underline">
           &larr; Back to Categories
         </Link>
       </div>
@@ -78,6 +80,12 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
                   <div>
                     <dt className="text-slate-500">Sort Order</dt>
                     <dd className="font-medium text-slate-900">{category.sortOrder}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">Created</dt>
+                    <dd className="font-medium text-slate-900">
+                      {formatDateTime(category.createdAt, tz)}
+                    </dd>
                   </div>
                   <div className="col-span-2">
                     <dt className="text-slate-500">Description</dt>
@@ -122,7 +130,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
                     {products.map((p) => (
                       <Tr key={p.id}>
                         <Td className="font-medium text-slate-900">
-                          <ProductEditLink productId={p.id} className="hover:text-brand-700 hover:underline">
+                          <ProductEditLink productId={p.id} className="hover:text-sci-blue hover:underline">
                             {p.name}
                           </ProductEditLink>
                         </Td>

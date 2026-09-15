@@ -17,6 +17,8 @@ import {
   ProductVisibility,
 } from '@/lib/types';
 import { uploadMultipleProductImages, uploadProductDocument, uploadVariantImage } from '@/lib/uploads';
+import { useCan } from '@/components/AdminShell';
+import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 import {
   Button,
   Card,
@@ -55,6 +57,9 @@ interface VariantFormRow {
   availableFrom: string;
   weightLb: string;
   isSoldByDrum: boolean;
+  // Display only — never sent back. Absent on a row the admin just added,
+  // which is exactly what "not saved yet" should look like.
+  createdAt?: string;
 }
 
 const EMPTY_VARIANT: VariantFormRow = {
@@ -91,6 +96,7 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     availableFrom: v.availableFrom ? v.availableFrom.slice(0, 16) : '',
     weightLb: v.weightLb != null ? String(v.weightLb) : '',
     isSoldByDrum: v.isSoldByDrum ?? false,
+    createdAt: v.createdAt,
   };
 }
 
@@ -143,6 +149,7 @@ export function ProductForm({
   const queryClient = useQueryClient();
   const toast = useToast();
   const isEdit = !!product;
+  const tz = useSiteTimezone();
 
   const [name, setName] = useState(product?.name || '');
   const [slug, setSlug] = useState(product?.slug || '');
@@ -152,7 +159,16 @@ export function ProductForm({
   const [casNumber, setCasNumber] = useState(product?.casNumber || '');
   const [shortDescription, setShortDescription] = useState(product?.shortDescription || '');
   const [chemicalDescriptions, setChemicalDescriptions] = useState(product?.chemicalDescriptions || '');
-  const [categoryId, setCategoryId] = useState(product?.category?.id ? String(product.category.id) : '');
+  // A product is stored against exactly one category — the most specific one
+  // it belongs to. The form splits that into two controls: the main category
+  // and, where the main has children, a subcategory. `categoryId` below is
+  // always the value that gets submitted.
+  const [mainCategoryId, setMainCategoryId] = useState(
+    product?.category ? String(product.category.parentId ?? product.category.id) : '',
+  );
+  const [subCategoryId, setSubCategoryId] = useState(
+    product?.category?.parentId ? String(product.category.id) : '',
+  );
   const [functionIds, setFunctionIds] = useState<number[]>(product?.functions?.map((f) => f.id) || []);
   const [certificationIds, setCertificationIds] = useState<number[]>(
     product?.certifications?.map((c) => c.id) || [],
@@ -406,6 +422,12 @@ export function ProductForm({
       setError('Please choose a category.');
       return null;
     }
+    // Guards against a stale subcategory left over from a main-category change
+    // racing the query — the id must still belong under the chosen main.
+    if (subCategoryId && !subCategories.some((c) => String(c.id) === subCategoryId)) {
+      setError('That subcategory does not belong to the selected main category.');
+      return null;
+    }
     if (variants.length === 0 || variants.some((v) => !v.sku || !v.label || !v.price)) {
       setError('Every variant needs at least a SKU, size label, and price.');
       return null;
@@ -518,6 +540,14 @@ export function ProductForm({
   }
 
   const categories = categoriesRes?.data || [];
+  const rootCategories = categories.filter((c) => c.parentId == null);
+  const subCategories = mainCategoryId
+    ? categories.filter((c) => String(c.parentId ?? '') === mainCategoryId)
+    : [];
+  // The subcategory wins when there is one; otherwise the product sits on the
+  // main category directly, which is legitimate — not every category is
+  // subdivided.
+  const categoryId = subCategoryId || mainCategoryId;
 
   // Stock alerts — evaluated the same way the backend derives status: a
   // tracked quantity of 0 (and not on backorder) is Out of Stock; anything
@@ -591,6 +621,11 @@ export function ProductForm({
       {/* Sticky so Save stays reachable on a form this long — the bottom bar
           is a scroll away once the variants section fills out. */}
       <div className="sticky top-0 z-20 -mx-1 flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 bg-slate-50/95 px-1 py-3 backdrop-blur lg:col-span-3">
+        {product?.createdAt && (
+          <p className="mr-auto text-xs text-slate-500">
+            Created {formatDateTime(product.createdAt, tz)}
+          </p>
+        )}
         <Button type="submit" loading={saveMutation.isPending}>
           {isEdit ? 'Save Changes' : 'Create Product'}
         </Button>
@@ -604,13 +639,38 @@ export function ProductForm({
             <TextField label="Name" required value={name} onChange={(e) => setName(e.target.value)} />
             <TextField label="SKU" required value={sku} onChange={(e) => setSku(e.target.value)} />
             <SelectField
-              label="Category"
+              label="Main Category"
               required
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              value={mainCategoryId}
+              onChange={(e) => {
+                setMainCategoryId(e.target.value);
+                // The old subcategory belongs to the old parent; keeping it
+                // would silently file the product under the wrong branch.
+                setSubCategoryId('');
+              }}
             >
               <option value="">Select a category…</option>
-              {categories.map((c) => (
+              {rootCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </SelectField>
+
+            <SelectField
+              label="Subcategory"
+              value={subCategoryId}
+              disabled={subCategories.length === 0}
+              onChange={(e) => setSubCategoryId(e.target.value)}
+            >
+              <option value="">
+                {!mainCategoryId
+                  ? 'Choose a main category first'
+                  : subCategories.length === 0
+                    ? 'No subcategories'
+                    : 'None — file under the main category'}
+              </option>
+              {subCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -645,7 +705,7 @@ export function ProductForm({
                 <button
                   type="button"
                   onClick={() => setSlugEditing(true)}
-                  className="text-xs font-medium text-brand-600 hover:underline"
+                  className="text-xs font-medium text-sci-blue hover:underline"
                 >
                   Edit
                 </button>
@@ -814,7 +874,7 @@ export function ProductForm({
               {/* The count stays visible while collapsed, so the section can be
                   closed without losing track of what is selected. */}
               {functionIds.length > 0 && (
-                <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                <span className="ml-2 rounded-full bg-sci-pale px-2 py-0.5 text-xs font-medium text-sci-blue">
                   {functionIds.length}
                 </span>
               )}
@@ -830,7 +890,7 @@ export function ProductForm({
                   onClick={() => toggleId(functionIds, f.id, setFunctionIds)}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                     functionIds.includes(f.id)
-                      ? 'border-brand-600 bg-brand-50 text-brand-700'
+                      ? 'border-sci-blue bg-sci-pale text-sci-blue'
                       : 'border-slate-200 text-slate-600 hover:border-slate-300'
                   }`}
                 >
@@ -880,13 +940,13 @@ export function ProductForm({
                   placeholder="Key (e.g. pH)"
                   value={s.key}
                   onChange={(e) => updateSpec(i, { key: e.target.value })}
-                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
                 />
                 <input
                   placeholder="Value (e.g. 6.5)"
                   value={s.value}
                   onChange={(e) => updateSpec(i, { value: e.target.value })}
-                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                  className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
                 />
                 <button
                   type="button"
@@ -971,7 +1031,7 @@ export function ProductForm({
               type="checkbox"
               checked={isFeatured}
               onChange={(e) => setIsFeatured(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              className="h-4 w-4 rounded border-slate-300 text-sci-blue focus:ring-sci-blue"
             />
             Featured
           </label>
@@ -999,7 +1059,7 @@ export function ProductForm({
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleTagInputKeyDown}
               placeholder="e.g. emollient"
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
             />
             <Button type="button" variant="secondary" size="sm" onClick={() => addTag(tagInput)}>
               Add
@@ -1012,14 +1072,14 @@ export function ProductForm({
               {tags.map((t) => (
                 <span
                   key={t}
-                  className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                  className="flex items-center gap-1 rounded-full bg-sci-pale px-2.5 py-1 text-xs font-medium text-sci-blue"
                 >
                   {t}
                   <button
                     type="button"
                     onClick={() => removeTag(t)}
                     aria-label={`Remove tag ${t}`}
-                    className="text-brand-500 hover:text-brand-800"
+                    className="text-sci-blue hover:text-sci-navy"
                   >
                     ×
                   </button>
@@ -1045,6 +1105,15 @@ export function ProductForm({
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Variant {i + 1}
+                  {v.createdAt ? (
+                    <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">
+                      added {formatDateTime(v.createdAt, tz)}
+                    </span>
+                  ) : (
+                    <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">
+                      not saved yet
+                    </span>
+                  )}
                 </p>
                 {variants.length > 1 && (
                   <button
@@ -1230,6 +1299,7 @@ function DocumentsField({
   certifications: Certification[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1315,7 +1385,7 @@ function DocumentsField({
                     updateAt(i, { type: value as ProductDocType, certificationId: null });
                   }
                 }}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-sci-blue focus:outline-none"
               >
                 <optgroup label="Document">
                   {DOC_TYPE_OPTIONS.map(([value, label]) => (
@@ -1343,7 +1413,7 @@ function DocumentsField({
                 value={doc.label}
                 onChange={(e) => updateAt(i, { label: e.target.value })}
                 placeholder="Label shown to customers"
-                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-900 focus:border-brand-500 focus:outline-none"
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-900 focus:border-sci-blue focus:outline-none"
               />
 
               {/* Opens the stored file so an admin can confirm they attached
@@ -1352,7 +1422,7 @@ function DocumentsField({
                 href={doc.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 text-xs font-medium text-brand-700 underline hover:no-underline"
+                className="shrink-0 text-xs font-medium text-sci-blue underline hover:no-underline"
               >
                 View
               </a>
@@ -1370,15 +1440,17 @@ function DocumentsField({
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"
-        onChange={handleFilesChange}
-        disabled={uploading}
-        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
-      />
+      {canUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"
+          onChange={handleFilesChange}
+          disabled={uploading}
+          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+        />
+      )}
       {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -1392,6 +1464,7 @@ function DocumentsField({
 // persisted as ProductImage rows keyed by their position in this list.
 function GalleryField({ images, onChange }: { images: string[]; onChange: (urls: string[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1480,15 +1553,17 @@ function GalleryField({ images, onChange }: { images: string[]; onChange: (urls:
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        onChange={handleFilesChange}
-        disabled={uploading}
-        className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
-      />
+      {canUpload && (
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleFilesChange}
+          disabled={uploading}
+          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+        />
+      )}
       {uploading && <p className="mt-1 text-xs text-slate-400">Uploading…</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -1509,6 +1584,7 @@ function VariantImagePanel({
   upload: (file: File) => Promise<string>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1540,14 +1616,16 @@ function VariantImagePanel({
         )}
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleFileChange}
-          disabled={uploading}
-          className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
-        />
+        {canUpload && (
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleFileChange}
+            disabled={uploading}
+            className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+          />
+        )}
         {value && (
           <button
             type="button"

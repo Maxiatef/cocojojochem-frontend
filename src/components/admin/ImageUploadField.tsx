@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { ImagePlaceholderIcon, TrashIcon } from '@/components/icons';
+import { useCan } from '@/components/AdminShell';
 
 export function ImageUploadField({
   label,
@@ -16,6 +17,9 @@ export function ImageUploadField({
   upload: (file: File) => Promise<string>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  // The upload endpoints check canUploadMedia, so an account without it gets
+  // a file picker that always fails. Show the current image, hide the picker.
+  const canUpload = useCan('canUploadMedia');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,14 +54,16 @@ export function ImageUploadField({
 
         <div className="flex-1 space-y-1.5">
           <div className="flex items-center gap-2">
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleFileChange}
-              disabled={uploading}
-              className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
-            />
+            {canUpload && (
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleFileChange}
+                disabled={uploading}
+                className="block w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sci-pale file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sci-blue hover:file:bg-sci-blue/15"
+              />
+            )}
             {value && (
               <button
                 type="button"

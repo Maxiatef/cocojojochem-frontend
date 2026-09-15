@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 import { AuditLogEntry, Paginated } from '@/lib/types';
 import { Badge, ErrorState, LoadingState, Pagination } from '@/components/ui';
-import { useIsAdmin } from '@/components/AdminShell';
+import { useCan } from '@/components/AdminShell';
 import {
   AuditChildChanges,
   AuditDiffTable,
@@ -43,7 +44,8 @@ export function RecordHistory({
   entityId: number | string;
   pageSize?: number;
 }) {
-  const isAdmin = useIsAdmin();
+  const isAdmin = useCan('canViewAuditLog');
+  const tz = useSiteTimezone();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
@@ -127,7 +129,7 @@ export function RecordHistory({
                       {entry.actorEmail || entry.actorSource || 'System'}
                       {entry.actorRole ? ` · ${entry.actorRole}` : ''} ·{' '}
                       <span title={entry.occurredAt}>
-                        {new Date(entry.occurredAt).toLocaleString()}
+                        {formatDateTime(entry.occurredAt, tz)}
                       </span>
                     </span>
                   </span>
@@ -146,7 +148,7 @@ export function RecordHistory({
                           value={entry.actorEmail || entry.actorSource || 'System'}
                         />
                         <Row label="Role" value={entry.actorRole || entry.actorType} />
-                        <Row label="When" value={new Date(entry.occurredAt).toLocaleString()} />
+                        <Row label="When" value={formatDateTime(entry.occurredAt, tz)} />
                         <Row label="Action" value={entry.action.replace(/_/g, ' ')} />
                       </div>
                     </section>

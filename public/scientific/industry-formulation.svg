@@ -1,0 +1,30 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="365" height="134" viewBox="0 0 365 134" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Scientific application illustration" clip-path="url(#clip0_0_44)">
+<path id="Vector" d="M356 0H9C4.02944 0 0 4.02944 0 9V125C0 129.971 4.02944 134 9 134H356C360.971 134 365 129.971 365 125V9C365 4.02944 360.971 0 356 0Z" fill="#EFF7FA"/>
+<path id="Vector_2" d="M265 149C311.392 149 349 111.392 349 65C349 18.6081 311.392 -19 265 -19C218.608 -19 181 18.6081 181 65C181 111.392 218.608 149 265 149Z" fill="#E1F3F5"/>
+<g id="Vector_3">
+<path d="M162 23H204ZM169 25V60L143 102C140.333 109.333 143.333 113 152 113H219C226.333 113 228.333 109.333 225 102L197 60V25" fill="#D6EEF5"/>
+<path d="M162 23H204M169 25V60L143 102C140.333 109.333 143.333 113 152 113H219C226.333 113 228.333 109.333 225 102L197 60V25" stroke="#1465BB" stroke-width="2"/>
+</g>
+<path id="Vector_4" opacity="0.65" d="M158 83H214L226 104C229.333 110 227 113 219 113H152C144 113 141.333 110 144 104L158 83Z" fill="#53C6C2"/>
+<path id="Vector_5" d="M177 101C179.209 101 181 99.2091 181 97C181 94.7909 179.209 93 177 93C174.791 93 173 94.7909 173 97C173 99.2091 174.791 101 177 101Z" fill="white"/>
+<path id="Vector_6" d="M191 85C192.657 85 194 83.6569 194 82C194 80.3431 192.657 79 191 79C189.343 79 188 80.3431 188 82C188 83.6569 189.343 85 191 85Z" fill="white"/>
+<path id="Vector_7" d="M249 72C257.284 72 264 65.2843 264 57C264 48.7157 257.284 42 249 42C240.716 42 234 48.7157 234 57C234 65.2843 240.716 72 249 72Z" fill="url(#paint0_radial_0_44)"/>
+<path id="Vector_8" d="M115 78C120.523 78 125 73.5228 125 68C125 62.4772 120.523 58 115 58C109.477 58 105 62.4772 105 68C105 73.5228 109.477 78 115 78Z" fill="url(#paint1_radial_0_44)"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_44" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(243 48) scale(25.5)">
+<stop stop-color="white"/>
+<stop offset="0.25" stop-color="#98E3E6"/>
+<stop offset="1" stop-color="#2776AF"/>
+</radialGradient>
+<radialGradient id="paint1_radial_0_44" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(111 62) scale(17)">
+<stop stop-color="white"/>
+<stop offset="0.25" stop-color="#98E3E6"/>
+<stop offset="1" stop-color="#2776AF"/>
+</radialGradient>
+<clipPath id="clip0_0_44">
+<rect width="365" height="134" fill="white"/>
+</clipPath>
+</defs>
+</svg>

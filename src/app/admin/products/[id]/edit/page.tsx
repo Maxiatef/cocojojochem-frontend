@@ -8,13 +8,18 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { Product } from '@/lib/types';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { Button, Card, ConfirmDialog, ErrorState, LoadingState, PageHeader } from '@/components/ui';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequirePermission, useCan } from '@/components/AdminShell';
 import { RecordHistory } from '@/components/admin/RecordHistory';
 import { TrashIcon } from '@/components/icons';
 
 function EditProductPageContent({ params }: { params: { id: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  // Deleting is a separate permission from editing, so an account that may
+  // edit this product can still be unable to delete it. Hide the control
+  // rather than letting it 403 — an offered button that always fails reads
+  // as a broken page.
+  const canDelete = useCan('canDeleteProduct');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -58,15 +63,17 @@ function EditProductPageContent({ params }: { params: { id: string } }) {
         <ProductForm
           product={data}
           headerActions={
-            <Button
-              type="button"
-              variant="danger"
-              icon={TrashIcon}
-              onClick={() => setConfirmingDelete(true)}
-              loading={deleteMutation.isPending}
-            >
-              Delete
-            </Button>
+            canDelete ? (
+              <Button
+                type="button"
+                variant="danger"
+                icon={TrashIcon}
+                onClick={() => setConfirmingDelete(true)}
+                loading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+            ) : null
           }
         />
       )}
@@ -101,8 +108,8 @@ function EditProductPageContent({ params }: { params: { id: string } }) {
 // to match rather than showing controls the API would refuse.
 export default function EditProductPage({ params }: { params: { id: string } }) {
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canEditProduct">
       <EditProductPageContent params={params} />
-    </RequireAdmin>
+    </RequirePermission>
   );
 }

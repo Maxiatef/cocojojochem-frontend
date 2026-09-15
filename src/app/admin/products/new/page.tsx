@@ -2,7 +2,7 @@
 
 import { ProductForm } from '@/components/admin/ProductForm';
 import { PageHeader } from '@/components/ui';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequirePermission } from '@/components/AdminShell';
 
 function NewProductPageContent() {
   return (
@@ -17,8 +17,8 @@ function NewProductPageContent() {
 // too — sales can reach product links from the dashboard's stock widgets.
 export default function NewProductPage() {
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canCreateProduct">
       <NewProductPageContent />
-    </RequireAdmin>
+    </RequirePermission>
   );
 }

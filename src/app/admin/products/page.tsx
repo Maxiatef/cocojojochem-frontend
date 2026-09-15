@@ -14,6 +14,7 @@ import {
   Card,
   EmptyState,
   ErrorState,
+  IconButton,
   LoadingState,
   PageHeader,
   Pagination,
@@ -26,9 +27,9 @@ import {
   Th,
   Tr,
 } from '@/components/ui';
-import { ImagePlaceholderIcon, PlusIcon } from '@/components/icons';
+import { EyeIcon, ImagePlaceholderIcon, PlusIcon } from '@/components/icons';
 import { StatusCard } from '@/components/admin/StatusCard';
-import { RequireStaff, useIsAdmin } from '@/components/AdminShell';
+import { RequireStaff, useCan } from '@/components/AdminShell';
 import { ProductEditLink } from '@/components/admin/ProductEditLink';
 
 type ProductAdminSort =
@@ -81,7 +82,14 @@ function productStockBadge(p: Product): string {
 type PageTab = 'catalog' | 'analytics';
 
 function ProductsPageContent() {
-  const isAdmin = useIsAdmin();
+  // Adding is its own permission; row editing and the publish toggle both go
+  // through the product update endpoint, so they share canEditProduct.
+  const canCreate = useCan('canCreateProduct');
+  const isAdmin = useCan('canEditProduct');
+  // Read-only detail is its own permission and its own page: an account with
+  // canViewProducts but not canEditProduct can open a product, it just can't
+  // change one.
+  const canViewProduct = useCan('canViewProducts');
   const [pageTab, setPageTab] = useState<PageTab>('catalog');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -187,7 +195,7 @@ function ProductsPageContent() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <PageHeader title="Products" description="The full wholesale ingredient catalog." />
-        {isAdmin && (
+        {canCreate && (
           <Link href="/admin/products/new">
             <Button icon={PlusIcon}>Add Product</Button>
           </Link>
@@ -206,7 +214,7 @@ function ProductsPageContent() {
             onClick={() => setPageTab(key)}
             className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
               pageTab === key
-                ? 'border-brand-600 text-brand-700'
+                ? 'border-sci-blue text-sci-blue'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -348,6 +356,7 @@ function ProductsPageContent() {
               <Th {...sortHeaderProps('price')}>Price range</Th>
               <Th {...sortHeaderProps('stock')}>Stock</Th>
               <Th {...sortHeaderProps('status')}>Status</Th>
+              {canViewProduct && <Th align="right">View</Th>}
             </TableHead>
             <tbody>
               {data.data.map((p) => {
@@ -358,14 +367,19 @@ function ProductsPageContent() {
                   togglePublishedMutation.isPending && togglePublishedMutation.variables?.id === p.id;
                 const thumbUrl = p.imageUrl || p.variants.find((v) => v.imageUrl)?.imageUrl || null;
                 return (
-                  // The row IS the link now — there is no separate read-only
-                  // product page any more, so opening a product means opening
-                  // its editor. Only admins can go there (the editor is
-                  // RequireAdmin), so a sales user's rows stay inert rather
-                  // than leading to an access-denied screen.
+                  // Clicking the row opens the product. Where that goes depends
+                  // on what the account may do: the editor for someone who can
+                  // change it, the read-only view for someone who can only look.
+                  // Neither leads to an access-denied screen.
                   <Tr
                     key={p.id}
-                    onClick={isAdmin ? () => router.push(`/admin/products/${p.id}/edit`) : undefined}
+                    onClick={
+                      isAdmin
+                        ? () => router.push(`/admin/products/${p.id}/edit`)
+                        : canViewProduct
+                          ? () => router.push(`/admin/products/${p.id}/view`)
+                          : undefined
+                    }
                   >
                     <Td>
                       <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
@@ -384,7 +398,18 @@ function ProductsPageContent() {
                       )}
                     </Td>
                     <Td className="text-slate-600">{p.sku}</Td>
-                    <Td className="text-slate-600">{p.category?.name || '—'}</Td>
+                    <Td className="text-slate-600">
+                      {p.category ? (
+                        <>
+                          {p.category.parent && (
+                            <span className="text-slate-400">{p.category.parent.name} › </span>
+                          )}
+                          {p.category.name}
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </Td>
                     <Td className="text-slate-600">{p.variants.length}</Td>
                     <Td className="text-slate-600">
                       {min != null ? (min === max ? `$${min}` : `$${min} – $${max}`) : '—'}
@@ -415,6 +440,22 @@ function ProductsPageContent() {
                         {p.isPublished ? 'Published' : 'Draft'}
                       </button>
                     </Td>
+                    {canViewProduct && (
+                      <Td align="right">
+                        {/* An explicit way in for an account that can only read,
+                            and a way for an editor to look without risking an
+                            accidental change. stopPropagation so it doesn't
+                            also fire the row's own navigation. */}
+                        <IconButton
+                          icon={EyeIcon}
+                          label={`View ${p.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/admin/products/${p.id}/view`);
+                          }}
+                        />
+                      </Td>
+                    )}
                   </Tr>
                 );
               })}
@@ -486,7 +527,7 @@ function ProductsAnalyticsTab() {
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
         >
           {PRODUCT_ANALYTICS_DAY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
@@ -578,7 +619,7 @@ function ProductsAnalyticsTab() {
                       .join(', ')}
                   </Td>
                   <Td align="right">
-                    <ProductEditLink productId={p.id} className="text-xs font-medium text-brand-600 hover:underline">
+                    <ProductEditLink productId={p.id} className="text-xs font-medium text-sci-blue hover:underline">
                       Restock
                     </ProductEditLink>
                   </Td>
@@ -623,7 +664,7 @@ function ProductsAnalyticsTab() {
                       <Td className="text-slate-600">{v.label}</Td>
                       <Td align="right" className="font-medium text-amber-700">{v.stockQuantity}</Td>
                       <Td align="right">
-                        <ProductEditLink productId={p.id} className="text-xs font-medium text-brand-600 hover:underline">
+                        <ProductEditLink productId={p.id} className="text-xs font-medium text-sci-blue hover:underline">
                           Restock
                         </ProductEditLink>
                       </Td>

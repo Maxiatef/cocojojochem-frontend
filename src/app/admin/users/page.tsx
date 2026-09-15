@@ -6,8 +6,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { RecordHistory } from '@/components/admin/RecordHistory';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { RequireAdmin } from '@/components/AdminShell';
-import { Paginated, UserDetail, UserListItem, UserRole } from '@/lib/types';
+import { RequirePermission, useCan } from '@/components/AdminShell';
+import { Paginated, Role, UserDetail, UserListItem } from '@/lib/types';
 import {
   Badge,
   Button,
@@ -34,9 +34,26 @@ import { StatusCard } from '@/components/admin/StatusCard';
 interface UserAdminStats {
   total: number;
   customers: number;
+  /** Everyone holding any role at all. */
+  staff: number;
   sales: number;
   admins: number;
+  /** Live per-role headcount, keyed by role name. */
+  roleCounts: Record<string, number>;
   deleted: number;
+}
+
+/**
+ * Options for a row's role select.
+ *
+ * Falls back to the row's own role when the roles list hasn't loaded, so a
+ * staff account never renders as "Customer" just because the lookup failed —
+ * which would read as data loss and invite an accidental demotion on the next
+ * change.
+ */
+function roleOptions(roles: Role[] | undefined, user: UserListItem) {
+  if (roles?.length) return roles;
+  return user.role ? [user.role] : [];
 }
 
 // Which lifecycle action a confirm dialog is currently asking about. One
@@ -54,6 +71,13 @@ export default function UsersAdminPage() {
   const [statusFilter, setStatusFilter] = useState<'' | 'DELETED'>('');
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  // This page is gated on canViewUsers, so a read-only role reaches it; each
+  // write control is gated on the permission its own endpoint checks.
+  const canCreate = useCan('canCreateUser');
+  const canEdit = useCan('canEditUser');
+  const canDelete = useCan('canDeleteUser');
+  const canAssignRoles = useCan('canManageUserRoles');
+
   const [form, setForm] = useState<StaffFormState>(EMPTY_STAFF_FORM);
   const [error, setError] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<number | null>(null);
@@ -63,7 +87,7 @@ export default function UsersAdminPage() {
     queryFn: () => {
       const params = new URLSearchParams({ page: '1', limit: '200' });
       if (search) params.set('search', search);
-      if (roleFilter) params.set('role', roleFilter);
+      if (roleFilter) params.set('roleId', roleFilter);
       if (statusFilter) params.set('status', statusFilter);
       return api.get<Paginated<UserListItem>>(`/users?${params.toString()}`);
     },
@@ -74,7 +98,7 @@ export default function UsersAdminPage() {
     queryFn: () => api.get<UserAdminStats>('/users/admin/stats'),
   });
 
-  function toggleRoleFilter(role: UserRole) {
+  function toggleRoleFilter(role: string) {
     setRoleFilter((prev) => (prev === role ? '' : role));
     setStatusFilter('');
   }
@@ -86,8 +110,17 @@ export default function UsersAdminPage() {
     queryClient.invalidateQueries({ queryKey: ['admin-users-stats'] });
   };
 
+  const { data: roles } = useQuery({
+    // The picker list, not the full roles resource: /roles needs canViewRoles,
+    // which an account granted only canManageUserRoles does not have — it saw
+    // an empty dropdown and could never assign anything.
+    queryKey: ['admin-role-options'],
+    queryFn: () => api.get<Role[]>('/roles/options'),
+  });
+
   const roleMutation = useMutation({
-    mutationFn: ({ id, role }: { id: number; role: UserRole }) => api.patch(`/users/${id}/role`, { role }),
+    mutationFn: ({ id, roleId }: { id: number; roleId: number | null }) =>
+      api.patch(`/users/${id}/role`, { roleId }),
     onSuccess: invalidate,
   });
 
@@ -159,12 +192,16 @@ export default function UsersAdminPage() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!form.roleId) {
+      setError('Choose a role for this staff account.');
+      return;
+    }
     createStaffMutation.mutate({
       fullName: form.fullName,
       email: form.email,
       phone: form.phone || undefined,
       password: form.password,
-      role: form.role,
+      roleId: Number(form.roleId),
     });
   }
 
@@ -172,13 +209,15 @@ export default function UsersAdminPage() {
   const inBin = statusFilter === 'DELETED';
 
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canViewUsers">
       <div>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <PageHeader title="Users" description="Manage customer, sales, and admin accounts." />
-          <Button onClick={() => setModalOpen(true)} icon={PlusIcon}>
-            Add Staff Account
-          </Button>
+          <PageHeader title="Users" description="Manage customer and staff accounts. Roles and their permissions are managed under Roles." />
+          {canCreate && (
+            <Button onClick={() => setModalOpen(true)} icon={PlusIcon}>
+              Add Staff Account
+            </Button>
+          )}
         </div>
 
         {stats && (
@@ -192,26 +231,24 @@ export default function UsersAdminPage() {
                 setStatusFilter('');
               }}
             />
+            {/* 'none' is the server's spelling for "holds no role", which is
+                what a customer is now. */}
             <StatusCard
               label="Customers"
               value={stats.customers}
               tone="green"
-              active={roleFilter === 'CUSTOMER'}
-              onClick={() => toggleRoleFilter('CUSTOMER')}
+              active={roleFilter === 'none'}
+              onClick={() => toggleRoleFilter('none')}
             />
+            {/* 'staff' is resolved server-side as "holds any role", so this
+                keeps working when an admin adds a role this page has never
+                heard of — and doesn't depend on the roles list having loaded. */}
             <StatusCard
-              label="Sales"
-              value={stats.sales}
+              label="Staff"
+              value={stats.staff}
               tone="amber"
-              active={roleFilter === 'SALES'}
-              onClick={() => toggleRoleFilter('SALES')}
-            />
-            <StatusCard
-              label="Admins"
-              value={stats.admins}
-              tone="brand"
-              active={roleFilter === 'ADMIN'}
-              onClick={() => toggleRoleFilter('ADMIN')}
+              active={roleFilter === 'staff'}
+              onClick={() => toggleRoleFilter('staff')}
             />
             <StatusCard
               label="Recycle Bin"
@@ -240,17 +277,21 @@ export default function UsersAdminPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or email…"
-            className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sci-blue"
           />
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-sci-blue"
           >
             <option value="">All roles</option>
-            <option value="CUSTOMER">Customer</option>
-            <option value="SALES">Sales</option>
-            <option value="ADMIN">Admin</option>
+            <option value="none">Customer (no role)</option>
+            <option value="staff">Any staff role</option>
+            {roles?.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -280,21 +321,26 @@ export default function UsersAdminPage() {
                       {/* Changing a recycled user's role is meaningless, and
                           the PATCH would succeed — so the bin shows the role
                           read-only. */}
-                      {inBin ? (
-                        <Badge status={u.role} />
+                      {inBin || !canAssignRoles ? (
+                        <Badge status={u.role?.name ?? 'Customer'} />
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <select
-                            value={u.role}
-                            onChange={(e) => roleMutation.mutate({ id: u.id, role: e.target.value as UserRole })}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                          >
-                            <option value="CUSTOMER">CUSTOMER</option>
-                            <option value="SALES">SALES</option>
-                            <option value="ADMIN">ADMIN</option>
-                          </select>
-                          <Badge status={u.role} />
-                        </div>
+                        <select
+                          value={u.roleId ?? ''}
+                          onChange={(e) =>
+                            roleMutation.mutate({
+                              id: u.id,
+                              roleId: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                        >
+                          <option value="">Customer</option>
+                          {roleOptions(roles, u).map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                            </option>
+                          ))}
+                        </select>
                       )}
                     </Td>
                     <Td className="text-slate-600">{u.company?.name ?? '—'}</Td>
@@ -314,33 +360,39 @@ export default function UsersAdminPage() {
                         <IconButton icon={EyeIcon} label={`View ${u.fullName}`} onClick={() => setViewingId(u.id)} />
                         {inBin ? (
                           <>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => setPending({ action: 'restore', user: u })}
-                            >
-                              Restore
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="danger"
-                              onClick={() => setPending({ action: 'purge', user: u })}
-                            >
-                              Delete forever
-                            </Button>
+                            {canEdit && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => setPending({ action: 'restore', user: u })}
+                              >
+                                Restore
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => setPending({ action: 'purge', user: u })}
+                              >
+                                Delete forever
+                              </Button>
+                            )}
                           </>
                         ) : (
                           <>
-                            <Link href={`/admin/users/${u.id}/edit`}>
-                              <IconButton icon={EditIcon} label={`Edit ${u.fullName}`} />
-                            </Link>
-                            {/* Admin accounts aren't deletable server-side, so
-                                don't offer an action that would 403. The
-                                role-change workaround is otherwise
-                                unguessable, hence the title text. */}
-                            {u.role === 'ADMIN' ? (
+                            {canEdit && (
+                              <Link href={`/admin/users/${u.id}/edit`}>
+                                <IconButton icon={EditIcon} label={`Edit ${u.fullName}`} />
+                              </Link>
+                            )}
+                            {/* Accounts whose role can delete users aren't
+                                deletable server-side, so don't offer an action
+                                that would 403. The role-change workaround is
+                                otherwise unguessable, hence the title text. */}
+                            {!canDelete ? null : u.role?.permissions?.canDeleteUser === true ? (
                               <span
-                                title="Admin accounts can't be deleted. Change the role to Sales or Customer first."
+                                title="Accounts that can manage users can't be deleted. Change the role first."
                                 className="inline-flex h-8 w-8 items-center justify-center text-slate-300"
                               >
                                 <TrashIcon className="h-4 w-4" />
@@ -417,7 +469,7 @@ export default function UsersAdminPage() {
 
         {viewingId != null && <UserDetailModal userId={viewingId} onClose={() => setViewingId(null)} />}
       </div>
-    </RequireAdmin>
+    </RequirePermission>
   );
 }
 
@@ -451,7 +503,7 @@ function UserDetailModal({ userId, onClose }: { userId: number; onClose: () => v
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Role</p>
-                <Badge status={user.role} />
+                <Badge status={user.role?.name ?? 'Customer'} />
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Company</p>

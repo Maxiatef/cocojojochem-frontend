@@ -1,6 +1,7 @@
 'use client';
 
 import { AuditChildChange, AuditFieldChange } from '@/lib/types';
+import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
 
 const REDACTED = '«redacted»';
 
@@ -47,7 +48,7 @@ export function visibleChildChanges(childChanges: AuditChildChange[]): AuditChil
  * than rendering as nothing — "the field went from blank to 24.00" has to be
  * legible, and an empty cell looks like a rendering bug.
  */
-function formatValue(value: unknown): { text: string; muted: boolean } {
+function formatValue(value: unknown, timeZone: string): { text: string; muted: boolean } {
   if (value === null || value === undefined) return { text: '—', muted: true };
   if (value === '') return { text: 'empty', muted: true };
   if (typeof value === 'boolean') return { text: value ? 'yes' : 'no', muted: false };
@@ -57,7 +58,9 @@ function formatValue(value: unknown): { text: string; muted: boolean } {
     // ISO timestamps are unreadable raw; anything else passes through.
     if (/^\d{4}-\d{2}-\d{2}T[\d:.]+Z?$/.test(value)) {
       const d = new Date(value);
-      if (!Number.isNaN(d.getTime())) return { text: d.toLocaleString(), muted: false };
+      // Site time, like every other timestamp in the admin — a date inside a
+      // diff is the same kind of fact as the one in the "When" column.
+      if (!Number.isNaN(d.getTime())) return { text: formatDateTime(value, timeZone), muted: false };
     }
     return { text: value, muted: false };
   }
@@ -73,7 +76,8 @@ function humanizeField(field: string): string {
 }
 
 function Value({ value, tone }: { value: unknown; tone: 'before' | 'after' }) {
-  const { text, muted } = formatValue(value);
+  const tz = useSiteTimezone();
+  const { text, muted } = formatValue(value, tz);
   const isRedacted = text === REDACTED;
 
   const base = muted ? 'text-slate-400 italic' : '';
@@ -149,6 +153,7 @@ const NOISE_FIELDS = new Set([
  * "Added" line says only *that* something appeared, not what it was.
  */
 function ValueList({ values }: { values: Record<string, unknown> }) {
+  const tz = useSiteTimezone();
   const entries = Object.entries(values).filter(
     ([field, value]) => !NOISE_FIELDS.has(field) && value !== null && value !== undefined && value !== '',
   );
@@ -157,7 +162,7 @@ function ValueList({ values }: { values: Record<string, unknown> }) {
   return (
     <dl className="mt-1.5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
       {entries.map(([field, value]) => {
-        const { text } = formatValue(value);
+        const { text } = formatValue(value, tz);
         return (
           <div key={field} className="flex gap-2 text-xs">
             <dt className="shrink-0 text-slate-500">{humanizeField(field)}</dt>

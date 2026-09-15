@@ -4,7 +4,7 @@ import { Fragment, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { RequireAdmin } from '@/components/AdminShell';
+import { RequirePermission, useCan } from '@/components/AdminShell';
 import { PageSeoDetail } from '@/components/admin/PageSeoDetail';
 import { SeoAnalyzeResult, SeoIssue, SeoMetric, SeoOverview } from '@/lib/types';
 import {
@@ -282,12 +282,12 @@ function ScorePill({ score }: { score: number | null }) {
 
 export default function SeoAdminPage() {
   return (
-    <RequireAdmin>
+    <RequirePermission permission="canViewSeoPages">
       <div>
         <PageHeader title="SEO" description="Real-time crawl-based site analysis." />
         <SiteAnalysisTab />
       </div>
-    </RequireAdmin>
+    </RequirePermission>
   );
 }
 
@@ -307,6 +307,9 @@ function fmtDateTime(d: string | null) {
 
 function SiteAnalysisTab() {
   const queryClient = useQueryClient();
+  // Running the crawler is a write (it stores metrics and issues), so it has
+  // its own permission rather than riding on read access to this page.
+  const canAnalyze = useCan('canRunSeoAnalyzer');
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [expandedMetricId, setExpandedMetricId] = useState<number | null>(null);
 
@@ -349,9 +352,11 @@ function SiteAnalysisTab() {
             Crawls the live storefront pages and detects real SEO issues — titles, meta descriptions, headings, content length, and image alt text.
           </p>
         </div>
-        <Button onClick={() => analyzeMutation.mutate()} loading={analyzeMutation.isPending} icon={GlobeIcon}>
-          Analyze Site
-        </Button>
+        {canAnalyze && (
+          <Button onClick={() => analyzeMutation.mutate()} loading={analyzeMutation.isPending} icon={GlobeIcon}>
+            Analyze Site
+          </Button>
+        )}
       </div>
 
       {analyzeError && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{analyzeError}</div>}

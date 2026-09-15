@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { SeoPage } from '@/lib/types';
 import { Button, TextAreaField, TextField } from '@/components/ui';
+import { useCan } from '@/components/AdminShell';
 
 /**
  * The editable half of a crawled page's SEO panel.
@@ -79,6 +80,9 @@ export function PageSeoFields({ path }: { path: string }) {
   const [focusKeyphrase, setFocusKeyphrase] = useState('');
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // PUT /seo-pages/by-path is the edit endpoint, so this Save needs the SEO
+  // page edit permission — viewing the analysis doesn't imply changing it.
+  const canEdit = useCan('canEditSeoPage');
   const [saved, setSaved] = useState(false);
 
   // Seed once the override arrives. Guarded on `dirty` so a slow refetch can't
@@ -167,13 +171,15 @@ export function PageSeoFields({ path }: { path: string }) {
       )}
 
       <div className="flex items-center gap-3">
-        <Button
-          onClick={() => saveMutation.mutate()}
-          loading={saveMutation.isPending}
-          disabled={!dirty}
-        >
-          Save
-        </Button>
+        {canEdit && (
+          <Button
+            onClick={() => saveMutation.mutate()}
+            loading={saveMutation.isPending}
+            disabled={!dirty}
+          >
+            Save
+          </Button>
+        )}
         {saved && !dirty && (
           <span className="text-xs text-green-700">
             Saved. Re-run Analyze Site to rescore this page.

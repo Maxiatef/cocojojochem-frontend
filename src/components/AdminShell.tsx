@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -26,24 +27,67 @@ import {
   ClockIcon,
 } from '@/components/icons';
 
-type AdminRole = 'ADMIN' | 'SALES';
-
-const NAV: { href: string; label: string; icon: (props: { className?: string }) => React.ReactElement; roles?: AdminRole[] }[] = [
-  { href: '/admin', label: 'Overview', icon: DashboardIcon },
-  { href: '/admin/messages', label: 'Messages', icon: MailIcon },
-  { href: '/admin/quote-requests', label: 'Quote Requests', icon: InboxIcon },
-  { href: '/admin/products', label: 'Products', icon: BottleIcon },
-  { href: '/admin/categories', label: 'Categories', icon: GridIcon },
-  { href: '/admin/functions', label: 'Functions', icon: TagIcon },
-  { href: '/admin/orders', label: 'Orders', icon: BoxIcon },
-  { href: '/admin/companies', label: 'Companies', icon: BuildingIcon },
-  { href: '/admin/coupons', label: 'Coupons', icon: TicketIcon },
-  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon },
-  { href: '/admin/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
-  { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, roles: ['ADMIN'] },
-  { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, roles: ['ADMIN'] },
-  { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, roles: ['ADMIN'] },
+// Each entry names the permission that its page's own list endpoint requires,
+// so the sidebar shows exactly what the account can actually open. The nav is
+// presentation only — the server enforces the same permission on every call.
+const NAV: {
+  href: string;
+  label: string;
+  icon: (props: { className?: string }) => React.ReactElement;
+  permission?: string;
+}[] = [
+  { href: '/admin', label: 'Overview', icon: DashboardIcon, permission: 'canViewDashboard' },
+  { href: '/admin/messages', label: 'Messages', icon: MailIcon, permission: 'canViewContactMessages' },
+  { href: '/admin/quote-requests', label: 'Quote Requests', icon: InboxIcon, permission: 'canViewQuoteRequests' },
+  { href: '/admin/products', label: 'Products', icon: BottleIcon, permission: 'canViewProducts' },
+  { href: '/admin/categories', label: 'Categories', icon: GridIcon, permission: 'canViewCategories' },
+  { href: '/admin/functions', label: 'Functions', icon: TagIcon, permission: 'canViewFunctions' },
+  { href: '/admin/orders', label: 'Orders', icon: BoxIcon, permission: 'canViewOrders' },
+  { href: '/admin/companies', label: 'Companies', icon: BuildingIcon, permission: 'canViewCompanies' },
+  { href: '/admin/coupons', label: 'Sales & Coupons', icon: TicketIcon, permission: 'canViewCoupons' },
+  { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon, permission: 'canViewAnalytics' },
+  { href: '/admin/users', label: 'Users', icon: UsersIcon, permission: 'canViewUsers' },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, permission: 'canViewAuditLog' },
+  { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, permission: 'canViewSeoPages' },
+  { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, permission: 'canViewSiteSettings' },
 ];
+
+/**
+ * The signed-in staff account, read from the server rather than from the JWT.
+ *
+ * Permissions live on the role row and an admin can change them at any time,
+ * so the token is deliberately not the source of truth — it carries only
+ * `roleId`. Cached for a minute so the sidebar and every page gate share one
+ * request rather than issuing their own.
+ */
+export function useMe() {
+  return useQuery({
+    queryKey: ['auth-me'],
+    queryFn: () => api.get<MeResponse>('/auth/me'),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+type MeResponse = {
+  id: number;
+  email: string;
+  roleId: number | null;
+  role: { id: number; name: string; permissions: Record<string, boolean> } | null;
+};
+
+/** `undefined` while loading — callers must treat that as "not yet allowed". */
+export function usePermissions(): Record<string, boolean> | undefined {
+  const { data, isLoading } = useMe();
+  if (isLoading) return undefined;
+  return data?.role?.permissions ?? {};
+}
+
+/** True only once permissions have loaded AND the permission is granted. */
+export function useCan(permission: string): boolean {
+  const permissions = usePermissions();
+  return permissions?.[permission] === true;
+}
 
 function initialsFromEmail(email: string) {
   return email.slice(0, 2).toUpperCase();
@@ -61,8 +105,8 @@ function AccessDenied({
   backLabel?: string;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-sci-pale px-4">
+      <div className="w-full max-w-sm border border-sci-border bg-white p-8 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-red-600">
             <path
@@ -74,8 +118,8 @@ function AccessDenied({
             />
           </svg>
         </div>
-        <h1 className="text-base font-semibold text-slate-900">Access denied</h1>
-        <p className="mt-1.5 text-sm text-slate-500">
+        <h1 className="font-sci-heading text-[20px] font-semibold text-sci-navy">Access denied</h1>
+        <p className="mt-2 font-sci-body text-sci-label text-sci-muted">
           {message ||
             (reason === 'not-logged-in'
               ? 'You need to sign in with a staff account to view the admin dashboard.'
@@ -83,7 +127,7 @@ function AccessDenied({
         </p>
         <a
           href={reason === 'not-logged-in' ? '/admin/login' : backHref}
-          className="mt-6 inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+          className="mt-6 inline-flex items-center justify-center rounded-md bg-sci-accent px-5 py-3 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95"
         >
           {reason === 'not-logged-in' ? 'Go to login' : backLabel}
         </a>
@@ -105,7 +149,8 @@ function SidebarContent({
   onNavigate: () => void;
   onLogout: () => void;
 }) {
-  const nav = NAV.filter((item) => !item.roles || (role && item.roles.includes(role as AdminRole)));
+  const permissions = usePermissions();
+  const nav = NAV.filter((item) => !item.permission || permissions?.[item.permission] === true);
 
   const { data: messageStats } = useQuery({
     queryKey: ['contact-messages-stats'],
@@ -115,23 +160,27 @@ function SidebarContent({
 
   return (
     <>
-      <div className="flex items-center gap-2.5 border-b border-slate-200 px-6 py-5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-          CJ
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-900">CocoJojoChem</p>
-          <p className="text-xs text-slate-500">Wholesale Admin</p>
-        </div>
+      <div className="flex flex-col gap-2 border-b border-white/10 px-6 py-6">
+        <Link href="/" aria-label="COCOJOJO Chemical — storefront home" className="w-fit">
+          <Image
+            src="/brand/cocojojo-logo.png"
+            alt="COCOJOJO Chemical"
+            width={999}
+            height={400}
+            sizes="300px"
+            className="h-11 w-auto brightness-0 invert"
+          />
+        </Link>
+
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+      <nav className="scrollbar-slim flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {nav.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
 
           let badgeCount = 0;
-          const badgeColor = 'bg-brand-600';
+          const badgeColor = 'bg-sci-accent text-sci-navy';
           if (item.href === '/admin/messages') {
             badgeCount = messageStats?.unread ?? 0;
           }
@@ -141,20 +190,24 @@ function SidebarContent({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+              className={`group relative flex items-center gap-3 rounded-md px-3 py-2.5 font-sci-body text-sci-label font-medium transition ${
                 active
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-white/10 text-white'
+                  : 'text-[#adc6d8] hover:bg-white/5 hover:text-white'
               }`}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-brand-600" />
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-sci-accent" />
               )}
-              <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
+              <Icon
+                className={`h-[18px] w-[18px] shrink-0 ${
+                  active ? 'text-sci-accent' : 'text-[#7e9cb4] group-hover:text-[#adc6d8]'
+                }`}
+              />
               <span className="flex-1">{item.label}</span>
               {badgeCount > 0 && (
                 <span
-                  className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold text-white ${badgeColor}`}
+                  className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${badgeColor}`}
                 >
                   {badgeCount}
                 </span>
@@ -164,19 +217,19 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="border-t border-slate-200 p-4">
+      <div className="border-t border-white/10 p-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-sci-accent">
             {email ? initialsFromEmail(email) : ''}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-slate-700">{email}</p>
-            {role && <p className="text-[11px] text-slate-400">{role}</p>}
+            <p className="truncate font-sci-body text-xs font-medium text-white">{email}</p>
+            {role && <p className="font-sci-body text-[11px] uppercase tracking-wide text-[#7e9cb4]">{role}</p>}
           </div>
           <button
             onClick={onLogout}
             aria-label="Sign out"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#7e9cb4] transition hover:bg-white/10 hover:text-white"
           >
             <LogoutIcon className="h-[18px] w-[18px]" />
           </button>
@@ -195,21 +248,29 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [denied, setDenied] = useState<'not-logged-in' | 'wrong-role' | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const { data: me, isLoading: meLoading, isError: meError } = useMe();
+
+  // Staff-ness is "holds a role", decided by the server, because the token no
+  // longer carries a role name — only a roleId whose meaning lives in the
+  // roles table and can be edited at any time.
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
+    if (!getToken()) {
       setDenied('not-logged-in');
       return;
     }
-    const payload = decodeToken(token);
-    if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'SALES')) {
+    if (meLoading) return;
+    if (meError || !me) {
+      setDenied('not-logged-in');
+      return;
+    }
+    if (me.roleId == null) {
       setDenied('wrong-role');
       return;
     }
-    setEmail(payload.email);
-    setRole(payload.role);
+    setEmail(me.email);
+    setRole(me.role?.name ?? null);
     setReady(true);
-  }, []);
+  }, [me, meLoading, meError]);
 
   // Close the drawer automatically whenever the route changes
   useEffect(() => {
@@ -233,26 +294,28 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-sci-pale">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
+    <div className="flex min-h-screen flex-col bg-sci-pale font-sci-body text-sci-navy md:flex-row">
       {/* Mobile top bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
-            CJ
-          </div>
-          <p className="text-sm font-semibold text-slate-900">CocoJojoChem</p>
-        </div>
+      <div className="flex items-center justify-between bg-sci-navy px-4 py-3 md:hidden">
+        <Image
+          src="/brand/cocojojo-logo.png"
+          alt="COCOJOJO Chemical"
+          width={991}
+          height={396}
+          sizes="130px"
+          className="h-7 w-auto brightness-0 invert"
+        />
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open menu"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-white/20 text-white"
         >
           <MenuIcon className="h-5 w-5" />
         </button>
@@ -261,12 +324,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       {/* Mobile off-canvas drawer + backdrop */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[80vw] flex-col bg-white shadow-xl">
+          <div className="absolute inset-0 bg-sci-deep/60" onClick={() => setDrawerOpen(false)} />
+          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[80vw] flex-col bg-sci-navy shadow-xl">
             <button
               onClick={() => setDrawerOpen(false)}
               aria-label="Close menu"
-              className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100"
+              className="absolute right-3 top-5 flex h-8 w-8 items-center justify-center rounded-md text-[#7e9cb4] hover:bg-white/10 hover:text-white"
             >
               <CloseIcon className="h-[18px] w-[18px]" />
             </button>
@@ -283,7 +346,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop sidebar — sticky to the viewport so the logout button stays
           reachable without scrolling, no matter how tall the page content is. */}
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-r md:border-slate-200 md:bg-white">
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:bg-sci-navy">
         <SidebarContent
           email={email}
           role={role}
@@ -302,93 +365,87 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
 // Client-side route gate. This is a UX guard only — it stops a page flashing
 // before redirect — and is NEVER the security boundary: every endpoint these
-// pages call is guarded server-side by RolesGuard, which is what actually
+// pages call is guarded server-side by PermissionGuard, which is what actually
 // enforces access.
-function RoleGate({
+function PermissionGate({
   children,
-  allow,
+  permission,
   deniedMessage,
 }: {
   children: React.ReactNode;
-  allow: AdminRole[];
+  /** Omitted means "any staff account", i.e. anyone holding a role at all. */
+  permission?: string;
   deniedMessage: string;
 }) {
-  const [allowed, setAllowed] = useState(false);
-  const [denied, setDenied] = useState<'not-logged-in' | 'wrong-role' | null>(null);
+  const { data, isLoading, isError } = useMe();
 
-  useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      setDenied('not-logged-in');
-      return;
-    }
-    const payload = decodeToken(token);
-    if (!payload || !allow.includes(payload.role as AdminRole)) {
-      setDenied('wrong-role');
-      return;
-    }
-    setAllowed(true);
-    // `allow` is a literal array at every call site, so a deps entry would
-    // re-run this on every render; the role can't change without a reload.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (!getToken()) {
+    return <AccessDenied reason="not-logged-in" backHref="/admin" backLabel="Back to dashboard" />;
+  }
 
-  if (denied) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
+      </div>
+    );
+  }
+
+  // A failed /auth/me means the session is gone or unreadable — treat it as
+  // not signed in rather than silently rendering an empty page.
+  if (isError || !data) {
+    return <AccessDenied reason="not-logged-in" backHref="/admin" backLabel="Back to dashboard" />;
+  }
+
+  const allowed = permission ? data.role?.permissions?.[permission] === true : data.roleId != null;
+
+  if (!allowed) {
     return (
       <AccessDenied
-        reason={denied}
-        message={denied === 'wrong-role' ? deniedMessage : undefined}
+        reason="wrong-role"
+        message={deniedMessage}
         backHref="/admin"
         backLabel="Back to dashboard"
       />
     );
   }
 
-  if (!allowed) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
-      </div>
-    );
-  }
-
   return <>{children}</>;
 }
 
-// ADMIN only — settings, staff, SEO, analytics.
-export function RequireAdmin({ children }: { children: React.ReactNode }) {
+/**
+ * Gate a page on one permission. Replaces the old RequireAdmin, which could
+ * only ask "is this account the ADMIN enum value" — a question that no longer
+ * has an answer now that an admin can define any role they like.
+ */
+export function RequirePermission({
+  permission,
+  children,
+}: {
+  permission: string;
+  children: React.ReactNode;
+}) {
   return (
-    <RoleGate allow={['ADMIN']} deniedMessage="This section is restricted to admin accounts.">
+    <PermissionGate
+      permission={permission}
+      deniedMessage="Your role doesn't include permission to view this section."
+    >
       {children}
-    </RoleGate>
+    </PermissionGate>
   );
 }
 
-// ADMIN + SALES — sections sales can view but not modify (catalog, coupons).
-// The read/write split is enforced server-side: the list endpoints allow both
-// roles, while create/edit/delete stay ADMIN-only, so a sales user reaching
-// one of these pages can browse it and nothing more.
+// Any staff account — anyone holding a role at all. Customers hold none.
 export function RequireStaff({ children }: { children: React.ReactNode }) {
   return (
-    <RoleGate allow={['ADMIN', 'SALES']} deniedMessage="This section is restricted to staff accounts.">
+    <PermissionGate deniedMessage="This section is restricted to staff accounts.">
       {children}
-    </RoleGate>
+    </PermissionGate>
   );
 }
 
-// Current staff role from the access token, for hiding write controls a sales
-// user isn't allowed to use. Returns null until the token is read on mount
-// (and on the server), so treat null as "not admin" and render read-only.
-export function useAdminRole(): AdminRole | null {
-  const [role, setRole] = useState<AdminRole | null>(null);
-  useEffect(() => {
-    const token = getToken();
-    const payload = token ? decodeToken(token) : null;
-    setRole((payload?.role as AdminRole) || null);
-  }, []);
-  return role;
-}
-
-export function useIsAdmin(): boolean {
-  return useAdminRole() === 'ADMIN';
+/** The signed-in account's role name, or null for a customer / while loading. */
+export function useAdminRole(): string | null {
+  const { data } = useMe();
+  return data?.role?.name ?? null;
 }
