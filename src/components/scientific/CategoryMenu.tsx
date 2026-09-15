@@ -222,6 +222,22 @@ export function CategoryMenu({ active }: { active: boolean }) {
                     );
                   })}
                 </ul>
+
+                {/* Always here, and always /categories — the "View all" button
+                    on the right follows whichever root is selected, so it can
+                    never be the way to reach the full index. Pinned below the
+                    scrolling list so a long catalogue cannot push it out of
+                    sight. */}
+                <Link
+                  href="/categories"
+                  onClick={() => setOpen(false)}
+                  className="mt-auto flex items-center justify-between gap-3 border-t border-sci-border px-6 py-3.5 font-sci-body text-sci-label font-semibold text-sci-blue transition hover:bg-white"
+                >
+                  All categories
+                  <span aria-hidden className="shrink-0">
+                    →
+                  </span>
+                </Link>
               </div>
 
               {/* Right — that category's subcategories */}
