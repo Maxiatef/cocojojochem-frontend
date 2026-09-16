@@ -92,7 +92,7 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     stockQuantity: v.stockQuantity != null ? String(v.stockQuantity) : '',
     backorder: v.stockStatus === 'ON_BACKORDER',
     imageUrl: v.imageUrl || '',
-    moq: '',
+    moq: v.moq != null ? String(v.moq) : '',
     lowStockThreshold: v.lowStockThreshold != null ? String(v.lowStockThreshold) : '',
     limitPerOrder: v.limitPerOrder ?? false,
     maxOrderQuantity: v.maxOrderQuantity != null ? String(v.maxOrderQuantity) : '',
@@ -485,7 +485,7 @@ export function ProductForm({
         // override, which always wins regardless of quantity.
         stockStatus: v.backorder ? 'ON_BACKORDER' : undefined,
         imageUrl: v.imageUrl || undefined,
-        moq: v.moq ? Number(v.moq) : undefined,
+        moq: v.moq ? Number(v.moq) : null,
         lowStockThreshold: v.lowStockThreshold ? Number(v.lowStockThreshold) : undefined,
         limitPerOrder: v.limitPerOrder,
         maxOrderQuantity: v.limitPerOrder && v.maxOrderQuantity ? Number(v.maxOrderQuantity) : undefined,

@@ -53,13 +53,23 @@ export function ProductBuyPanel({ product }: { product: Product }) {
       day: 'numeric',
     });
 
-  // Clamp quantity down if switching to a variant with a stricter (or newly
-  // set) per-order limit than the quantity already selected.
+  // The variant's minimum order quantity, or 1 when it has none. Treating
+  // null and 1 identically here means the rest of this component never has to
+  // branch on "is there a minimum".
+  const minQuantity = variant?.moq && variant.moq > 1 ? variant.moq : 1;
+
+  // Clamp the selected quantity into the variant's allowed range whenever the
+  // variant changes. Both directions matter: switching to a stricter limit
+  // must come DOWN, and switching to one with a minimum must go UP — landing
+  // on a quantity the server will refuse is a worse first impression than
+  // silently starting at a legal one.
   useEffect(() => {
     if (variant?.limitPerOrder && variant.maxOrderQuantity && quantity > variant.maxOrderQuantity) {
       setQuantity(variant.maxOrderQuantity);
+      return;
     }
-  }, [variant, quantity]);
+    if (quantity < minQuantity) setQuantity(minQuantity);
+  }, [variant, quantity, minQuantity]);
 
   async function handleAddToCart() {
     if (!variant) return;
@@ -280,13 +290,29 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                   </p>
                 )}
 
+                {/* Stated, not just enforced. The stepper already starts at
+                    the minimum and will not go below it, so without this line
+                    a customer would find the minus button dead with no
+                    explanation. */}
+                {minQuantity > 1 && (
+                  <p className="mt-3 font-sci-body text-sci-label text-sci-muted">
+                    Minimum order: <span className="font-medium text-sci-navy">{minQuantity}</span>{' '}
+                    &times; {variant?.label}
+                  </p>
+                )}
+
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <div className="flex items-center rounded-md border border-sci-border bg-white">
                     <button
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      onClick={() => setQuantity((q) => Math.max(minQuantity, q - 1))}
                       aria-label="Decrease quantity"
-                      title="Decrease quantity"
-                      className="px-4 py-3 text-sci-muted transition hover:text-sci-navy"
+                      title={
+                        quantity <= minQuantity && minQuantity > 1
+                          ? `Minimum order is ${minQuantity}`
+                          : 'Decrease quantity'
+                      }
+                      disabled={quantity <= minQuantity}
+                      className="px-4 py-3 text-sci-muted transition hover:text-sci-navy disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       −
                     </button>

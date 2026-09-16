@@ -38,6 +38,8 @@ export interface ProductVariant {
   imageUrl: string | null;
   isOnSale?: boolean;
   effectivePrice?: string;
+  /** Minimum order quantity for this variant. Null (or 1) means no minimum. */
+  moq: number | null;
   lowStockThreshold: number | null;
   limitPerOrder: boolean;
   maxOrderQuantity: number | null;
