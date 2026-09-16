@@ -212,6 +212,36 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 }
 
 /**
+ * Whether an order is still at a point where cancelling is safe.
+ *
+ * Mirrors OrdersService.customerCancelEligibility on the server. Cancelling
+ * runs restoreStock unconditionally, so cancelling anything that has already
+ * left the warehouse adds units back to inventory that are physically in a
+ * van or at the customer's — the count silently goes wrong, and nothing
+ * downstream ever corrects it.
+ *
+ * The tracking-number case is the subtle one, and the reason this cannot just
+ * read the status: a shipping label can be bought while the order still says
+ * PROCESSING, so by the time the status catches up the goods are already
+ * gone.
+ *
+ * Unknown statuses refuse rather than guess: the cost of wrongly hiding the
+ * button is a phone call, and the cost of wrongly showing it is inventory
+ * that no longer matches the shelves.
+ */
+function canCancelOrder(order: Order): boolean {
+  if (order.trackingNumber) return false;
+  switch (order.status) {
+    case 'PENDING':
+    case 'PROCESSING':
+      return true;
+    default:
+      // SHIPPED, DELIVERED, CANCELLED, and anything added later.
+      return false;
+  }
+}
+
+/**
  * The Cancel Order button and its confirmation.
  *
  * Extracted because both order modals offer it, and a cancellation rule that
@@ -220,10 +250,15 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
  * refund alert, so the two entry points must be identical by construction
  * rather than by someone remembering.
  *
- * Renders nothing when the order is already cancelled or the account lacks
- * canCancelOrder: a control that is always refused reads as a broken page
- * rather than as a restriction. The server is still the authority — this
- * only decides what to show.
+ * Renders nothing when the account lacks canCancelOrder, or when the order is
+ * past the point where cancelling is safe (see canCancelOrder above): a
+ * control that should not be used reads better absent than present-and-wrong.
+ *
+ * NOTE: this hides the button, it does not close the door. PATCH
+ * /orders/:id/status still accepts CANCELLED from any state — the admin route
+ * has no eligibility check, only the customer one does. Anyone with
+ * canCancelOrder and curl can still cancel a delivered order and silently
+ * restock it.
  */
 function CancelOrderControl({ order }: { order: Order }) {
   const queryClient = useQueryClient();
@@ -241,7 +276,7 @@ function CancelOrderControl({ order }: { order: Order }) {
     },
   });
 
-  if (order.status === 'CANCELLED' || !canCancel) return null;
+  if (!canCancel || !canCancelOrder(order)) return null;
 
   return (
     <>
