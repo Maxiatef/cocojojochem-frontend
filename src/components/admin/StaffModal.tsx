@@ -3,7 +3,7 @@
 import { FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Role } from '@/lib/types';
+import { Role, TeamOption } from '@/lib/types';
 import { Button, Modal, SelectField, TextField } from '@/components/ui';
 
 export interface StaffFormState {
@@ -13,6 +13,7 @@ export interface StaffFormState {
   password: string;
   /** Role id as a string so it can back a <select>; '' means none chosen. */
   roleId: string;
+  teamId: string;
 }
 
 export const EMPTY_STAFF_FORM: StaffFormState = {
@@ -21,6 +22,7 @@ export const EMPTY_STAFF_FORM: StaffFormState = {
   phone: '',
   password: '',
   roleId: '',
+  teamId: '',
 };
 
 export function StaffModal({
@@ -46,6 +48,15 @@ export function StaffModal({
     // an empty dropdown and could never assign anything.
     queryKey: ['admin-role-options'],
     queryFn: () => api.get<Role[]>('/roles/options'),
+    enabled: open,
+  });
+
+  // Same reasoning as the role picker: /teams needs canViewTeams, which an
+  // account that may only create staff does not have. /teams/options is the
+  // thin list that canCreateUser also opens.
+  const { data: teams } = useQuery({
+    queryKey: ['admin-team-options'],
+    queryFn: () => api.get<TeamOption[]>('/teams/options'),
     enabled: open,
   });
 
@@ -88,6 +99,18 @@ export function StaffModal({
           {roles?.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField
+          label="Team"
+          value={form.teamId}
+          onChange={(e) => setForm({ ...form, teamId: e.target.value })}
+        >
+          <option value="">No team</option>
+          {teams?.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
             </option>
           ))}
         </SelectField>
