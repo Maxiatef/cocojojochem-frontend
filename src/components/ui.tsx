@@ -248,6 +248,24 @@ export function Modal({
   );
 }
 
+/**
+ * The red star on a required field's label.
+ *
+ * Driven by the same `required` prop that already reaches the input, so the
+ * mark and the browser's own validation can never disagree — a field cannot
+ * be starred without actually being required, or required without being
+ * starred. aria-hidden because the input's `required` already tells a screen
+ * reader; announcing "asterisk" as well is noise.
+ */
+function RequiredMark({ required }: { required?: boolean }) {
+  if (!required) return null;
+  return (
+    <span aria-hidden className="ml-0.5 text-red-500">
+      *
+    </span>
+  );
+}
+
 export function TextField({
   label,
   ...props
@@ -258,7 +276,12 @@ export function TextField({
           already labelled by its surrounding layout (see the admin user
           editor's two-column FieldRow) — rendering the element anyway would
           leave a stray gap above the input. */}
-      {label && <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">{label}</label>}
+      {label && (
+        <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">
+          {label}
+          <RequiredMark required={props.required} />
+        </label>
+      )}
       <input
         {...props}
         className="w-full rounded-lg border border-sci-border px-3.5 py-2 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
@@ -273,7 +296,10 @@ export function TextAreaField({
 }: { label: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div>
-      <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">{label}</label>
+      <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">
+        {label}
+        <RequiredMark required={props.required} />
+      </label>
       <textarea
         {...props}
         className="w-full rounded-lg border border-sci-border px-3.5 py-2 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"
@@ -290,7 +316,12 @@ export function SelectField({
   return (
     <div>
       {/* Empty label = labelled by the surrounding layout; see TextField. */}
-      {label && <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">{label}</label>}
+      {label && (
+        <label className="mb-1.5 block font-sci-body text-sci-label font-medium text-sci-navy">
+          {label}
+          <RequiredMark required={props.required} />
+        </label>
+      )}
       <select
         {...props}
         className="w-full rounded-lg border border-sci-border bg-white px-3.5 py-2 font-sci-body text-sci-label text-sci-navy outline-none transition focus:border-sci-blue focus:ring-2 focus:ring-sci-blue/15"

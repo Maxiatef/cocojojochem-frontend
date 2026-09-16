@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { RequirePermission, useCan } from '@/components/AdminShell';
-import { Company, Role, UserDetail } from '@/lib/types';
+import { Company, Role, TeamOption, UserDetail } from '@/lib/types';
 import { WEAK_PASSWORD_THRESHOLD, generatePassword, scorePassword } from '@/lib/passwordStrength';
 import {
   Badge,
@@ -102,6 +102,12 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     queryFn: () => api.get<Role[]>('/roles/options'),
   });
 
+  // Thin picker for the same reason as roles — see /teams/options.
+  const { data: teams } = useQuery({
+    queryKey: ['admin-team-options'],
+    queryFn: () => api.get<TeamOption[]>('/teams/options'),
+  });
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -110,6 +116,9 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const canResetPassword = useCan('canResetUserPassword');
   const canAssignRoles = useCan('canManageUserRoles');
   const [roleId, setRoleId] = useState<string>('');
+  // '' means no team. Only meaningful for staff — a customer has no activity
+  // for a manager to report on.
+  const [teamId, setTeamId] = useState<string>('');
   const [companyId, setCompanyId] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -133,6 +142,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     setEmail(user.email);
     setPhone(user.phone || '');
     setRoleId(user.roleId != null ? String(user.roleId) : '');
+    setTeamId(user.teamId != null ? String(user.teamId) : '');
     setCompanyId(user.companyId != null ? String(user.companyId) : '');
   }, [user]);
 
@@ -227,6 +237,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       email,
       phone: phone || null,
       roleId: roleId ? Number(roleId) : null,
+      teamId: teamId ? Number(teamId) : null,
       companyId: companyId ? Number(companyId) : null,
     });
   }
@@ -339,6 +350,23 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
                     <Badge status={user.role?.name ?? 'Customer'} />
                   )}
                 </FieldRow>
+                {/* Only offered for staff: a team exists to group people whose
+                    work a manager reports on, and a customer has none. */}
+                {roleId && (
+                  <FieldRow
+                    label="Team"
+                    help="The manager of this team can see everything this person does."
+                  >
+                    <SelectField label="" value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+                      <option value="">No team</option>
+                      {teams?.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </SelectField>
+                  </FieldRow>
+                )}
                 <FieldRow label="Company" help="Links this user to a wholesale account.">
                   <SelectField label="" value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
                     <option value="">No company</option>

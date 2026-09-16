@@ -629,6 +629,10 @@ export interface UserListItem {
   deletedAt?: string | null;
   companyId: number | null;
   company: Company | null;
+  // Staff grouping. Null for customers and for staff in no team. `team` is
+  // only joined on the admin list and detail endpoints.
+  teamId?: number | null;
+  team?: { id: number; name: string } | null;
   createdAt: string;
   orderCount: number;
   totalSpent: number;
@@ -818,4 +822,87 @@ export interface ProductSeoDraft {
   metaDescription?: string;
   imageCount?: number;
   imagesWithAlt?: number;
+}
+
+// --- Teams ------------------------------------------------------------------
+
+/** The manager as the teams API returns them — display fields only, never the full user row. */
+export interface TeamManager {
+  id: number;
+  fullName: string;
+  email: string;
+}
+
+export interface Team {
+  id: number;
+  name: string;
+  description: string | null;
+  managerId: number | null;
+  manager: TeamManager | null;
+  createdAt: string;
+  /** Present on the list endpoint. */
+  memberCount?: number;
+  /** Present on GET /teams/:id. */
+  members?: UserListItem[];
+}
+
+/** Thin picker shape from GET /teams/options. */
+export interface TeamOption {
+  id: number;
+  name: string;
+}
+
+/** A staff account the admin can drop into a team, with where they sit today. */
+export interface AssignableStaff {
+  id: number;
+  fullName: string;
+  email: string;
+  roleName: string | null;
+  teamId: number | null;
+  teamName: string | null;
+}
+
+export interface TeamMemberSummary {
+  id: number;
+  fullName: string;
+  email: string;
+  roleName: string | null;
+  status: UserStatus;
+  actionCount: number;
+  lastActiveAt: string | null;
+}
+
+/** GET /teams/my-team and GET /teams/:id/overview. */
+export interface TeamOverview {
+  team: Team;
+  members: TeamMemberSummary[];
+  memberCount: number;
+  totalActions: number;
+}
+
+export interface TeamReportMember {
+  id: number;
+  fullName: string;
+  email: string;
+  roleName: string | null;
+  actions: number;
+  byAction: Record<string, number>;
+  byEntity: Record<string, number>;
+  orders: number;
+  revenue: number;
+}
+
+/** GET /teams/my-team/report and GET /teams/:id/report. */
+export interface TeamReport {
+  team: Team;
+  range: { from: string; to: string };
+  members: TeamReportMember[];
+  totals: {
+    actions: number;
+    orders: number;
+    revenue: number;
+    byAction: Record<string, number>;
+    byEntity: Record<string, number>;
+  };
+  daily: { day: string; count: number }[];
 }

@@ -26,10 +26,19 @@ import {
 import { ChevronDownIcon, PlusIcon } from '@/components/icons';
 import { EMPTY_STAFF_FORM, StaffFormState, StaffModal } from '@/components/admin/StaffModal';
 import { RolesTab } from '@/components/admin/RolesTab';
+import { TeamsTab } from '@/components/admin/TeamsTab';
 import { TIMEZONE_OPTIONS, timeZoneLabel } from '@/lib/siteTimezone';
 import { TestimonialsTab } from '@/components/admin/TestimonialsTab';
 
-type Tab = 'general' | 'shipping' | 'tax' | 'notifications' | 'staff' | 'roles' | 'testimonials';
+type Tab =
+  | 'general'
+  | 'shipping'
+  | 'tax'
+  | 'notifications'
+  | 'staff'
+  | 'roles'
+  | 'teams'
+  | 'testimonials';
 
 // Site-settings is a generic key/value store on the backend — these are the
 // keys this admin UI has adopted for the fields the plan calls for.
@@ -58,6 +67,7 @@ const TABS: [Tab, string][] = [
   ['notifications', 'Notifications'],
   ['staff', 'Staff'],
   ['roles', 'Roles'],
+  ['teams', 'Teams'],
   ['testimonials', 'Testimonials'],
 ];
 
@@ -135,12 +145,14 @@ export default function SettingsAdminPage() {
   const canViewSettings = useCan('canViewSiteSettings');
   const canViewStaff = useCan('canViewUsers');
   const canViewRoles = useCan('canViewRoles');
+  const canViewTeams = useCan('canViewTeams');
   const canViewTestimonials = useCan('canViewTestimonials');
   const canViewRates = useCan('canViewShippingRates');
   const tabs = TABS.filter(([key]) => {
     if (key === 'general') return canViewSettings;
     if (key === 'staff') return canViewStaff;
     if (key === 'roles') return canViewRoles;
+    if (key === 'teams') return canViewTeams;
     if (key === 'testimonials') return canViewTestimonials;
     return true;
   });
@@ -150,7 +162,7 @@ export default function SettingsAdminPage() {
       <div>
         <PageHeader
           title="Settings"
-          description="Wholesale, shipping, tax, notifications, staff, and roles."
+          description="Wholesale, shipping, tax, notifications, staff, roles, and teams."
         />
 
         <div className="mb-6 flex flex-wrap gap-x-1 gap-y-2 border-b border-slate-200">
@@ -196,6 +208,7 @@ export default function SettingsAdminPage() {
         {tab === 'general' && canViewSettings && <GeneralTab />}
         {tab === 'staff' && canViewStaff && <StaffTab />}
         {tab === 'roles' && canViewRoles && <RolesTab />}
+        {tab === 'teams' && canViewTeams && <TeamsTab />}
         {tab === 'testimonials' && canViewTestimonials && <TestimonialsTab />}
       </div>
     </RequirePermission>
@@ -765,6 +778,7 @@ function StaffTab() {
       phone: form.phone || undefined,
       password: form.password,
       roleId: Number(form.roleId),
+      teamId: form.teamId ? Number(form.teamId) : null,
     });
   }
 

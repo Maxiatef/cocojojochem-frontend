@@ -32,6 +32,22 @@ export function UsersIcon({ className = base }: IconProps) {
   );
 }
 
+// A small group under one figure — the reporting line UsersIcon deliberately
+// does not imply. Distinct enough from UsersIcon to read at sidebar size,
+// since the two sit next to each other.
+export function TeamIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="12" cy="5" r="2.6" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.6v3.2M6 18v-1.4A2.6 2.6 0 018.6 14h6.8a2.6 2.6 0 012.6 2.6V18" />
+      <path strokeLinecap="round" d="M6 11h12" />
+      <circle cx="6" cy="20" r="1.9" />
+      <circle cx="12" cy="20" r="1.9" />
+      <circle cx="18" cy="20" r="1.9" />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
