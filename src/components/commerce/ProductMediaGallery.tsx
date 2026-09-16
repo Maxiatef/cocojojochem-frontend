@@ -116,6 +116,7 @@ export function ProductMediaGallery({
               type="button"
               onClick={() => step(-1)}
               aria-label="Previous image"
+              title="Previous image"
               className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sci-navy shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
             >
               <ChevronLeftIcon className="h-5 w-5" />
@@ -124,6 +125,7 @@ export function ProductMediaGallery({
               type="button"
               onClick={() => step(1)}
               aria-label="Next image"
+              title="Next image"
               className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-sci-navy shadow-sm transition hover:bg-white focus:opacity-100 md:opacity-0 md:group-hover:opacity-100"
             >
               <ChevronRightIcon className="h-5 w-5" />
@@ -146,6 +148,7 @@ export function ProductMediaGallery({
                 type="button"
                 onClick={() => setActiveIndex(i)}
                 aria-label={`View image ${i + 1} of ${images.length}`}
+                title={`View image ${i + 1} of ${images.length}`}
                 aria-current={isActive}
                 className={`aspect-square overflow-hidden border transition ${
                   isActive ? 'border-sci-blue' : 'border-sci-border hover:border-sci-blue/60'

@@ -953,6 +953,7 @@ export function ProductForm({
                   onClick={() => removeSpec(i)}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
                   aria-label="Remove spec"
+                  title="Remove spec"
                 >
                   <TrashIcon className="h-3.5 w-3.5" />
                 </button>
@@ -1079,6 +1080,7 @@ export function ProductForm({
                     type="button"
                     onClick={() => removeTag(t)}
                     aria-label={`Remove tag ${t}`}
+                    title={`Remove tag ${t}`}
                     className="text-sci-blue hover:text-sci-navy"
                   >
                     ×
@@ -1121,6 +1123,7 @@ export function ProductForm({
                     onClick={() => removeVariant(i)}
                     className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
                     aria-label="Remove variant"
+                    title="Remove variant"
                   >
                     <TrashIcon className="h-3.5 w-3.5" />
                   </button>
@@ -1431,6 +1434,7 @@ function DocumentsField({
                 type="button"
                 onClick={() => removeAt(i)}
                 aria-label="Remove document"
+                title="Remove document"
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-red-600 hover:bg-red-50"
               >
                 <TrashIcon className="h-3.5 w-3.5" />
@@ -1538,6 +1542,7 @@ function GalleryField({ images, onChange }: { images: string[]; onChange: (urls:
                   type="button"
                   onClick={() => removeAt(i)}
                   aria-label="Remove image"
+                  title="Remove image"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-red-600 hover:bg-white"
                 >
                   <TrashIcon className="h-3.5 w-3.5" />
@@ -1631,6 +1636,7 @@ function VariantImagePanel({
             type="button"
             onClick={() => onChange('')}
             aria-label="Remove image"
+            title="Remove image"
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
           >
             <TrashIcon className="h-3.5 w-3.5" />

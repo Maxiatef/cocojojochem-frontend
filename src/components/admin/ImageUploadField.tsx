@@ -69,6 +69,7 @@ export function ImageUploadField({
                 type="button"
                 onClick={() => onChange('')}
                 aria-label="Remove image"
+                title="Remove image"
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
               >
                 <TrashIcon className="h-3.5 w-3.5" />

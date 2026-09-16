@@ -76,6 +76,7 @@ function QuantityStepper({
       <button
         onClick={onDecrement}
         aria-label="Decrease quantity"
+        title="Decrease quantity"
         className="px-3 py-2 text-sci-muted transition hover:text-sci-navy"
       >
         −
@@ -86,6 +87,7 @@ function QuantityStepper({
       <button
         onClick={onIncrement}
         aria-label="Increase quantity"
+        title="Increase quantity"
         className="px-3 py-2 text-sci-muted transition hover:text-sci-navy"
       >
         +
@@ -143,6 +145,7 @@ function CartRow({
       <button
         onClick={onRemove}
         aria-label={`Remove ${productName} from your cart`}
+        title={`Remove ${productName} from your cart`}
         className="flex h-8 w-8 items-center justify-center rounded-md text-sci-muted transition hover:bg-red-50 hover:text-red-600 sm:order-last"
       >
         <CloseIcon className="h-4 w-4" />

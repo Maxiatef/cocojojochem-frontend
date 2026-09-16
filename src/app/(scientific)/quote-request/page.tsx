@@ -323,6 +323,7 @@ function QuoteListRowView({
         <button
           type="button"
           aria-label={`Decrease quantity of ${item.productName}`}
+          title={`Decrease quantity of ${item.productName}`}
           onClick={() => {
             if (item.quantity <= 1) {
               setConfirmingRemove(true);
@@ -340,6 +341,7 @@ function QuoteListRowView({
         <button
           type="button"
           aria-label={`Increase quantity of ${item.productName}`}
+          title={`Increase quantity of ${item.productName}`}
           onClick={() => onUpdateQuantity(item.quantity + 1)}
           className="px-3 py-2 font-sci-body text-sci-muted transition hover:text-sci-navy"
         >

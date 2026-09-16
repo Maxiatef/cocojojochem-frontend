@@ -367,8 +367,16 @@ export function IconButton({
     danger: 'text-sci-muted hover:bg-red-50 hover:text-red-600',
   };
   return (
+    // `title` carries the same string as `aria-label`, so the hover tooltip
+    // and the screen-reader name can never describe the button differently.
+    // These buttons are icon-only: without it, the only way to find out what
+    // the bin or the box does is to click one.
+    //
+    // Declared before {...props} so a caller with something longer to say —
+    // the reason an action is unavailable, say — can still override it.
     <button
       aria-label={label}
+      title={label}
       className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${variants[variant]} ${className}`}
       {...props}
     >

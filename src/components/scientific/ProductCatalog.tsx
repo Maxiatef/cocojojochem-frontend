@@ -411,6 +411,7 @@ function ProductCatalogInner({ fixedCategoryId }: { fixedCategoryId?: number }) 
                   type="button"
                   onClick={f.clear}
                   aria-label={`Remove ${f.label} filter ${f.value}`}
+                  title={`Remove ${f.label} filter ${f.value}`}
                   className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full text-sci-muted transition hover:bg-sci-blue hover:text-white"
                 >
                   <span aria-hidden>×</span>

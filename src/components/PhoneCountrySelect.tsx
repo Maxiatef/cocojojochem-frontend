@@ -49,6 +49,7 @@ export function PhoneCountrySelect({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Select country code"
+        title="Select country code"
         aria-expanded={open}
         className="flex h-full items-center gap-1.5 border border-sci-border px-2.5 py-2.5 text-sm text-sci-navy outline-none focus:border-sci-blue"
       >

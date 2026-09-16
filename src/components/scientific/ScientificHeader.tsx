@@ -191,6 +191,7 @@ export function ScientificHeader() {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label="Toggle navigation"
+            title="Toggle navigation"
             className="rounded-md border border-sci-border p-3 text-sci-navy md:hidden"
           >
             <span aria-hidden className="block h-0.5 w-5 bg-current" />

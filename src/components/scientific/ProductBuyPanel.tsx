@@ -285,6 +285,7 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                       aria-label="Decrease quantity"
+                      title="Decrease quantity"
                       className="px-4 py-3 text-sci-muted transition hover:text-sci-navy"
                     >
                       −
@@ -301,6 +302,7 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                         )
                       }
                       aria-label="Increase quantity"
+                      title="Increase quantity"
                       disabled={
                         !!variant?.limitPerOrder &&
                         !!variant.maxOrderQuantity &&

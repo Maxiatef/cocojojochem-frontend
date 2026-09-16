@@ -229,6 +229,7 @@ function SidebarContent({
           <button
             onClick={onLogout}
             aria-label="Sign out"
+            title="Sign out"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#7e9cb4] transition hover:bg-white/10 hover:text-white"
           >
             <LogoutIcon className="h-[18px] w-[18px]" />
@@ -315,6 +316,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <button
           onClick={() => setDrawerOpen(true)}
           aria-label="Open menu"
+          title="Open menu"
           className="flex h-9 w-9 items-center justify-center rounded-md border border-white/20 text-white"
         >
           <MenuIcon className="h-5 w-5" />
@@ -329,6 +331,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setDrawerOpen(false)}
               aria-label="Close menu"
+              title="Close menu"
               className="absolute right-3 top-5 flex h-8 w-8 items-center justify-center rounded-md text-[#7e9cb4] hover:bg-white/10 hover:text-white"
             >
               <CloseIcon className="h-[18px] w-[18px]" />

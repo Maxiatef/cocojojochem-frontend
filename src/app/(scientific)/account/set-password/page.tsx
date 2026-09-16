@@ -109,6 +109,7 @@ function SetPasswordForm() {
               type="button"
               onClick={() => setShowNew((v) => !v)}
               aria-label={showNew ? 'Hide password' : 'Show password'}
+              title={showNew ? 'Hide password' : 'Show password'}
               aria-pressed={showNew}
               tabIndex={-1}
               className="absolute inset-y-0 right-0 flex items-center px-3 text-sci-muted transition hover:text-sci-navy"
@@ -136,6 +137,7 @@ function SetPasswordForm() {
               type="button"
               onClick={() => setShowConfirm((v) => !v)}
               aria-label={showConfirm ? 'Hide confirmation' : 'Show confirmation'}
+              title={showConfirm ? 'Hide confirmation' : 'Show confirmation'}
               aria-pressed={showConfirm}
               tabIndex={-1}
               className="absolute inset-y-0 right-0 flex items-center px-3 text-sci-muted transition hover:text-sci-navy"
