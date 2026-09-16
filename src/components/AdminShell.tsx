@@ -22,6 +22,7 @@ import {
   TagIcon,
   TicketIcon,
   UsersIcon,
+  TeamIcon,
   SettingsIcon,
   GlobeIcon,
   ClockIcon,
@@ -47,6 +48,9 @@ const NAV: {
   { href: '/admin/coupons', label: 'Sales & Coupons', icon: TicketIcon, permission: 'canViewCoupons' },
   { href: '/admin/analytics', label: 'Analytics', icon: ChartIcon, permission: 'canViewAnalytics' },
   { href: '/admin/users', label: 'Users', icon: UsersIcon, permission: 'canViewUsers' },
+  // Sits next to Users because it is the same subject from the other side:
+  // Users is every account, My Team is the handful this person is over.
+  { href: '/admin/my-team', label: 'My Team', icon: TeamIcon, permission: 'canViewOwnTeam' },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, permission: 'canViewAuditLog' },
   { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, permission: 'canViewSeoPages' },
   { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, permission: 'canViewSiteSettings' },
@@ -92,7 +96,7 @@ export function useCan(permission: string): boolean {
 function initialsFromEmail(email: string) {
   return email.slice(0, 2).toUpperCase();
 }
-
+  
 function AccessDenied({
   reason,
   message,
