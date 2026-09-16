@@ -211,6 +211,56 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   );
 }
 
+/**
+ * The Cancel Order button and its confirmation.
+ *
+ * Extracted because both order modals offer it, and a cancellation rule that
+ * exists in two places is one that will eventually disagree with itself —
+ * this is the control that loses a sale, restocks inventory and triggers a
+ * refund alert, so the two entry points must be identical by construction
+ * rather than by someone remembering.
+ *
+ * Renders nothing when the order is already cancelled or the account lacks
+ * canCancelOrder: a control that is always refused reads as a broken page
+ * rather than as a restriction. The server is still the authority — this
+ * only decides what to show.
+ */
+function CancelOrderControl({ order }: { order: Order }) {
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const canCancel = useCan('canCancelOrder');
+
+  const cancelOrder = useMutation({
+    mutationFn: () => api.patch(`/orders/${order.id}/status`, { status: 'CANCELLED' }),
+    onSuccess: () => {
+      // Both modals re-read their order from this list, so invalidating it is
+      // what makes the button disappear and the badge flip to CANCELLED
+      // without either of them tracking the change itself.
+      queryClient.invalidateQueries({ queryKey: ['orders-admin'] });
+      setConfirming(false);
+    },
+  });
+
+  if (order.status === 'CANCELLED' || !canCancel) return null;
+
+  return (
+    <>
+      <Button type="button" variant="danger" size="sm" onClick={() => setConfirming(true)}>
+        Cancel Order
+      </Button>
+      <ConfirmDialog
+        open={confirming}
+        title="Cancel order"
+        message={`Cancel order #${order.id}? The customer will not be automatically notified, and this cannot be undone from here.`}
+        confirmLabel="Cancel Order"
+        loading={cancelOrder.isPending}
+        onConfirm={() => cancelOrder.mutate()}
+        onCancel={() => setConfirming(false)}
+      />
+    </>
+  );
+}
+
 function ViewOrderModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const isGuest = !order.user;
   const customerName = order.user?.fullName || order.guestName || null;
@@ -221,14 +271,17 @@ function ViewOrderModal({ order, onClose }: { order: Order; onClose: () => void 
   return (
     <Modal open onClose={onClose} title={`Order #${order.id}`} size="lg">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Badge status={order.status} />
-          <p className="text-xs text-slate-500">
-            Placed {new Date(order.createdAt).toLocaleString()}
-            {order.updatedAt && order.updatedAt !== order.createdAt && (
-              <> · Updated {new Date(order.updatedAt).toLocaleString()}</>
-            )}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-slate-500">
+              Placed {new Date(order.createdAt).toLocaleString()}
+              {order.updatedAt && order.updatedAt !== order.createdAt && (
+                <> · Updated {new Date(order.updatedAt).toLocaleString()}</>
+              )}
+            </p>
+            <CancelOrderControl order={order} />
+          </div>
         </div>
 
         <div className="border-t border-slate-100 pt-5">
@@ -347,7 +400,6 @@ function ManageShippingModal({
   const [carrierCode, setCarrierCode] = useState(order.carrierCode || 'usps');
   const [trackingError, setTrackingError] = useState<string | null>(null);
   const [trackingSaved, setTrackingSaved] = useState(false);
-  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   const saveTracking = useMutation({
     mutationFn: () =>
@@ -363,21 +415,12 @@ function ManageShippingModal({
     },
   });
 
-  // Three separate permissions: advancing the status, cancelling (its own,
-  // because it loses a sale and can't be undone from here), and tracking.
+  // Advancing the status and editing tracking are separate permissions.
+  // Cancelling has a third, and lives in CancelOrderControl along with it.
   // Controls the account can't use aren't shown — a button that always 403s
   // reads as a broken page rather than a restriction.
   const canEditStatus = useCan('canEditOrderStatus');
-  const canCancel = useCan('canCancelOrder');
   const canEditTracking = useCan('canEditOrderTracking');
-
-  const cancelOrder = useMutation({
-    mutationFn: () => api.patch(`/orders/${order.id}/status`, { status: 'CANCELLED' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders-admin'] });
-      setConfirmingCancel(false);
-    },
-  });
 
   return (
     <Modal open onClose={onClose} title={`Manage Shipping — Order #${order.id}`} size="lg">
@@ -385,16 +428,7 @@ function ManageShippingModal({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Order Status</p>
-            {order.status !== 'CANCELLED' && canCancel && (
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={() => setConfirmingCancel(true)}
-              >
-                Cancel Order
-              </Button>
-            )}
+            <CancelOrderControl order={order} />
           </div>
           {order.status === 'CANCELLED' ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
@@ -470,15 +504,6 @@ function ManageShippingModal({
         )}
       </div>
 
-      <ConfirmDialog
-        open={confirmingCancel}
-        title="Cancel order"
-        message={`Cancel order #${order.id}? The customer will not be automatically notified, and this cannot be undone from here.`}
-        confirmLabel="Cancel Order"
-        loading={cancelOrder.isPending}
-        onConfirm={() => cancelOrder.mutate()}
-        onCancel={() => setConfirmingCancel(false)}
-      />
     </Modal>
   );
 }
