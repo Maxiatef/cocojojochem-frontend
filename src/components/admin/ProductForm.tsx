@@ -45,6 +45,7 @@ interface VariantFormRow {
   id?: number;
   sku: string;
   label: string;
+  color: string;
   price: string;
   salePrice: string;
   stockQuantity: string;
@@ -65,6 +66,7 @@ interface VariantFormRow {
 const EMPTY_VARIANT: VariantFormRow = {
   sku: '',
   label: '',
+  color: '',
   price: '',
   salePrice: '',
   stockQuantity: '',
@@ -84,6 +86,7 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
     id: v.id,
     sku: v.sku,
     label: v.label,
+    color: v.color || '',
     price: v.price,
     salePrice: v.salePrice || '',
     stockQuantity: v.stockQuantity != null ? String(v.stockQuantity) : '',
@@ -470,6 +473,10 @@ export function ProductForm({
         id: v.id,
         sku: v.sku,
         label: v.label,
+        // null, not undefined: the server spreads the DTO onto the row, so
+        // undefined would silently leave the old colour in place and the
+        // field could never be cleared once set.
+        color: v.color.trim() || null,
         price: Number(v.price),
         salePrice: v.salePrice ? Number(v.salePrice) : undefined,
         stockQuantity: v.stockQuantity ? Number(v.stockQuantity) : undefined,
@@ -1152,6 +1159,13 @@ export function ProductForm({
                       placeholder="1 Gallon"
                       value={v.label}
                       onChange={(e) => updateVariant(i, { label: e.target.value })}
+                    />
+                    <TextField
+                      label="Color"
+                      placeholder="Pale yellow"
+                      maxLength={100}
+                      value={v.color}
+                      onChange={(e) => updateVariant(i, { color: e.target.value })}
                     />
                     <TextField
                       label="Price ($)"

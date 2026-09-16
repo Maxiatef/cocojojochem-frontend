@@ -126,10 +126,11 @@ function ProductViewContent({ params }: { params: { id: string } }) {
                 <EmptyState message="No variants." />
               </div>
             ) : (
-              <Table minWidth={860}>
+              <Table minWidth={940}>
                 <TableHead>
                   <Th>Label</Th>
                   <Th>SKU</Th>
+                  <Th>Color</Th>
                   <Th>Price</Th>
                   <Th>Stock</Th>
                   <Th>Weight</Th>
@@ -146,6 +147,7 @@ function ProductViewContent({ params }: { params: { id: string } }) {
                         )}
                       </Td>
                       <Td className="text-slate-600">{v.sku}</Td>
+                      <Td className="text-slate-600">{v.color || '—'}</Td>
                       <Td className="text-slate-600">{priceOf(v)}</Td>
                       <Td>
                         <Badge status={v.stockStatus} />

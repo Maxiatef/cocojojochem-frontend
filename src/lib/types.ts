@@ -29,6 +29,8 @@ export interface ProductVariant {
   id: number;
   sku: string;
   label: string;
+  /** Free-text colour description, e.g. "Pale yellow". Null where not recorded. */
+  color: string | null;
   price: string;
   salePrice: string | null;
   stockQuantity: number | null;
