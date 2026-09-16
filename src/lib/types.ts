@@ -782,7 +782,15 @@ export interface AuditFilterOptions {
   // Every staff account (role != CUSTOMER), plus anyone already in the log
   // who is no longer staff. `status` is 'GONE' for the latter.
   actors: { id: number; email: string; role: string; status?: string }[];
-  roles: AuditActorType[];
+  /**
+   * Real role NAMES — the roles table plus any role name already recorded in
+   * the log, so a renamed or deleted role's entries stay reachable. Not
+   * AuditActorType: that is the fixed ADMIN|SALES|SYSTEM vocabulary the table
+   * was built with, which no longer matches the roles an admin can create.
+   */
+  roles: string[];
+  /** Still offered separately — automated changes have no role at all. */
+  actorTypes: AuditActorType[];
   actions: AuditAction[];
 }
 

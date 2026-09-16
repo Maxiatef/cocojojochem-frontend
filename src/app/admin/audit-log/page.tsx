@@ -42,6 +42,14 @@ import {
 type ActorOption = { id: number; email: string; role: string; status?: string };
 
 /**
+ * Sentinel for the one entry in the role dropdown that is not a role.
+ *
+ * Prefixed so it can never collide with a role someone actually creates —
+ * a role literally named "System" would otherwise silently hijack it.
+ */
+const SYSTEM_OPTION = '__system';
+
+/**
  * Groups the actor list by role name, built from the data rather than from a
  * fixed list of roles — an admin can create any role they like, and one this
  * page had never heard of used to fall through into "No longer staff".
@@ -84,7 +92,10 @@ function AuditLog() {
   const [entityName, setEntityName] = useState('');
   const [action, setAction] = useState('');
   const [actorId, setActorId] = useState('');
-  const [actorType, setActorType] = useState('');
+  // One control, two parameters. Everything in this dropdown is a role name
+  // except SYSTEM_OPTION, which has to go to actorType because automated
+  // changes (Stripe, Shippo, cron) have no role for actorRole to match.
+  const [actorRole, setActorRole] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
@@ -100,7 +111,7 @@ function AuditLog() {
 
   const { data, isLoading, isError } = useQuery({
     // Every filter belongs in the key, or react-query serves a stale page.
-    queryKey: ['admin-audit-log', search, entityName, action, actorId, actorType, from, to, page],
+    queryKey: ['admin-audit-log', search, entityName, action, actorId, actorRole, from, to, page],
     queryFn: () => {
       const params = new URLSearchParams();
       params.set('page', String(page));
@@ -109,7 +120,8 @@ function AuditLog() {
       if (entityName) params.set('entityName', entityName);
       if (action) params.set('action', action);
       if (actorId) params.set('actorId', actorId);
-      if (actorType) params.set('actorType', actorType);
+      if (actorRole === SYSTEM_OPTION) params.set('actorType', 'SYSTEM');
+      else if (actorRole) params.set('actorRole', actorRole);
       if (from) params.set('from', new Date(from).toISOString());
       if (to) {
         // A bare date parses as midnight, which would exclude everything
@@ -128,14 +140,14 @@ function AuditLog() {
     queryFn: () => api.get<AuditFilterOptions>('/audit-logs/filters'),
   });
 
-  const hasFilters = !!(search || entityName || action || actorId || actorType || from || to);
+  const hasFilters = !!(search || entityName || action || actorId || actorRole || from || to);
 
   function clearFilters() {
     setSearch('');
     setEntityName('');
     setAction('');
     setActorId('');
-    setActorType('');
+    setActorRole('');
     setFrom('');
     setTo('');
     setPage(1);
@@ -184,12 +196,13 @@ function AuditLog() {
           </SelectField>
         </div>
         <div className="w-40">
-          {/* Roles come from the table, so SYSTEM only appears once an
-              automated change has actually been recorded. */}
+          {/* Real roles from the database — the roles that exist now, plus
+              any role name already recorded in the log so a renamed or
+              deleted one stays reachable. */}
           <SelectField
             label=""
-            value={actorType}
-            onChange={(e) => resetPageAnd(setActorType)(e.target.value)}
+            value={actorRole}
+            onChange={(e) => resetPageAnd(setActorRole)(e.target.value)}
           >
             <option value="">All roles</option>
             {(filters?.roles || []).map((r) => (
@@ -197,6 +210,9 @@ function AuditLog() {
                 {r}
               </option>
             ))}
+            {/* Last, and separated, because it is not a role: it is how
+                automated changes are attributed. */}
+            <option value={SYSTEM_OPTION}>System (automated)</option>
           </SelectField>
         </div>
         <div className="w-56">
