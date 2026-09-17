@@ -25,7 +25,7 @@ import { useToast } from '@/components/ui';
  * a guest what signing in would buy them.
  */
 
-type ServerWishlistItem = { id: number; productId: number; savedAt: string; product: Product };
+type ServerWishlistItem = { id: string; productId: string; savedAt: string; product: Product };
 
 export default function WishlistPage() {
   const signedIn = typeof window !== 'undefined' && !!getCustomerToken();

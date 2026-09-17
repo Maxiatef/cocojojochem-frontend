@@ -11,7 +11,7 @@ export interface Paginated<T> {
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -19,14 +19,14 @@ export interface Category {
   sortOrder: number;
   productCount?: number;
   // Categories nest exactly one level: a root, or a subcategory of a root.
-  parentId: number | null;
+  parentId: string | null;
   parent?: Category | null;
   children?: Category[];
   createdAt?: string;
 }
 
 export interface ProductVariant {
-  id: number;
+  id: string;
   sku: string;
   label: string;
   /** Free-text colour description, e.g. "Pale yellow". Null where not recorded. */
@@ -50,7 +50,7 @@ export interface ProductVariant {
 }
 
 export interface ProductFunction {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description?: string | null;
@@ -60,7 +60,7 @@ export interface ProductFunction {
 }
 
 export interface Certification {
-  id: number;
+  id: string;
   name: string;
   iconUrl: string | null;
 }
@@ -68,7 +68,7 @@ export interface Certification {
 export type ProductVisibility = 'PUBLIC' | 'PRIVATE' | 'PASSWORD_PROTECTED';
 
 export interface ProductSpecRow {
-  id: number;
+  id: string;
   key: string;
   value: string;
 }
@@ -84,7 +84,7 @@ export interface ProductSeoData {
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   sku: string;
@@ -113,7 +113,7 @@ export interface Product {
 }
 
 export interface ProductGalleryImage {
-  id: number;
+  id: string;
   url: string;
   altText: string | null;
   sortOrder: number;
@@ -125,32 +125,32 @@ export interface ProductGalleryImage {
 export type ProductDocType = 'COA' | 'SDS' | 'TDS' | 'SPEC_SHEET' | 'CERTIFICATE' | 'OTHER';
 
 export interface ProductDocumentRow {
-  id: number;
+  id: string;
   url: string;
   type: ProductDocType;
   label: string | null;
   // Set only when type is CERTIFICATE — which of the product's certifications
   // this file is the proof of.
-  certificationId?: number | null;
-  certification?: { id: number; name: string } | null;
+  certificationId?: string | null;
+  certification?: { id: string; name: string } | null;
 }
 
 export interface ServerCartItem {
-  id: number;
-  productVariantId: number;
+  id: string;
+  productVariantId: string;
   quantity: number;
   price: string;
   variant: ProductVariant & { product?: Product };
 }
 
 export interface ServerCart {
-  id: number;
+  id: string;
   items: ServerCartItem[];
 }
 
 export interface ServerQuoteListItem {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   productSlug: string;
   productName: string;
   variantLabel: string | null;
@@ -161,7 +161,7 @@ export interface ServerQuoteListItem {
 export type AccountStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
 
 export interface Company {
-  id: number;
+  id: string;
   name: string;
   taxId: string | null;
   website: string | null;
@@ -173,11 +173,11 @@ export interface Company {
 }
 
 export interface CompanyUser {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
   phone: string | null;
-  roleId: number | null;
+  roleId: string | null;
   role: Role | null;
   createdAt: string;
 }
@@ -192,7 +192,7 @@ export type RequestStatus = 'NEW' | 'IN_PROGRESS' | 'QUOTED' | 'WON' | 'LOST';
 export type ContactMessageStatus = 'UNREAD' | 'READ' | 'ARCHIVED';
 
 export interface ContactMessage {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   phone: string | null;
@@ -205,7 +205,7 @@ export interface ContactMessage {
 }
 
 export interface Testimonial {
-  id: number;
+  id: string;
   authorName: string;
   company: string | null;
   quote: string;
@@ -219,19 +219,19 @@ export interface Testimonial {
 }
 
 export interface CustomerProfile {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
   phone: string | null;
-  roleId: number | null;
+  roleId: string | null;
   role: Role | null;
-  companyId: number | null;
+  companyId: string | null;
   company: Company | null;
   createdAt: string;
 }
 
 export interface QuoteRequestItem {
-  id: number;
+  id: string;
   productName: string;
   quantity: number | null;
   unit: string | null;
@@ -239,7 +239,7 @@ export interface QuoteRequestItem {
 }
 
 export interface QuoteRequest {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   phone: string | null;
@@ -249,14 +249,14 @@ export interface QuoteRequest {
   status: RequestStatus;
   items: QuoteRequestItem[];
   createdAt: string;
-  user?: { id: number; fullName: string; email: string } | null;
+  user?: { id: string; fullName: string; email: string } | null;
 }
 
 export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 export interface OrderItem {
-  id: number;
-  productVariantId: number | null;
+  id: string;
+  productVariantId: string | null;
   productName: string;
   variantLabel: string;
   sku: string;
@@ -274,14 +274,14 @@ export interface CheckoutResponse {
 }
 
 export interface Order {
-  id: number;
+  id: string;
   status: OrderStatus;
   subtotal: string;
   total: string;
   createdAt: string;
   updatedAt?: string;
   items: OrderItem[];
-  user?: { id: number; fullName: string; email: string; phone?: string | null; company?: Company | null };
+  user?: { id: string; fullName: string; email: string; phone?: string | null; company?: Company | null };
   guestEmail?: string | null;
   guestName?: string | null;
   guestPhone?: string | null;
@@ -356,7 +356,7 @@ export type TrackingInfo =
     };
 
 export interface DashboardRecentOrder {
-  id: number;
+  id: string;
   status: OrderStatus;
   total: string;
   createdAt: string;
@@ -382,11 +382,11 @@ export interface DashboardOverview {
     onBackorderCount: number;
     lowStockCount: number;
     lowStockProducts: {
-      variantId: number;
+      variantId: string;
       variantLabel: string;
       sku: string;
       stockQuantity: number;
-      productId: number;
+      productId: string;
       productName: string;
       productSlug: string;
     }[];
@@ -407,7 +407,7 @@ export interface QuoteRequestStats {
 export type CouponType = 'PERCENTAGE_CART' | 'PERCENTAGE_PRODUCT' | 'FIXED_CART' | 'FIXED_PRODUCT';
 
 export interface Coupon {
-  id: number;
+  id: string;
   code: string;
   description: string | null;
   type: CouponType;
@@ -449,14 +449,14 @@ export interface CouponAnalyticsAll {
   totalUsages: number;
   topUsers: { email: string; usageCount: number }[];
   topProducts: { productName: string; quantitySold: number }[];
-  topCoupons: { couponId: number; code: string; usageCount: number }[];
+  topCoupons: { couponId: string; code: string; usageCount: number }[];
 }
 
 export interface CouponAnalyticsOne {
   coupon: Coupon;
   usageCount: number;
   totalDiscountGiven: number;
-  recentUsages: { id: number; couponId: number; orderId: number | null; email: string; usedAt: string }[];
+  recentUsages: { id: string; couponId: string; orderId: string | null; email: string; usedAt: string }[];
   topUsers: { email: string; usageCount: number }[];
 }
 
@@ -473,7 +473,7 @@ export interface CouponValidateResult {
 // --- Bulk sale discounts ------------------------------------------------------
 
 export interface BulkSaleDiscount {
-  id: number;
+  id: string;
   name: string;
   discountPercent: string;
   startDate: string;
@@ -490,7 +490,7 @@ export interface BulkSaleDiscount {
 // --- SEO pages ----------------------------------------------------------------
 
 export interface SeoPage {
-  id: number;
+  id: string;
   path: string;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -522,7 +522,7 @@ export interface PageYoastCheck {
 }
 
 export interface SeoMetric {
-  id: number;
+  id: string;
   path: string;
   title: string | null;
   metaDescription: string | null;
@@ -548,7 +548,7 @@ export interface SeoMetric {
 }
 
 export interface SeoIssue {
-  id: number;
+  id: string;
   path: string;
   issueType: SeoIssueType;
   severity: SeoIssueSeverity;
@@ -577,7 +577,7 @@ export interface SeoAnalyzeResult {
 
 export interface SiteSettingsResponse {
   settings: Record<string, string | null>;
-  rows: { id: number; key: string; value: string | null; updatedAt: string }[];
+  rows: { id: string; key: string; value: string | null; updatedAt: string }[];
 }
 
 // --- Users ----------------------------------------------------------------------
@@ -585,7 +585,7 @@ export interface SiteSettingsResponse {
 // Roles are rows in the database now, created and named by an admin, so there
 // is no fixed union of role names any more. A user with no role is a customer.
 export interface Role {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   permissions: Record<string, boolean>;
@@ -615,7 +615,7 @@ export type UserRole = string;
 export type UserStatus = 'ACTIVE' | 'DELETED';
 
 export interface UserListItem {
-  id: number;
+  id: string;
   email: string;
   // fullName stays canonical for display everywhere; firstName/lastName are
   // the editable parts the admin editor writes, which the backend recomposes
@@ -625,18 +625,18 @@ export interface UserListItem {
   firstName?: string | null;
   lastName?: string | null;
   phone: string | null;
-  roleId: number | null;
+  roleId: string | null;
   role: Role | null;
   status: UserStatus;
   // Only set when status is DELETED — shown as the "Deleted" column in the
   // Recycle Bin. Never branch on this; `status` is the authoritative gate.
   deletedAt?: string | null;
-  companyId: number | null;
+  companyId: string | null;
   company: Company | null;
   // Staff grouping. Null for customers and for staff in no team. `team` is
   // only joined on the admin list and detail endpoints.
-  teamId?: number | null;
-  team?: { id: number; name: string } | null;
+  teamId?: string | null;
+  team?: { id: string; name: string } | null;
   createdAt: string;
   orderCount: number;
   totalSpent: number;
@@ -659,7 +659,10 @@ export interface SalesProductsAnalytics {
     avgOrderValue: number;
   };
   products: {
-    productId: number;
+    productId: string;
+    // Carried so the product name can link to its editor, which is addressed
+    // by slug rather than id.
+    productSlug: string;
     name: string;
     categoryName: string | null;
     unitsSold: number;
@@ -668,19 +671,20 @@ export interface SalesProductsAnalytics {
     stockStatus: string;
   }[];
   categories: {
-    categoryId: number;
+    categoryId: string;
     name: string;
     revenue: number;
     unitsSold: number;
   }[];
   topCompanies: {
-    companyId: number;
+    companyId: string;
     name: string;
     revenue: number;
     orderCount: number;
   }[];
   slowMovers: {
-    productId: number;
+    productId: string;
+    productSlug: string;
     name: string;
     categoryName: string | null;
     createdAt: string;
@@ -712,14 +716,14 @@ export interface ShippingRateTierRow {
 // Narrow projection returned by POST /orders/guest-track — deliberately
 // carries no address, phone or payment identifiers (see trackAsGuest).
 export interface GuestOrderTracking {
-  id: number;
+  id: string;
   status: Order['status'];
   createdAt: string;
   total: number;
   trackingNumber: string | null;
   carrierCode: string | null;
   items: {
-    id: number;
+    id: string;
     productName: string;
     variantLabel: string;
     sku: string;
@@ -761,7 +765,7 @@ export interface AuditLogEntry {
   occurredAt: string;
   requestId: string;
   actorType: AuditActorType;
-  actorId: number | null;
+  actorId: string | null;
   actorEmail: string | null;
   actorRole: string | null;
   actorSource: string | null;
@@ -789,7 +793,7 @@ export interface AuditFilterOptions {
   entityNames: string[];
   // Every staff account (role != CUSTOMER), plus anyone already in the log
   // who is no longer staff. `status` is 'GONE' for the latter.
-  actors: { id: number; email: string; role: string; status?: string }[];
+  actors: { id: string; email: string; role: string; status?: string }[];
   /**
    * Real role NAMES — the roles table plus any role name already recorded in
    * the log, so a renamed or deleted role's entries stay reachable. Not
@@ -822,7 +826,7 @@ export interface ProductSeoAnalysis {
 
 /** What the editor sends for a live score — a draft, not a saved product. */
 export interface ProductSeoDraft {
-  productId?: number;
+  productId?: string;
   name: string;
   slug: string;
   shortDescription?: string;
@@ -840,16 +844,16 @@ export interface ProductSeoDraft {
 
 /** The manager as the teams API returns them — display fields only, never the full user row. */
 export interface TeamManager {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
 }
 
 export interface Team {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
-  managerId: number | null;
+  managerId: string | null;
   manager: TeamManager | null;
   createdAt: string;
   /** Present on the list endpoint. */
@@ -860,22 +864,22 @@ export interface Team {
 
 /** Thin picker shape from GET /teams/options. */
 export interface TeamOption {
-  id: number;
+  id: string;
   name: string;
 }
 
 /** A staff account the admin can drop into a team, with where they sit today. */
 export interface AssignableStaff {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   roleName: string | null;
-  teamId: number | null;
+  teamId: string | null;
   teamName: string | null;
 }
 
 export interface TeamMemberSummary {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   roleName: string | null;
@@ -893,7 +897,7 @@ export interface TeamOverview {
 }
 
 export interface TeamReportMember {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   roleName: string | null;

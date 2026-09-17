@@ -21,6 +21,7 @@ import {
   TextField,
   useToast,
 } from '@/components/ui';
+import { encodeRouteParam } from '@/lib/ids';
 
 // Two-column label-left / control-right rhythm, the way WooCommerce lays out
 // its user profile rows. Collapses to stacked on narrow screens.
@@ -80,13 +81,14 @@ function StrengthMeter({ password }: { password: string }) {
   );
 }
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
+export default function EditUserPage({ params }: { params: { email: string } }) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
   const { data: user, isLoading, isError } = useQuery({
-    queryKey: ['admin-user-detail', params.id],
-    queryFn: () => api.get<UserDetail>(`/users/${params.id}/detail`),
+    queryKey: ['admin-user-detail', params.email],
+    queryFn: () =>
+      api.get<UserDetail>(`/users/by-email/${encodeRouteParam(params.email)}/detail`),
   });
 
   const { data: companies } = useQuery({
@@ -155,9 +157,9 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const isWeak = strength.score < WEAK_PASSWORD_THRESHOLD;
 
   const saveMutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api.patch(`/users/${params.id}`, body),
+    mutationFn: (body: Record<string, unknown>) => api.patch(`/users/${user!.id}`, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', params.email] });
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       toast.success('User details saved.');
       setFormError(null);
@@ -167,7 +169,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
 
   const passwordMutation = useMutation({
     mutationFn: (body: { newPassword: string }) =>
-      api.patch<{ success: boolean; revokedSessions?: number }>(`/users/${params.id}/password`, body),
+      api.patch<{ success: boolean; revokedSessions?: number }>(`/users/${user!.id}/password`, body),
     onSuccess: (res) => {
       const revoked = res?.revokedSessions ?? 0;
       toast.success(
@@ -186,7 +188,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const resetLinkMutation = useMutation({
     mutationFn: () =>
       api.post<{ success: boolean; email: string; emailSent: boolean }>(
-        `/users/${params.id}/send-password-reset`,
+        `/users/${user!.id}/send-password-reset`,
         {},
       ),
     onSuccess: (res) => {
@@ -208,7 +210,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
 
   const revokeSessionsMutation = useMutation({
     mutationFn: () =>
-      api.post<{ success: boolean; revokedSessions: number }>(`/users/${params.id}/revoke-sessions`, {}),
+      api.post<{ success: boolean; revokedSessions: number }>(`/users/${user!.id}/revoke-sessions`, {}),
     onSuccess: (res) => {
       setSessionsConfirmOpen(false);
       const revoked = res?.revokedSessions ?? 0;
@@ -236,9 +238,9 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       lastName: lastName.trim() || null,
       email,
       phone: phone || null,
-      roleId: roleId ? Number(roleId) : null,
-      teamId: teamId ? Number(teamId) : null,
-      companyId: companyId ? Number(companyId) : null,
+      roleId: roleId || null,
+      teamId: teamId || null,
+      companyId: companyId || null,
     });
   }
 

@@ -12,6 +12,7 @@ import { formatUsd } from '@/lib/pricing';
 import { IconButton, useToast } from '@/components/ui';
 import { ShippingIcon, ImagePlaceholderIcon } from '@/components/icons';
 import { OrderShippingModal } from '@/components/commerce/OrderShippingModal';
+import { displayId } from '@/lib/ids';
 
 type Tab = 'ongoing' | 'completed';
 
@@ -23,7 +24,7 @@ export default function CustomerOrdersPage() {
   const router = useRouter();
   const toast = useToast();
   const [ready, setReady] = useState(false);
-  const [reorderingId, setReorderingId] = useState<number | null>(null);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('ongoing');
   const [shippingModalOrder, setShippingModalOrder] = useState<Order | null>(null);
 
@@ -137,7 +138,7 @@ export default function CustomerOrdersPage() {
               {visibleOrders.map((order) => (
                 <div key={order.id} className="rounded-xl border border-sci-border bg-white p-5">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-sci-navy">Order #{order.id}</p>
+                    <p className="font-medium text-sci-navy">Order {displayId(order.id)}</p>
                     <div className="flex items-center gap-1.5">
                       <span className="rounded-full bg-sci-pale px-2.5 py-1 text-xs font-medium text-sci-muted">
                         {order.status}

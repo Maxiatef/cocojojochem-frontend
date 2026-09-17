@@ -13,32 +13,36 @@ import { useEffect, useState } from 'react';
 const WISHLIST_KEY = 'cocojojochem_wishlist';
 const WISHLIST_EVENT = 'cocojojochem-wishlist-changed';
 
-function readWishlist(): number[] {
+function readWishlist(): string[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
     // Defensive: this key is user-writable and survives deploys, so anything
     // that is not a list of ids is treated as an empty list rather than
     // thrown at the render.
-    return Array.isArray(raw) ? raw.filter((id) => Number.isInteger(id)) : [];
+    //
+    // The string check also quietly clears lists saved before ids became
+    // uuids. Those numbers no longer name any product, so dropping them shows
+    // an empty wishlist rather than a row of "product not found".
+    return Array.isArray(raw) ? raw.filter((id) => typeof id === 'string') : [];
   } catch {
     return [];
   }
 }
 
-function writeWishlist(ids: number[]) {
+function writeWishlist(ids: string[]) {
   localStorage.setItem(WISHLIST_KEY, JSON.stringify(ids));
   window.dispatchEvent(new Event(WISHLIST_EVENT));
 }
 
-export function addToWishlist(productId: number) {
+export function addToWishlist(productId: string) {
   const ids = readWishlist();
   if (ids.includes(productId)) return;
   // Newest first, matching the server's `createdAt DESC`.
   writeWishlist([productId, ...ids]);
 }
 
-export function removeFromWishlist(productId: number) {
+export function removeFromWishlist(productId: string) {
   writeWishlist(readWishlist().filter((id) => id !== productId));
 }
 
@@ -46,12 +50,12 @@ export function clearWishlist() {
   writeWishlist([]);
 }
 
-export function getWishlist(): number[] {
+export function getWishlist(): string[] {
   return readWishlist();
 }
 
 export function useWishlist() {
-  const [ids, setIds] = useState<number[]>([]);
+  const [ids, setIds] = useState<string[]>([]);
 
   useEffect(() => {
     setIds(readWishlist());
@@ -69,7 +73,7 @@ export function useWishlist() {
   return {
     ids,
     count: ids.length,
-    has: (productId: number) => ids.includes(productId),
+    has: (productId: string) => ids.includes(productId),
     add: addToWishlist,
     remove: removeFromWishlist,
     clear: clearWishlist,

@@ -41,7 +41,7 @@ export function RecordHistory({
   pageSize = HISTORY_PAGE_SIZE,
 }: {
   entityName: string;
-  entityId: number | string;
+  entityId: string | string;
   pageSize?: number;
 }) {
   const isAdmin = useCan('canViewAuditLog');

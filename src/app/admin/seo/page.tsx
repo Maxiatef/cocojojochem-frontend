@@ -45,7 +45,7 @@ import { AlertTriangleIcon, ChartIcon, CheckCircleIcon, ClockIcon, GlobeIcon } f
  *      and render `<MetaTagsTab />` alongside `<SiteAnalysisTab />`.
  *
  * interface SeoFormState {
- *   id: number | null;
+ *   id: string | null;
  *   path: string;
  *   metaTitle: string;
  *   metaDescription: string;
@@ -84,7 +84,7 @@ import { AlertTriangleIcon, ChartIcon, CheckCircleIcon, ClockIcon, GlobeIcon } f
  *   });
  *
  *   const updateMutation = useMutation({
- *     mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
+ *     mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
  *       api.patch(`/seo-pages/${id}`, body),
  *     onSuccess: () => {
  *       invalidate();
@@ -94,7 +94,7 @@ import { AlertTriangleIcon, ChartIcon, CheckCircleIcon, ClockIcon, GlobeIcon } f
  *   });
  *
  *   const deleteMutation = useMutation({
- *     mutationFn: (id: number) => api.delete(`/seo-pages/${id}`),
+ *     mutationFn: (id: string) => api.delete(`/seo-pages/${id}`),
  *     onSuccess: () => {
  *       invalidate();
  *       setPendingDelete(null);
@@ -311,7 +311,7 @@ function SiteAnalysisTab() {
   // its own permission rather than riding on read access to this page.
   const canAnalyze = useCan('canRunSeoAnalyzer');
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
-  const [expandedMetricId, setExpandedMetricId] = useState<number | null>(null);
+  const [expandedMetricId, setExpandedMetricId] = useState<string | null>(null);
 
   const overviewQuery = useQuery({
     queryKey: ['seo-analyzer-overview'],

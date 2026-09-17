@@ -31,14 +31,14 @@ export function useWishlistState() {
 
   const { data: serverIds } = useQuery({
     queryKey: WISHLIST_SERVER_KEY,
-    queryFn: () => customerApi.get<number[]>('/wishlist/ids'),
+    queryFn: () => customerApi.get<string[]>('/wishlist/ids'),
     enabled: signedIn,
   });
 
   const ids = signedIn ? serverIds || [] : localIds;
 
   const toggle = useCallback(
-    async (productId: number) => {
+    async (productId: string) => {
       const saved = ids.includes(productId);
 
       if (!signedIn) {
@@ -49,7 +49,7 @@ export function useWishlistState() {
 
       // Optimistic: the heart must respond on the click, not on the round
       // trip. A failed request re-fetches, which puts it back.
-      queryClient.setQueryData<number[]>(WISHLIST_SERVER_KEY, (prev = []) =>
+      queryClient.setQueryData<string[]>(WISHLIST_SERVER_KEY, (prev = []) =>
         saved ? prev.filter((id) => id !== productId) : [productId, ...prev],
       );
 
@@ -66,5 +66,5 @@ export function useWishlistState() {
     [ids, signedIn, queryClient],
   );
 
-  return { ids, signedIn, has: (productId: number) => ids.includes(productId), toggle };
+  return { ids, signedIn, has: (productId: string) => ids.includes(productId), toggle };
 }

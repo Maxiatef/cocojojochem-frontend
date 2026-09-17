@@ -74,10 +74,10 @@ export function useMe() {
 }
 
 type MeResponse = {
-  id: number;
+  id: string;
   email: string;
-  roleId: number | null;
-  role: { id: number; name: string; permissions: Record<string, boolean> } | null;
+  roleId: string | null;
+  role: { id: string; name: string; permissions: Record<string, boolean> } | null;
 };
 
 /** `undefined` while loading — callers must treat that as "not yet allowed". */

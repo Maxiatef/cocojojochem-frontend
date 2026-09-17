@@ -23,7 +23,7 @@ import { ChevronDownIcon, EyeIcon } from '@/components/icons';
 import { OrderDetailCard } from '@/components/admin/OrderDetailCard';
 
 export default function CompaniesPage() {
-  const [viewingId, setViewingId] = useState<number | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['companies'],
@@ -94,7 +94,7 @@ export default function CompaniesPage() {
   );
 }
 
-function CompanyDetailModal({ companyId, onClose }: { companyId: number; onClose: () => void }) {
+function CompanyDetailModal({ companyId, onClose }: { companyId: string; onClose: () => void }) {
   const queryClient = useQueryClient();
   // Editing a company is its own permission; without it the detail panel is
   // read-only rather than offering an Edit link that would be refused.

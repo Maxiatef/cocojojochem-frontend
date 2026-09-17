@@ -98,7 +98,7 @@ function FacetHeading({ children, active }: { children: React.ReactNode; active:
   );
 }
 
-function ProductCatalogInner({ fixedCategoryId }: { fixedCategoryId?: number }) {
+function ProductCatalogInner({ fixedCategoryId }: { fixedCategoryId?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -512,7 +512,7 @@ function ProductCatalogInner({ fixedCategoryId }: { fixedCategoryId?: number }) 
   );
 }
 
-export function ProductCatalog(props: { fixedCategoryId?: number }) {
+export function ProductCatalog(props: { fixedCategoryId?: string }) {
   return (
     <Suspense>
       <ProductCatalogInner {...props} />

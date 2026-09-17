@@ -29,7 +29,7 @@ export default function QuoteRequestsPage() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: RequestStatus }) =>
+    mutationFn: ({ id, status }: { id: string; status: RequestStatus }) =>
       api.patch(`/wholesale/quote-requests/${id}/status`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['quote-requests'] }),
     onError: (err) => setError(getFriendlyErrorMessage(err)),

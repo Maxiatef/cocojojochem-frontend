@@ -10,7 +10,7 @@ const CART_KEY = 'cocojojochem_cart';
 const CART_EVENT = 'cocojojochem-cart-changed';
 
 export interface LocalCartItem {
-  variantId: number;
+  variantId: string;
   productSlug: string;
   productName: string;
   variantLabel: string;
@@ -23,7 +23,13 @@ export interface LocalCartItem {
 function readCart(): LocalCartItem[] {
   if (typeof window === 'undefined') return [];
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const raw = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    if (!Array.isArray(raw)) return [];
+    // Items saved before ids became uuids carry a number here. They name no
+    // variant any more, so checkout would reject the whole cart with a
+    // validation error the customer cannot act on. Dropping them loses the
+    // stale rows and leaves a cart that still works.
+    return raw.filter((i) => i && typeof i.variantId === 'string');
   } catch {
     return [];
   }
@@ -45,14 +51,14 @@ export function addToCart(item: LocalCartItem) {
   writeCart(items);
 }
 
-export function updateCartQuantity(variantId: number, quantity: number) {
+export function updateCartQuantity(variantId: string, quantity: number) {
   const items = readCart()
     .map((i) => (i.variantId === variantId ? { ...i, quantity } : i))
     .filter((i) => i.quantity > 0);
   writeCart(items);
 }
 
-export function removeFromCart(variantId: number) {
+export function removeFromCart(variantId: string) {
   writeCart(readCart().filter((i) => i.variantId !== variantId));
 }
 

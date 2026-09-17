@@ -51,7 +51,7 @@ export function TrackingTimeline({
   theme = 'shop',
   showSummary = true,
 }: {
-  orderId: number;
+  orderId: string;
   enabled: boolean;
   client: TrackingApiClient;
   /** GET /orders/:id/tracking/admin vs GET /orders/:id/tracking */

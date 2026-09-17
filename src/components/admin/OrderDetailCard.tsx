@@ -1,6 +1,7 @@
 import { Order } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { Badge } from '@/components/ui';
+import { displayId } from '@/lib/ids';
 
 export function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -19,7 +20,7 @@ export function OrderDetailCard({ order }: { order: Order }) {
   return (
     <div className="rounded-lg border border-slate-200 p-3">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-900">Order #{order.id}</p>
+        <p className="text-sm font-semibold text-slate-900">Order {displayId(order.id)}</p>
         <div className="flex items-center gap-2">
           <Badge status={order.status} />
           <span className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleString()}</span>

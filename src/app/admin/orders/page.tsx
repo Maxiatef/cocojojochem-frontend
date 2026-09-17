@@ -26,6 +26,7 @@ import { OrderStatusStepper } from '@/components/OrderStatusStepper';
 import { useCan } from '@/components/AdminShell';
 import { formatUsd } from '@/lib/pricing';
 import { StatusCard } from '@/components/admin/StatusCard';
+import { displayId } from '@/lib/ids';
 
 interface OrderAdminStats {
   total: number;
@@ -64,7 +65,7 @@ export default function OrdersPage() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
+    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       api.patch(`/orders/${id}/status`, { status }),
     onSuccess: (_res, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders-admin'] });
@@ -142,7 +143,7 @@ export default function OrdersPage() {
             <tbody>
               {orders.map((o) => (
                 <tr key={o.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-5 py-3.5 font-medium text-slate-900">#{o.id}</td>
+                  <td className="px-5 py-3.5 font-medium text-slate-900">{displayId(o.id)}</td>
                   <td className="px-5 py-3.5">
                     {o.user ? (
                       <>
@@ -286,7 +287,7 @@ function CancelOrderControl({ order }: { order: Order }) {
       <ConfirmDialog
         open={confirming}
         title="Cancel order"
-        message={`Cancel order #${order.id}? The customer will not be automatically notified, and this cannot be undone from here.`}
+        message={`Cancel order ${displayId(order.id)}? The customer will not be automatically notified, and this cannot be undone from here.`}
         confirmLabel="Cancel Order"
         loading={cancelOrder.isPending}
         onConfirm={() => cancelOrder.mutate()}
@@ -304,7 +305,7 @@ function ViewOrderModal({ order, onClose }: { order: Order; onClose: () => void 
   const company = order.user?.company || null;
 
   return (
-    <Modal open onClose={onClose} title={`Order #${order.id}`} size="lg">
+    <Modal open onClose={onClose} title={`Order ${displayId(order.id)}`} size="lg">
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Badge status={order.status} />
@@ -458,7 +459,7 @@ function ManageShippingModal({
   const canEditTracking = useCan('canEditOrderTracking');
 
   return (
-    <Modal open onClose={onClose} title={`Manage Shipping — Order #${order.id}`} size="lg">
+    <Modal open onClose={onClose} title={`Manage Shipping — Order ${displayId(order.id)}`} size="lg">
       <div className="space-y-6">
         <div>
           <div className="mb-3 flex items-center justify-between">

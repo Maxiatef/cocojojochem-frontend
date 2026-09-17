@@ -7,7 +7,7 @@ import { SITE_URL } from '@/lib/seo';
 // rebuilding it on every crawler hit is not.
 export const revalidate = 3600;
 
-type AzIndex = Record<string, { id: number; name: string; slug: string }[]>;
+type AzIndex = Record<string, { id: string; name: string; slug: string }[]>;
 
 /**
  * Generates /sitemap.xml. There was none in any form before, on a site whose

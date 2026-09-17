@@ -55,7 +55,7 @@ export function CategoryMenu({ active }: { active: boolean }) {
   const [categories, setCategories] = useState<CategoryNode[] | null>(null);
   const [failed, setFailed] = useState(false);
   /** Which top-level category the right pane is showing. */
-  const [activeRoot, setActiveRoot] = useState<number | null>(null);
+  const [activeRoot, setActiveRoot] = useState<string | null>(null);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   // A pointer leaving the trigger on its way to the panel crosses a few pixels

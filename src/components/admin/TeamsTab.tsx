@@ -40,11 +40,11 @@ import { TeamActivityFeed } from '@/components/admin/TeamActivityFeed';
 import { TeamReportPanel } from '@/components/admin/TeamReportPanel';
 
 interface TeamFormState {
-  id: number | null;
+  id: string | null;
   name: string;
   description: string;
   managerId: string;
-  memberIds: number[];
+  memberIds: string[];
 }
 
 const EMPTY_FORM: TeamFormState = {
@@ -95,7 +95,7 @@ export function TeamsTab() {
       const payload = {
         name: body.name.trim(),
         description: body.description.trim() || null,
-        managerId: body.managerId ? Number(body.managerId) : null,
+        managerId: body.managerId || null,
         memberIds: body.memberIds,
       };
       return body.id
@@ -111,7 +111,7 @@ export function TeamsTab() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/teams/${id}`),
+    mutationFn: (id: string) => api.delete(`/teams/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);
@@ -148,7 +148,7 @@ export function TeamsTab() {
     setModalOpen(true);
   }
 
-  function toggleMember(id: number) {
+  function toggleMember(id: string) {
     setForm((prev) => ({
       ...prev,
       memberIds: prev.memberIds.includes(id)

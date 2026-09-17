@@ -19,6 +19,7 @@ import { Badge, Card, ErrorState, LoadingState, PageHeader, StatCard } from '@/c
 import { formatUsd } from '@/lib/pricing';
 import { AlertTriangleIcon, BoxIcon, BuildingIcon, DollarIcon, InboxIcon } from '@/components/icons';
 import { ProductEditLink } from '@/components/admin/ProductEditLink';
+import { displayId } from '@/lib/ids';
 
 export default function AdminOverviewPage() {
   const overview = useQuery({
@@ -148,7 +149,7 @@ export default function AdminOverviewPage() {
                 <tbody>
                   {d.orders.recent.map((o) => (
                     <tr key={o.id} className="border-b border-sci-border/60 last:border-0">
-                      <td className="px-6 py-3 font-medium text-sci-navy">#{o.id}</td>
+                      <td className="px-6 py-3 font-medium text-sci-navy">{displayId(o.id)}</td>
                       <td className="px-6 py-3 text-sci-muted">
                         {o.customerName || o.customerEmail || '—'}
                       </td>
@@ -214,7 +215,7 @@ export default function AdminOverviewPage() {
                   {d.inventory.lowStockProducts.map((v) => (
                     <tr key={v.variantId} className="border-b border-sci-border/60 last:border-0">
                       <td className="px-6 py-3 font-medium text-sci-navy">
-                        <ProductEditLink productId={v.productId} className="hover:underline">
+                        <ProductEditLink productSlug={v.productSlug} className="hover:underline">
                           {v.productName}
                         </ProductEditLink>
                       </td>

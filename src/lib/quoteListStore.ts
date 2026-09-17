@@ -11,7 +11,7 @@ const QUOTE_LIST_KEY = 'cocojojochem_quote_list';
 const QUOTE_LIST_EVENT = 'cocojojochem-quote-list-changed';
 
 export interface QuoteListItem {
-  productId: number;
+  productId: string;
   productSlug: string;
   productName: string;
   variantLabel: string | null;
@@ -22,7 +22,11 @@ export interface QuoteListItem {
 function readQuoteList(): QuoteListItem[] {
   if (typeof window === 'undefined') return [];
   try {
-    return JSON.parse(localStorage.getItem(QUOTE_LIST_KEY) || '[]');
+    const raw = JSON.parse(localStorage.getItem(QUOTE_LIST_KEY) || '[]');
+    if (!Array.isArray(raw)) return [];
+    // Entries saved before ids became uuids hold a number and name no
+    // product, so they are dropped rather than submitted with the request.
+    return raw.filter((i) => i && typeof i.productId === 'string');
   } catch {
     return [];
   }
@@ -44,14 +48,14 @@ export function addToQuoteList(item: QuoteListItem) {
   writeQuoteList(items);
 }
 
-export function updateQuoteListQuantity(productId: number, variantLabel: string | null, quantity: number) {
+export function updateQuoteListQuantity(productId: string, variantLabel: string | null, quantity: number) {
   const items = readQuoteList()
     .map((i) => (i.productId === productId && i.variantLabel === variantLabel ? { ...i, quantity } : i))
     .filter((i) => i.quantity > 0);
   writeQuoteList(items);
 }
 
-export function removeFromQuoteList(productId: number, variantLabel: string | null) {
+export function removeFromQuoteList(productId: string, variantLabel: string | null) {
   writeQuoteList(readQuoteList().filter((i) => !(i.productId === productId && i.variantLabel === variantLabel)));
 }
 

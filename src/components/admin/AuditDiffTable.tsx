@@ -2,6 +2,7 @@
 
 import { AuditChildChange, AuditFieldChange } from '@/lib/types';
 import { formatDateTime, useSiteTimezone } from '@/lib/siteTimezone';
+import { displayId } from '@/lib/ids';
 
 const REDACTED = '«redacted»';
 
@@ -252,7 +253,7 @@ export function AuditChildChanges({ childChanges }: { childChanges: AuditChildCh
                 className="rounded-lg border border-green-100 bg-green-50/60 px-3 py-2 text-sm"
               >
                 <span className="font-medium text-green-800">Added</span>{' '}
-                <span className="text-slate-700">{row.label || `#${row.id}`}</span>
+                <span className="text-slate-700">{row.label || displayId(row.id)}</span>
                 <ValueList values={row.values} />
               </div>
             ))}
@@ -263,7 +264,7 @@ export function AuditChildChanges({ childChanges }: { childChanges: AuditChildCh
                 className="rounded-lg border border-red-100 bg-red-50/60 px-3 py-2 text-sm"
               >
                 <span className="font-medium text-red-800">Removed</span>{' '}
-                <span className="text-slate-700">{row.label || `#${row.id}`}</span>
+                <span className="text-slate-700">{row.label || displayId(row.id)}</span>
                 <ValueList values={row.values} />
               </div>
             ))}
@@ -272,7 +273,7 @@ export function AuditChildChanges({ childChanges }: { childChanges: AuditChildCh
               <div key={`m-${row.id}`} className="rounded-lg border border-slate-200 px-3 py-2">
                 <p className="mb-1.5 text-sm">
                   <span className="font-medium text-amber-800">Changed</span>{' '}
-                  <span className="text-slate-700">{row.label || `#${row.id}`}</span>
+                  <span className="text-slate-700">{row.label || displayId(row.id)}</span>
                 </p>
                 <AuditDiffTable changes={row.changes} />
               </div>

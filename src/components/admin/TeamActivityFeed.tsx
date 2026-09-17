@@ -21,6 +21,7 @@ import {
   Tr,
 } from '@/components/ui';
 import { ChildChangeChips, visibleChildChanges } from '@/components/admin/AuditDiffTable';
+import { displayId } from '@/lib/ids';
 
 const PAGE_SIZE = 25;
 
@@ -152,7 +153,7 @@ export function TeamActivityFeed({
                   <Td>
                     <span className="text-slate-900">{entry.entityLabel || entry.entityName}</span>
                     <span className="ml-1 text-xs text-slate-400">
-                      {entry.entityName} #{entry.entityId}
+                      {entry.entityName} {displayId(entry.entityId)}
                     </span>
                   </Td>
                   <Td className="text-slate-600">

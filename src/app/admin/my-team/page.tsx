@@ -231,10 +231,10 @@ function MembersTab({
  * replaces the roster rather than applying a delta, so what is ticked here is
  * exactly what the team ends up as.
  */
-function RosterModal({ currentIds, onClose }: { currentIds: number[]; onClose: () => void }) {
+function RosterModal({ currentIds, onClose }: { currentIds: string[]; onClose: () => void }) {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const [selected, setSelected] = useState<number[]>(currentIds);
+  const [selected, setSelected] = useState<string[]>(currentIds);
   const [error, setError] = useState<string | null>(null);
 
   const { data: staff, isLoading, isError } = useQuery({
@@ -253,7 +253,7 @@ function RosterModal({ currentIds, onClose }: { currentIds: number[]; onClose: (
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });
 
-  function toggle(id: number) {
+  function toggle(id: string) {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 

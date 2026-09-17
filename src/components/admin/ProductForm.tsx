@@ -32,7 +32,7 @@ import { FileIcon, ImagePlaceholderIcon, PlusIcon, StarIcon, TrashIcon } from '@
 interface SpecFormRow {
   // Round-tripped so the server patches this existing row in place instead of
   // recreating it. Undefined on a row the admin just added.
-  id?: number;
+  id?: string;
   key: string;
   value: string;
 }
@@ -42,7 +42,7 @@ const EMPTY_SPEC: SpecFormRow = { key: '', value: '' };
 interface VariantFormRow {
   // Round-tripped so the server patches this existing row in place instead of
   // recreating it. Undefined on a row the admin just added.
-  id?: number;
+  id?: string;
   sku: string;
   label: string;
   color: string;
@@ -105,12 +105,12 @@ function toVariantRow(v: Product['variants'][number]): VariantFormRow {
 
 
 export interface ProductDocumentDraft {
-  id?: number;
+  id?: string;
   url: string;
   type: ProductDocType;
   label: string;
   /** Only meaningful when type is CERTIFICATE. */
-  certificationId?: number | null;
+  certificationId?: string | null;
 }
 
 // The select carries one of these as its value. Certifications are encoded
@@ -172,8 +172,8 @@ export function ProductForm({
   const [subCategoryId, setSubCategoryId] = useState(
     product?.category?.parentId ? String(product.category.id) : '',
   );
-  const [functionIds, setFunctionIds] = useState<number[]>(product?.functions?.map((f) => f.id) || []);
-  const [certificationIds, setCertificationIds] = useState<number[]>(
+  const [functionIds, setFunctionIds] = useState<string[]>(product?.functions?.map((f) => f.id) || []);
+  const [certificationIds, setCertificationIds] = useState<string[]>(
     product?.certifications?.map((c) => c.id) || [],
   );
   const [isPublished, setIsPublished] = useState(product?.isPublished ?? true);
@@ -342,7 +342,7 @@ export function ProductForm({
       toast.success('Product created successfully.');
       // A brand new product is the one case that must navigate: staying on a
       // form with no product id would make the next save create a second copy.
-      if (saved?.id) router.push(`/admin/products/${saved.id}/edit`);
+      if (saved?.slug) router.push(`/admin/products/${saved.slug}/edit`);
       else router.push('/admin/products');
     },
     onError: (err) => {
@@ -352,7 +352,7 @@ export function ProductForm({
     },
   });
 
-  function toggleId(list: number[], id: number, setList: (v: number[]) => void) {
+  function toggleId(list: string[], id: string, setList: (v: string[]) => void) {
     setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
   }
 
@@ -447,7 +447,7 @@ export function ProductForm({
       chemicalDescriptions: chemicalDescriptions || undefined,
       // No standalone imageUrl — the backend derives the cover image from
       // gallery[0] whenever `gallery` is sent.
-      categoryId: Number(categoryId),
+      categoryId,
       functionIds,
       certificationIds,
       isPublished,
@@ -1393,7 +1393,7 @@ function DocumentsField({
                   if (value.startsWith(CERT_VALUE_PREFIX)) {
                     updateAt(i, {
                       type: 'CERTIFICATE',
-                      certificationId: Number(value.slice(CERT_VALUE_PREFIX.length)),
+                      certificationId: value.slice(CERT_VALUE_PREFIX.length),
                     });
                   } else {
                     // Clear the link when switching back to a document kind,

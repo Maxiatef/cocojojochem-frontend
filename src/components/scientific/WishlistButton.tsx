@@ -17,7 +17,7 @@ export function WishlistButton({
   variant = 'icon',
   className = '',
 }: {
-  productId: number;
+  productId: string;
   variant?: 'icon' | 'labelled';
   className?: string;
 }) {

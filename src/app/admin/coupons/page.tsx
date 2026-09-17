@@ -44,6 +44,7 @@ import {
   Tr,
 } from '@/components/ui';
 import { EditIcon, EyeIcon, PlusIcon, TrashIcon, ChartIcon, DollarIcon, TicketIcon } from '@/components/icons';
+import { displayId } from '@/lib/ids';
 
 type Tab = 'coupons' | 'analytics' | 'bulk-sales';
 
@@ -59,11 +60,11 @@ function idsToString(json: string | null | undefined): string {
   }
 }
 
-function idsToArray(json: string | null | undefined): number[] {
+function idsToArray(json: string | null | undefined): string[] {
   if (!json) return [];
   try {
     const arr = JSON.parse(json);
-    return Array.isArray(arr) ? arr.filter((n) => typeof n === 'number') : [];
+    return Array.isArray(arr) ? arr.filter((v) => typeof v === 'string') : [];
   } catch {
     return [];
   }
@@ -87,7 +88,7 @@ function fmtDate(d: string | null, tz: string) {
 // --- Coupon form state ----------------------------------------------------
 
 interface CouponFormState {
-  id: number | null;
+  id: string | null;
   code: string;
   description: string;
   type: CouponType;
@@ -102,12 +103,12 @@ interface CouponFormState {
   isActive: boolean;
   applicableToAllCategories: boolean;
   applicableToAllProducts: boolean;
-  excludedCategoryIds: number[];
-  excludedProductIds: number[];
-  excludedVariantIds: number[];
-  includedCategoryIds: number[];
-  includedProductIds: number[];
-  includedVariantIds: number[];
+  excludedCategoryIds: string[];
+  excludedProductIds: string[];
+  excludedVariantIds: string[];
+  includedCategoryIds: string[];
+  includedProductIds: string[];
+  includedVariantIds: string[];
   allowFreeShipping: boolean;
   individualUseOnly: boolean;
   excludeSaleItems: boolean;
@@ -323,15 +324,15 @@ function CouponToggle({
 // --- Bulk sale form state -----------------------------------------------
 
 interface BulkSaleFormState {
-  id: number | null;
+  id: string | null;
   name: string;
   discountPercent: string;
   startDate: string;
   endDate: string;
   isActive: boolean;
-  categoryIds: number[];
-  productIds: number[];
-  variantIds: number[];
+  categoryIds: string[];
+  productIds: string[];
+  variantIds: string[];
   applyToAllVariants: boolean;
 }
 
@@ -411,9 +412,9 @@ function IdCheckboxPicker({
   onChange,
 }: {
   label: string;
-  options: { id: number; label: string }[];
-  selected: number[];
-  onChange: (ids: number[]) => void;
+  options: { id: string; label: string }[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
 }) {
   const [search, setSearch] = useState('');
   const filtered = useMemo(
@@ -421,7 +422,7 @@ function IdCheckboxPicker({
     [options, search],
   );
 
-  function toggle(id: number) {
+  function toggle(id: string) {
     onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
   }
 
@@ -677,7 +678,7 @@ function CouponListSection({
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
+    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
       api.patch(`/coupons/${id}`, body),
     onSuccess: () => {
       invalidate();
@@ -687,7 +688,7 @@ function CouponListSection({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/coupons/${id}`),
+    mutationFn: (id: string) => api.delete(`/coupons/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);
@@ -1071,19 +1072,19 @@ function CouponDetailModal({
   onClose,
 }: {
   coupon: Coupon;
-  categoryOptions: { id: number; label: string }[];
-  productOptions: { id: number; label: string }[];
-  variantOptions: { id: number; label: string }[];
+  categoryOptions: { id: string; label: string }[];
+  productOptions: { id: string; label: string }[];
+  variantOptions: { id: string; label: string }[];
   onClose: () => void;
 }) {
   const tz = useSiteTimezone();
   const status = couponStatus(coupon);
 
-  function namesFor(ids: string | null, options: { id: number; label: string }[]): string {
+  function namesFor(ids: string | null, options: { id: string; label: string }[]): string {
     const idList = idsToArray(ids);
     if (idList.length === 0) return '—';
     const byId = new Map(options.map((o) => [o.id, o.label]));
-    return idList.map((id) => byId.get(id) || `#${id}`).join(', ');
+    return idList.map((id) => byId.get(id) || displayId(id)).join(', ');
   }
 
   const hasExclusions =
@@ -1374,7 +1375,7 @@ function BulkSalesTab() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
+    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
       api.patch(`/bulk-sales/${id}`, body),
     onSuccess: () => {
       invalidate();
@@ -1384,7 +1385,7 @@ function BulkSalesTab() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/bulk-sales/${id}`),
+    mutationFn: (id: string) => api.delete(`/bulk-sales/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);

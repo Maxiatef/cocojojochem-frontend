@@ -32,7 +32,7 @@ export function clearToken() {
 // waiting for the access token to expire.
 export function decodeToken(
   token: string,
-): { sub: number; email: string; roleId: number | null } | null {
+): { sub: number; email: string; roleId: string | null } | null {
   try {
     const payload = token.split('.')[1];
     return JSON.parse(atob(payload));

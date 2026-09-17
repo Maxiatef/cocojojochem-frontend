@@ -194,8 +194,8 @@ function GuestCartRow({
   onRemove,
 }: {
   item: LocalCartItem;
-  onUpdate: (variantId: number, quantity: number) => void;
-  onRemove: (variantId: number) => void;
+  onUpdate: (variantId: string, quantity: number) => void;
+  onRemove: (variantId: string) => void;
 }) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
 
@@ -242,7 +242,7 @@ function CustomerCartView() {
   });
 
   const updateQuantity = useMutation({
-    mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
+    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
       customerApi.patch(`/cart/items/${id}`, { quantity }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-cart'] });
@@ -252,7 +252,7 @@ function CustomerCartView() {
   });
 
   const removeItem = useMutation({
-    mutationFn: (id: number) => customerApi.delete(`/cart/items/${id}`),
+    mutationFn: (id: string) => customerApi.delete(`/cart/items/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-cart'] });
       window.dispatchEvent(new Event('cocojojochem-server-cart-changed'));

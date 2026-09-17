@@ -35,7 +35,7 @@ import { EditIcon, PlusIcon, TrashIcon, UsersIcon } from '@/components/icons';
 import { useCan } from '@/components/AdminShell';
 
 interface RoleFormState {
-  id: number | null;
+  id: string | null;
   name: string;
   description: string;
   permissions: Record<string, boolean>;
@@ -125,7 +125,7 @@ export function RolesTab() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/roles/${id}`),
+    mutationFn: (id: string) => api.delete(`/roles/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);
@@ -185,8 +185,18 @@ export function RolesTab() {
     saveMutation.mutate(form);
   }
 
+  /**
+   * Counted against the catalog, not against whatever the row happens to
+   * store. A role's permissions column can outlive the catalog — a key
+   * granted while a feature branch was running stays in the row after you
+   * switch away from it — and counting those produced "62 / 61", a fraction
+   * that cannot be true.
+   */
   const grantedCount = (role: Role) =>
-    Object.values(role.permissions ?? {}).filter(Boolean).length;
+    (groups ?? []).reduce(
+      (n, g) => n + g.permissions.filter((p) => role.permissions?.[p.key]).length,
+      0,
+    );
 
   return (
     <>
@@ -410,7 +420,7 @@ export function RolesTab() {
 
                 {canEditUser && (
                   <Link
-                    href={`/admin/users/${u.id}/edit`}
+                    href={`/admin/users/${encodeURIComponent(u.email)}/edit`}
                     className="shrink-0 text-xs font-medium text-sci-blue hover:underline"
                   >
                     Open
@@ -448,6 +458,6 @@ export function RolesTab() {
   );
 }
 
-function isSystemRole(roles: Role[] | undefined, id: number) {
+function isSystemRole(roles: Role[] | undefined, id: string) {
   return roles?.find((r) => r.id === id)?.isSystem === true;
 }

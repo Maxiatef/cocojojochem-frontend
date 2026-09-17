@@ -33,7 +33,7 @@ import { RequireStaff, useCan } from '@/components/AdminShell';
 type FunctionSort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
 interface FunctionFormState {
-  id: number | null;
+  id: string | null;
   name: string;
   slug: string;
   description: string;
@@ -90,7 +90,7 @@ function FunctionsAdminPageContent() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
+    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
       api.patch(`/wholesale/functions/${id}`, body),
     onSuccess: () => {
       invalidate();
@@ -100,7 +100,7 @@ function FunctionsAdminPageContent() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/wholesale/functions/${id}`),
+    mutationFn: (id: string) => api.delete(`/wholesale/functions/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);

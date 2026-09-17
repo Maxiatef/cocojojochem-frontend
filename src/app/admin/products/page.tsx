@@ -182,7 +182,7 @@ function ProductsPageContent() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-products'] });
 
   const togglePublishedMutation = useMutation({
-    mutationFn: ({ id, isPublished }: { id: number; isPublished: boolean }) =>
+    mutationFn: ({ id, isPublished }: { id: string; isPublished: boolean }) =>
       api.patch(`/wholesale/products/${id}`, { isPublished }),
     onSuccess: () => {
       invalidate();
@@ -375,9 +375,9 @@ function ProductsPageContent() {
                     key={p.id}
                     onClick={
                       isAdmin
-                        ? () => router.push(`/admin/products/${p.id}/edit`)
+                        ? () => router.push(`/admin/products/${p.slug}/edit`)
                         : canViewProduct
-                          ? () => router.push(`/admin/products/${p.id}/view`)
+                          ? () => router.push(`/admin/products/${p.slug}/view`)
                           : undefined
                     }
                   >
@@ -451,7 +451,7 @@ function ProductsPageContent() {
                           label={`View ${p.name}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/admin/products/${p.id}/view`);
+                            router.push(`/admin/products/${p.slug}/view`);
                           }}
                         />
                       </Td>
@@ -573,7 +573,7 @@ function ProductsAnalyticsTab() {
                 <Tr key={p.productId}>
                   <Td className="font-medium text-slate-900">
                     <span className="mr-2 text-xs text-slate-400">#{i + 1}</span>
-                    <ProductEditLink productId={p.productId} className="hover:underline">
+                    <ProductEditLink productSlug={p.productSlug} className="hover:underline">
                       {p.name}
                     </ProductEditLink>
                   </Td>
@@ -619,7 +619,7 @@ function ProductsAnalyticsTab() {
                       .join(', ')}
                   </Td>
                   <Td align="right">
-                    <ProductEditLink productId={p.id} className="text-xs font-medium text-sci-blue hover:underline">
+                    <ProductEditLink productSlug={p.slug} className="text-xs font-medium text-sci-blue hover:underline">
                       Restock
                     </ProductEditLink>
                   </Td>
@@ -664,7 +664,7 @@ function ProductsAnalyticsTab() {
                       <Td className="text-slate-600">{v.label}</Td>
                       <Td align="right" className="font-medium text-amber-700">{v.stockQuantity}</Td>
                       <Td align="right">
-                        <ProductEditLink productId={p.id} className="text-xs font-medium text-sci-blue hover:underline">
+                        <ProductEditLink productSlug={p.slug} className="text-xs font-medium text-sci-blue hover:underline">
                           Restock
                         </ProductEditLink>
                       </Td>
@@ -696,7 +696,7 @@ function ProductsAnalyticsTab() {
               {(sales?.slowMovers || []).map((p) => (
                 <Tr key={p.productId}>
                   <Td className="font-medium text-slate-900">
-                    <ProductEditLink productId={p.productId} className="hover:underline">
+                    <ProductEditLink productSlug={p.productSlug} className="hover:underline">
                       {p.name}
                     </ProductEditLink>
                   </Td>

@@ -40,7 +40,7 @@ import { useCan } from '@/components/AdminShell';
  */
 
 interface TestimonialFormState {
-  id: number | null;
+  id: string | null;
   authorName: string;
   company: string;
   quote: string;
@@ -106,7 +106,7 @@ export function TestimonialsTab() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/wholesale/testimonials/${id}`),
+    mutationFn: (id: string) => api.delete(`/wholesale/testimonials/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);

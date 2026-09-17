@@ -28,11 +28,11 @@ interface CategoryDetail extends Category {
 
 // Read-only detail view (a single GET, no writes), and it's what the View
 // button on the categories list opens — so sales must be able to reach it.
-export default function ViewCategoryPage({ params }: { params: { id: string } }) {
+export default function ViewCategoryPage({ params }: { params: { slug: string } }) {
   const tz = useSiteTimezone();
   const { data: category, isLoading, isError } = useQuery({
-    queryKey: ['admin-category-detail', params.id],
-    queryFn: () => api.get<CategoryDetail>(`/wholesale/categories/id/${params.id}`),
+    queryKey: ['admin-category-detail', params.slug],
+    queryFn: () => api.get<CategoryDetail>(`/wholesale/categories/slug/${params.slug}/detail`),
   });
 
   const products = category?.products || [];
@@ -102,7 +102,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
                   {category.children.map((c) => (
                     <Link
                       key={c.id}
-                      href={`/admin/categories/${c.id}`}
+                      href={`/admin/categories/${c.slug}`}
                       className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-200"
                     >
                       {c.name}
@@ -130,7 +130,7 @@ export default function ViewCategoryPage({ params }: { params: { id: string } })
                     {products.map((p) => (
                       <Tr key={p.id}>
                         <Td className="font-medium text-slate-900">
-                          <ProductEditLink productId={p.id} className="hover:text-sci-blue hover:underline">
+                          <ProductEditLink productSlug={p.slug} className="hover:text-sci-blue hover:underline">
                             {p.name}
                           </ProductEditLink>
                         </Td>

@@ -35,11 +35,12 @@ import {
   ChildChangeChips,
   visibleChildChanges,
 } from '@/components/admin/AuditDiffTable';
+import { displayId } from '@/lib/ids';
 
 // Staff are grouped by role so a long list stays scannable, with anyone no
 // longer on staff kept at the bottom rather than dropped — their entries are
 // still in the log and have to stay reachable.
-type ActorOption = { id: number; email: string; role: string; status?: string };
+type ActorOption = { id: string; email: string; role: string; status?: string };
 
 /**
  * Sentinel for the one entry in the role dropdown that is not a role.
@@ -308,7 +309,7 @@ function AuditLog() {
                   <Td>
                     <span className="text-slate-900">{entry.entityLabel || entry.entityName}</span>
                     <span className="ml-1 text-xs text-slate-400">
-                      {entry.entityName} #{entry.entityId}
+                      {entry.entityName} {displayId(entry.entityId)}
                     </span>
                   </Td>
                   <Td className="text-slate-600">

@@ -12,6 +12,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { OrderShippingModal } from '@/components/commerce/OrderShippingModal';
 import { ShippingIcon, ImagePlaceholderIcon } from '@/components/icons';
 import { Container } from '@/components/scientific/primitives';
+import { displayId, shortId } from '@/lib/ids';
 
 /**
  * The customer account, in the Scientific edition.
@@ -51,12 +52,15 @@ const STATUS_PILL: Record<string, string> = {
 
 const MONO = { fontFamily: 'var(--font-account-mono), monospace' } as const;
 
-function accountId(id: number) {
-  return `ACCT-${String(id).padStart(6, '0')}`;
+// Padding a uuid to six characters does nothing — it is already 36 — so both
+// of these show the id's first block instead. Long enough to quote in a
+// support email, short enough to read.
+function accountId(id: string) {
+  return `ACCT-${shortId(id)}`;
 }
 
-function orderNumber(id: number) {
-  return `#${String(id).padStart(6, '0')}`;
+function orderNumber(id: string) {
+  return displayId(id);
 }
 
 function shortDate(value: string) {

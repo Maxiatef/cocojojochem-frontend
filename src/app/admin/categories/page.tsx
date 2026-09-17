@@ -41,7 +41,7 @@ import { RequireStaff, useCan } from '@/components/AdminShell';
 type CategorySort = 'name_asc' | 'name_desc' | 'products_desc' | 'products_asc';
 
 interface CategoryFormState {
-  id: number | null;
+  id: string | null;
   // Display only — the form never sends this back.
   createdAt?: string;
   name: string;
@@ -121,7 +121,7 @@ function CategoriesAdminPageContent() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
+    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
       api.patch(`/wholesale/categories/${id}`, body),
     onSuccess: () => {
       invalidate();
@@ -131,7 +131,7 @@ function CategoriesAdminPageContent() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/wholesale/categories/${id}`),
+    mutationFn: (id: string) => api.delete(`/wholesale/categories/${id}`),
     onSuccess: () => {
       invalidate();
       setPendingDelete(null);
@@ -176,7 +176,7 @@ function CategoriesAdminPageContent() {
       imageUrl: form.imageUrl || undefined,
       // Sent as null, not omitted: clearing the parent has to be able to
       // promote a subcategory back to the top level.
-      parentId: form.parentId ? Number(form.parentId) : null,
+      parentId: form.parentId || null,
     };
     if (form.id) {
       updateMutation.mutate({ id: form.id, body });
@@ -268,7 +268,7 @@ function CategoriesAdminPageContent() {
                   <Td className="whitespace-nowrap text-slate-600">{formatDate(c.createdAt, tz)}</Td>
                   <Td align="right">
                     <div className="flex justify-end gap-1.5">
-                      <Link href={`/admin/categories/${c.id}`}>
+                      <Link href={`/admin/categories/${c.slug}`}>
                         <IconButton icon={EyeIcon} label="View" onClick={() => {}} />
                       </Link>
                       {canEdit && (

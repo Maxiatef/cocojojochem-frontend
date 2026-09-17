@@ -777,8 +777,8 @@ function StaffTab() {
       email: form.email,
       phone: form.phone || undefined,
       password: form.password,
-      roleId: Number(form.roleId),
-      teamId: form.teamId ? Number(form.teamId) : null,
+      roleId: form.roleId,
+      teamId: form.teamId || null,
     });
   }
 
@@ -813,7 +813,7 @@ function StaffTab() {
               {staff.map((u) => (
                 <Tr
                   key={u.id}
-                  onClick={canEditStaff ? () => router.push(`/admin/users/${u.id}/edit`) : undefined}
+                  onClick={canEditStaff ? () => router.push(`/admin/users/${encodeURIComponent(u.email)}/edit`) : undefined}
                 >
                   <Td>
                     <div className="font-medium text-slate-900">{u.fullName}</div>

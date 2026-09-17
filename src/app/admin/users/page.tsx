@@ -80,7 +80,7 @@ export default function UsersAdminPage() {
 
   const [form, setForm] = useState<StaffFormState>(EMPTY_STAFF_FORM);
   const [error, setError] = useState<string | null>(null);
-  const [viewingId, setViewingId] = useState<number | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-users', search, roleFilter, statusFilter],
@@ -119,13 +119,13 @@ export default function UsersAdminPage() {
   });
 
   const roleMutation = useMutation({
-    mutationFn: ({ id, roleId }: { id: number; roleId: number | null }) =>
+    mutationFn: ({ id, roleId }: { id: string; roleId: string | null }) =>
       api.patch(`/users/${id}/role`, { roleId }),
     onSuccess: invalidate,
   });
 
   const softDeleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete<{ revokedSessions: number }>(`/users/${id}`),
+    mutationFn: (id: string) => api.delete<{ revokedSessions: number }>(`/users/${id}`),
     onSuccess: (res) => {
       invalidate();
       setPending(null);
@@ -143,7 +143,7 @@ export default function UsersAdminPage() {
   });
 
   const restoreMutation = useMutation({
-    mutationFn: (id: number) => api.patch(`/users/${id}/restore`, {}),
+    mutationFn: (id: string) => api.patch(`/users/${id}/restore`, {}),
     onSuccess: () => {
       invalidate();
       setPending(null);
@@ -156,7 +156,7 @@ export default function UsersAdminPage() {
   });
 
   const purgeMutation = useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       api.delete<{ detachedOrders: number; detachedQuoteRequests: number }>(`/users/${id}/permanent`),
     onSuccess: (res) => {
       invalidate();
@@ -201,7 +201,7 @@ export default function UsersAdminPage() {
       email: form.email,
       phone: form.phone || undefined,
       password: form.password,
-      roleId: Number(form.roleId),
+      roleId: form.roleId,
     });
   }
 
@@ -329,7 +329,7 @@ export default function UsersAdminPage() {
                           onChange={(e) =>
                             roleMutation.mutate({
                               id: u.id,
-                              roleId: e.target.value ? Number(e.target.value) : null,
+                              roleId: e.target.value || null,
                             })
                           }
                           className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
@@ -382,7 +382,7 @@ export default function UsersAdminPage() {
                         ) : (
                           <>
                             {canEdit && (
-                              <Link href={`/admin/users/${u.id}/edit`}>
+                              <Link href={`/admin/users/${encodeURIComponent(u.email)}/edit`}>
                                 <IconButton icon={EditIcon} label={`Edit ${u.fullName}`} />
                               </Link>
                             )}
@@ -473,7 +473,7 @@ export default function UsersAdminPage() {
   );
 }
 
-function UserDetailModal({ userId, onClose }: { userId: number; onClose: () => void }) {
+function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => void }) {
   const { data: user, isLoading, isError } = useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: () => api.get<UserDetail>(`/users/${userId}/detail`),

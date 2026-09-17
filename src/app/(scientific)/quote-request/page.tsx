@@ -29,7 +29,7 @@ import { Container, Eyebrow } from '@/components/scientific/primitives';
 
 interface QuoteListRow {
   key: string;
-  productId: number;
+  productId: string;
   productSlug: string;
   productName: string;
   variantLabel: string | null;
@@ -433,14 +433,14 @@ function CustomerQuoteListView({ email }: { email: string }) {
   }
 
   const updateQuantity = useMutation({
-    mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
+    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
       customerApi.patch(`/quote-list/items/${id}`, { quantity }),
     onSuccess: notifyChanged,
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });
 
   const removeItem = useMutation({
-    mutationFn: (id: number) => customerApi.delete(`/quote-list/items/${id}`),
+    mutationFn: (id: string) => customerApi.delete(`/quote-list/items/${id}`),
     onSuccess: notifyChanged,
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });

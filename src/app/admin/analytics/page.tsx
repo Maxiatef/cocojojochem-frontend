@@ -183,7 +183,7 @@ function SalesProductsTab() {
                   {data.products.map((p) => (
                     <Tr key={p.productId}>
                       <Td className="font-medium text-slate-900">
-                        <ProductEditLink productId={p.productId} className="hover:underline">
+                        <ProductEditLink productSlug={p.productSlug} className="hover:underline">
                           {p.name}
                         </ProductEditLink>
                       </Td>
@@ -260,7 +260,7 @@ function SalesProductsTab() {
                   {data.slowMovers.map((p) => (
                     <Tr key={p.productId}>
                       <Td className="font-medium text-slate-900">
-                        <ProductEditLink productId={p.productId} className="hover:underline">
+                        <ProductEditLink productSlug={p.productSlug} className="hover:underline">
                           {p.name}
                         </ProductEditLink>
                       </Td>

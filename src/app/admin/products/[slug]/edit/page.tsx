@@ -12,7 +12,7 @@ import { RequirePermission, useCan } from '@/components/AdminShell';
 import { RecordHistory } from '@/components/admin/RecordHistory';
 import { TrashIcon } from '@/components/icons';
 
-function EditProductPageContent({ params }: { params: { id: string } }) {
+function EditProductPageContent({ params }: { params: { slug: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   // Deleting is a separate permission from editing, so an account that may
@@ -24,15 +24,17 @@ function EditProductPageContent({ params }: { params: { id: string } }) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-product', params.id],
-    queryFn: () => api.get<Product>(`/wholesale/products/by-id/${params.id}`),
+    queryKey: ['admin-product', params.slug],
+    queryFn: () => api.get<Product>(`/wholesale/products/by-slug/${params.slug}`),
   });
 
   // Deleting lives here rather than on the list, because this page is now the
   // product's only detail view — you delete a product while looking at it,
   // not from a row you might have mis-clicked.
   const deleteMutation = useMutation({
-    mutationFn: () => api.delete(`/wholesale/products/${params.id}`),
+    // By id, not slug: the slug is how the page was reached, but the
+    // record is identified by its id everywhere it is acted on.
+    mutationFn: () => api.delete(`/wholesale/products/${data!.id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['admin-products-stats'] });
@@ -106,7 +108,7 @@ function EditProductPageContent({ params }: { params: { id: string } }) {
 // This page is both the view and the editor — there is no separate read-only
 // product page. Editing is ADMIN-only server-side, so the whole page is gated
 // to match rather than showing controls the API would refuse.
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage({ params }: { params: { slug: string } }) {
   return (
     <RequirePermission permission="canEditProduct">
       <EditProductPageContent params={params} />

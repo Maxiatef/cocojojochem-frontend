@@ -11,6 +11,7 @@ import { formatUsd } from '@/lib/pricing';
 import { carrierLabel, carrierTrackingUrl } from '@/lib/carrierTracking';
 import { orderCancelEligibility } from '@/lib/orderCancel';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { displayId } from '@/lib/ids';
 
 // Customer-facing shipping view, opened from the shipping icon on both
 // /account/orders and the /account dashboard. Read-only apart from
@@ -38,7 +39,7 @@ export function OrderShippingModal({ order, onClose }: { order: Order; onClose: 
       // mounted. Tracking is dropped too since a cancelled order has none.
       queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
       queryClient.invalidateQueries({ queryKey: ['order-tracking', order.id] });
-      toast.success(`Order #${order.id} has been cancelled.`);
+      toast.success(`Order ${displayId(order.id)} has been cancelled.`);
       setConfirmOpen(false);
       onClose();
     },
@@ -53,7 +54,7 @@ export function OrderShippingModal({ order, onClose }: { order: Order; onClose: 
 
   return (
     <>
-      <Modal open onClose={onClose} title={`Shipping — Order #${order.id}`}>
+      <Modal open onClose={onClose} title={`Shipping — Order ${displayId(order.id)}`}>
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-slate-500">
@@ -139,7 +140,7 @@ export function OrderShippingModal({ order, onClose }: { order: Order; onClose: 
 
       <ConfirmDialog
         open={confirmOpen}
-        title={`Cancel order #${order.id}?`}
+        title={`Cancel order ${displayId(order.id)}?`}
         message={`This cancels the whole order for ${formatUsd(order.total)} and can't be undone.${
           order.status === 'PROCESSING'
             ? ' Your payment will be refunded to the card you used at checkout, which usually takes 5–10 business days.'

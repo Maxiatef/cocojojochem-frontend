@@ -37,13 +37,13 @@ import { ImagePlaceholderIcon } from '@/components/icons';
  * Someone who *can* edit is sent to the editor instead — two detail views for
  * the same product would just be a place for the two to drift apart.
  */
-function ProductViewContent({ params }: { params: { id: string } }) {
+function ProductViewContent({ params }: { params: { slug: string } }) {
   const canEdit = useCan('canEditProduct');
   const tz = useSiteTimezone();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-product', params.id],
-    queryFn: () => api.get<Product>(`/wholesale/products/by-id/${params.id}`),
+    queryKey: ['admin-product', params.slug],
+    queryFn: () => api.get<Product>(`/wholesale/products/by-slug/${params.slug}`),
   });
 
   return (
@@ -62,7 +62,7 @@ function ProductViewContent({ params }: { params: { id: string } }) {
         </Link>
         {canEdit && data && (
           <Link
-            href={`/admin/products/${data.id}/edit`}
+            href={`/admin/products/${data.slug}/edit`}
             className="text-sm font-medium text-sci-blue underline-offset-2 hover:underline"
           >
             Open the editor
@@ -334,7 +334,7 @@ function priceOf(v: ProductVariant): string {
   return `${price} → $${v.salePrice}`;
 }
 
-export default function ProductViewPage({ params }: { params: { id: string } }) {
+export default function ProductViewPage({ params }: { params: { slug: string } }) {
   return (
     <RequirePermission permission="canViewProducts">
       <ProductViewContent params={params} />

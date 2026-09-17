@@ -33,7 +33,7 @@ const TABS: { label: string; value: ContactMessageStatus | 'ALL' }[] = [
 export default function AdminMessagesPage() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<ContactMessageStatus | 'ALL'>('ALL');
-  const [openId, setOpenId] = useState<number | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ContactMessage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,21 +70,21 @@ export default function AdminMessagesPage() {
   const canDelete = useCan('canDeleteContactMessage');
 
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: ContactMessageStatus }) =>
+    mutationFn: ({ id, status }: { id: string; status: ContactMessageStatus }) =>
       api.patch<ContactMessage>(`/wholesale/contact-messages/${id}/status`, { status }),
     onSuccess: applyUpdatedMessage,
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });
 
   const setReplied = useMutation({
-    mutationFn: ({ id, replied }: { id: number; replied: boolean }) =>
+    mutationFn: ({ id, replied }: { id: string; replied: boolean }) =>
       api.patch<ContactMessage>(`/wholesale/contact-messages/${id}/replied`, { replied }),
     onSuccess: applyUpdatedMessage,
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });
 
   const deleteMessage = useMutation({
-    mutationFn: (id: number) => api.delete(`/wholesale/contact-messages/${id}`),
+    mutationFn: (id: string) => api.delete(`/wholesale/contact-messages/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-messages'] });
       queryClient.invalidateQueries({ queryKey: ['contact-messages-stats'] });

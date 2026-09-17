@@ -17,24 +17,29 @@ import { useCan } from '@/components/AdminShell';
  * a new product listing can't reintroduce the same dead end.
  */
 export function ProductEditLink({
-  productId,
+  productSlug,
   className = '',
   children,
 }: {
-  productId: number | string;
+  /**
+   * The editor is addressed by slug, so its URL reads as the product rather
+   * than a uuid. Every payload that lists products carries one; a row without
+   * it renders as plain text rather than a link to nowhere.
+   */
+  productSlug?: string | null;
   className?: string;
   children: React.ReactNode;
 }) {
   const isAdmin = useCan('canEditProduct');
 
-  if (!isAdmin) {
+  if (!isAdmin || !productSlug) {
     // Plain text, not a disabled link — nothing here hints at an action a
     // sales user can't take.
     return <span className={className}>{children}</span>;
   }
 
   return (
-    <Link href={`/admin/products/${productId}/edit`} className={className}>
+    <Link href={`/admin/products/${productSlug}/edit`} className={className}>
       {children}
     </Link>
   );

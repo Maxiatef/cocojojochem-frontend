@@ -8,6 +8,8 @@ import { CloseIcon } from '@/components/icons';
 type ToastVariant = 'success' | 'error' | 'info';
 
 interface ToastItem {
+  // A render-local counter for React keys, not a record id — nothing is
+  // stored or fetched by it.
   id: number;
   message: string;
   variant: ToastVariant;
