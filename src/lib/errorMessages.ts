@@ -89,6 +89,15 @@ export function getFriendlyErrorMessage(err: unknown, context: ErrorContext = 'd
     // 1. A form-specific override always wins — those exist precisely to
     //    replace the API's wording (e.g. login deliberately says "Incorrect
     //    email or password" rather than echoing which half was wrong).
+    // …except when the server has deliberately said something more specific
+    // than "wrong credentials". A suspended or recycled account reaches this
+    // path only AFTER the password compare succeeded, so the server is free
+    // to name the reason — and the person needs to know, or they will keep
+    // retrying a password that is in fact correct.
+    if (context === 'login' && err.status === 401 && err.serverMessage) {
+      return err.serverMessage;
+    }
+
     if (context !== 'default') {
       const contextCopy = STATUS_MESSAGES[context]?.[err.status];
       if (contextCopy) return contextCopy;
