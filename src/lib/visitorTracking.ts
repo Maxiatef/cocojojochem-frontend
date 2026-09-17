@@ -1,5 +1,7 @@
 'use client';
 
+import { hasAnalyticsConsent } from './consent';
+
 // Lightweight in-house visitor tracking — no third-party analytics SDK.
 // visitorId is a random id generated once per browser and persisted in
 // localStorage, purely to de-duplicate "unique visitors" from raw page-view
@@ -27,6 +29,11 @@ function getOrCreateVisitorId(): string {
 // `keepalive` so the request survives a fast route change/unload.
 export function trackPageView(path: string) {
   try {
+    // Nothing is stored and nothing is sent until the visitor has said yes.
+    // Silence is not consent: an unanswered notice reads the same as a
+    // decline here, which is the only reading that makes the notice honest.
+    if (!hasAnalyticsConsent()) return;
+
     const visitorId = getOrCreateVisitorId();
     fetch(`${API_URL}/track/pageview`, {
       method: 'POST',

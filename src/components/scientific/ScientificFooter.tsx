@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@/components/scientific/primitives';
+import { CookieSettingsLink } from '@/components/scientific/CookieSettingsLink';
 import { FooterNewsletter } from '@/components/scientific/FooterNewsletter';
 
 /** COCOJOJO "Scientific edition" footer (Figma 33:322). */
@@ -88,6 +89,11 @@ export function ScientificFooter() {
                   {link.label}
                 </Link>
               ))}
+              {/* Withdrawing consent has to be as easy as giving it, so this
+                  sits with the policies rather than behind one of them. */}
+              {column.heading === 'Legal' && (
+                <CookieSettingsLink className="text-left font-sci-body text-sci-body hover:underline" />
+              )}
             </div>
           ))}
         </div>

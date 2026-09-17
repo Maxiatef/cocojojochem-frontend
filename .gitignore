@@ -2,4 +2,8 @@ node_modules
 .next
 .env.local
 *.log
-tsconfig.tsbuildinfo
+
+# TypeScript's incremental build cache. One is written per project file
+# (tsconfig.tsbuildinfo, tsconfig.build.tsbuildinfo), it changes on every
+# typecheck, and it is machine-specific — so it is noise in every diff.
+*.tsbuildinfo

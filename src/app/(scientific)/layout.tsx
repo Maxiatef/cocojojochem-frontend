@@ -1,6 +1,7 @@
 import { ScientificHeader } from '@/components/scientific/ScientificHeader';
 import { ScientificFooter } from '@/components/scientific/ScientificFooter';
 import { VisitorTracker } from '@/components/commerce/VisitorTracker';
+import { ConsentNotice } from '@/components/scientific/ConsentNotice';
 import { SCI_FONT_VARS } from '@/lib/fonts';
 
 /**
@@ -25,6 +26,7 @@ export default function ScientificLayout({ children }: { children: React.ReactNo
       <ScientificHeader />
       <main className="flex-1">{children}</main>
       <ScientificFooter />
+      <ConsentNotice />
     </div>
   );
 }
