@@ -92,9 +92,9 @@ export function Hero() {
           </h1>
 
           <p className="font-sci-body text-sci-body text-white">
-            Quality chemicals. Exceptional ingredients.
+            Quality chemicals. Exceptional ingredients. As a result, we source the best for your formulations.
             <br />
-            A partner who sees your potential.
+            Above all, a partner who sees your potential.
           </p>
 
           {/* Stacked on mobile, as the design has them — side by side they
@@ -109,7 +109,8 @@ export function Hero() {
           </div>
 
           <p className="font-sci-body text-sci-label font-medium text-[#adc6d8]">
-            From a first formulation to full-scale production.
+            In particular, from a first formulation to full-scale production. In short, we support
+            your journey from concept to market.
           </p>
         </div>
 

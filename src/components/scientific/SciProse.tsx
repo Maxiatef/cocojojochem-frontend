@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Container, Eyebrow, SectionHeading } from '@/components/scientific/primitives';
 
 /**
@@ -17,12 +18,28 @@ export function SciProse({
   eyebrow,
   heading,
   paragraphs,
+  subheadings = [],
 }: {
   eyebrow: string;
   heading: string;
   paragraphs: string[];
+  /**
+   * Optional `<h3>` waypoints inside the collapsed body, each keyed to the
+   * index in `paragraphs` it precedes (1 is the first paragraph after the
+   * always-visible lead, since index 0 never gets a heading of its own).
+   *
+   * Nine unbroken paragraphs is a wall for a crawler's readability check and
+   * for a person skimming it — the SEO crawl's "subheading distribution"
+   * assessment flags any run past ~300 words with nothing to break it up,
+   * and a human reader hits the same wall sooner. Optional and empty by
+   * default: `about`, `categories` and `functions` all call this component
+   * with continuous prose that hasn't been split into labeled sections yet,
+   * and passing nothing leaves them exactly as they render today.
+   */
+  subheadings?: { beforeIndex: number; text: string }[];
 }) {
   const [first, ...rest] = paragraphs;
+  const headingBefore = new Map(subheadings.map((s) => [s.beforeIndex, s.text]));
 
   return (
     <section className="border-t border-sci-border bg-white py-16">
@@ -40,9 +57,20 @@ export function SciProse({
                 <span className="hidden group-open:inline">Show less ↑</span>
               </summary>
               <div className="mt-4 flex flex-col gap-4">
-                {rest.map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
+                {rest.map((p, i) => {
+                  const index = i + 1; // rest[i] is paragraphs[index]
+                  const subheading = headingBefore.get(index);
+                  return (
+                    <Fragment key={i}>
+                      {subheading && (
+                        <h3 className="mt-2 font-sci-heading text-[20px] font-semibold leading-7 text-sci-navy first:mt-0">
+                          {subheading}
+                        </h3>
+                      )}
+                      <p>{p}</p>
+                    </Fragment>
+                  );
+                })}
               </div>
             </details>
           )}

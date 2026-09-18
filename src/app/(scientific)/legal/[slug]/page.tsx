@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getLegalPolicy, legalPolicies } from '@/lib/legalPolicies';
+import { getLegalPolicy, legalPolicies, type LegalPolicy } from '@/lib/legalPolicies';
 import { clampDescription, pageMetadata } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
 import { LegalDocument } from '@/components/scientific/LegalDocument';
@@ -21,7 +21,7 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const policy = getLegalPolicy(params.slug);
+  const policy: LegalPolicy | undefined = getLegalPolicy(params.slug);
 
   if (!policy) {
     return pageMetadata({
@@ -33,9 +33,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   }
 
   return pageMetadata({
-    title: policy.title,
+    title: policy.metaTitle || policy.title,
     description: clampDescription(
-      policy.summary,
+      policy.metaDescription || policy.summary,
       `Read the COCOJOJO ${policy.title}. Effective ${policy.effectiveDate || 'on publication'}.`,
     ),
     path: `/legal/${policy.slug}`,

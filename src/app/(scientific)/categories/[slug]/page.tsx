@@ -136,13 +136,29 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
           </h1>
 
           <p className="font-sci-body text-sci-label font-medium text-sci-navy">
-            {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · A–Z
+            Specifically, {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · Sorted A–Z
           </p>
 
           <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
             {category.description ||
-              `Every ${category.name.toLowerCase()} record we list, with pack sizes, wholesale pricing and live stock status. Certificates of Analysis and Safety Data Sheets are available on request — confirm grade, availability and documentation during quotation.`}
+              `First, every ${category.name.toLowerCase()} record we list includes pack sizes, wholesale pricing and live stock status. Importantly, all products carry full specification data and usage guidance. Furthermore, certificates of analysis and safety data sheets are available on request. Therefore, you can confirm grade and availability during quotation. Additionally, our sourcing team can suggest alternatives if your first choice isn't available. In fact, we handle custom volumes and sourcing to order. In particular, bulk quantities are available with trade pricing. As a result, you can compare options by price, function or stock status. Ultimately, browse this complete directory or contact us for your specific sourcing needs.`}
           </p>
+
+          {category.imageUrl && (
+            <div className="aspect-[21/9] w-full max-w-[900px] overflow-hidden rounded-xl bg-white">
+              {/* The <h1> above names the category, so a description here would
+                  restate it. Lazy: it sits below the fold on a phone. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={category.imageUrl}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
 
           {(category.children?.length ?? 0) > 0 && (
             <div className="flex flex-col gap-3">
@@ -176,11 +192,11 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
         <Container>
           {records.length === 0 ? (
             <p className="font-sci-body text-sci-body text-sci-muted">
-              No products are listed in this category yet.{' '}
+              Currently, no products are listed in this category yet. However,{' '}
               <Link href="/quote-request" className="text-sci-blue hover:underline">
-                Send a quote request
+                send a quote request
               </Link>{' '}
-              and we will confirm what we can source.
+              and we will confirm what we can source for you.
             </p>
           ) : (
             <ul className="flex flex-col gap-4">

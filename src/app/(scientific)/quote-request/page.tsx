@@ -10,6 +10,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { ServerQuoteListItem } from '@/lib/types';
 import { ImagePlaceholderIcon } from '@/components/icons';
 import { Container, Eyebrow } from '@/components/scientific/primitives';
+import { SciProse } from '@/components/scientific/SciProse';
 
 /**
  * Quote request, restyled to the "Scientific edition" design
@@ -100,6 +101,19 @@ function SourcingIntro() {
     </section>
   );
 }
+
+/**
+ * What a buyer actually needs to know before sending a request. The page is
+ * otherwise a form, and a form is almost no indexable text — this is the only
+ * substantive copy on the route.
+ */
+const QUOTING_PARAGRAPHS: string[] = [
+  `A useful quote starts with a clear brief. Specifically, tell us the material, the grade, the quantity and the delivery destination, and we can usually come back with pricing and availability within one business day. Where a specification is still open, describe the behaviour you need in the formulation and we will suggest candidates that fit.`,
+  `Wholesale pricing moves with volume, pack size and current material cost. Consequently, a price confirmed against a drum quantity will differ from the same material in a 5 kg pail. Additionally, tell us your expected annual usage rather than only the first order — it changes which price band applies and whether we hold stock against your forecast.`,
+  `Stock positions shown in the catalog reflect what is available now. However, availability moves as material ships, so a quote confirms both the price and the quantity we can commit to. Meanwhile, if you are planning a production run several weeks out, say so in the request — we can reserve material or schedule it to arrive against your date.`,
+  `Most buyers need paperwork before a material can enter a formulation. Therefore, tell us which documents you require: safety data sheets, technical data sheets, certificates of analysis, or origin and allergen statements. In particular, batch-specific documentation has to be requested against the lot you receive, so flag it early rather than after delivery.`,
+  `A significant share of what we ship is sourced to order against a customer specification. Similarly, if a material is not listed in the catalog it is still worth asking. Finally, where you need to trial a material before committing to volume, request a sample in the same message and we will quote both together.`,
+];
 
 function ContactForm({
   items,
@@ -528,7 +542,7 @@ function QuoteRequestSentPanel() {
 }
 
 export default function QuoteRequestPage() {
-  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
+  const [isAuthed, setIsAuthed] = useState(false);
   const [email, setEmail] = useState('');
 
   useEffect(() => {
@@ -537,8 +551,6 @@ export default function QuoteRequestPage() {
     setIsAuthed(!!token);
     setEmail(decoded?.email || '');
   }, []);
-
-  if (isAuthed === null) return null;
 
   return (
     <>
@@ -549,6 +561,18 @@ export default function QuoteRequestPage() {
           {isAuthed ? <CustomerQuoteListView email={email} /> : <GuestQuoteRequestFlow />}
         </Container>
       </section>
+
+      <SciProse
+        eyebrow="Before you send"
+        heading="How quoting works"
+        paragraphs={QUOTING_PARAGRAPHS}
+        subheadings={[
+          { beforeIndex: 1, text: 'Pricing and volume' },
+          { beforeIndex: 2, text: 'Lead times and stock' },
+          { beforeIndex: 3, text: 'Documentation and compliance' },
+          { beforeIndex: 4, text: 'Samples and sourcing to order' },
+        ]}
+      />
     </>
   );
 }

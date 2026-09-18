@@ -439,9 +439,24 @@ export function ProductBuyPanel({ product }: { product: Product }) {
           <h2 className="font-sci-heading text-sci-subheading font-semibold text-sci-navy">
             Product details
           </h2>
-          <p className="mt-4 max-w-[900px] whitespace-pre-line font-sci-body text-sci-body text-sci-muted">
-            {product.description}
-          </p>
+          {/* Split on blank lines so a long description becomes separate <p>
+              elements instead of one block. `whitespace-pre-line` stays on each
+              piece, so single newlines still render as breaks and the output
+              looks unchanged. */}
+          <div className="mt-4 flex max-w-[900px] flex-col gap-4">
+            {product.description
+              .split(/\n\s*\n/)
+              .map((para) => para.trim())
+              .filter(Boolean)
+              .map((para, i) => (
+                <p
+                  key={i}
+                  className="whitespace-pre-line font-sci-body text-sci-body text-sci-muted"
+                >
+                  {para}
+                </p>
+              ))}
+          </div>
         </section>
       )}
     </>

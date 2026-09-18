@@ -45,7 +45,7 @@ export function ProductTile({ product }: { product: Product }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={image}
-            alt=""
+            alt={`${product.name} wholesale cosmetic ingredients`}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (

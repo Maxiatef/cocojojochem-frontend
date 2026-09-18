@@ -9,6 +9,12 @@ export type LegalPolicy = {
   effectiveDate?: string;
   lastUpdated?: string | null;
   summary?: string;
+  /**
+   * Search-result copy. Kept separate from `summary`, which renders as the
+   * lead paragraph on the page itself and reads differently from a snippet.
+   */
+  metaTitle?: string;
+  metaDescription?: string;
   blocks: LegalBlock[];
 };
 
@@ -20,6 +26,8 @@ export const legalPolicies = [
     "effectiveDate": "May 27, 2026",
     "lastUpdated": "August 11, 2026",
     "summary": "How COCOJOJO collects, uses, protects, and shares personal information across its website, orders, customer accounts, communications, analytics, advertising, and related services.",
+    "metaTitle": "Privacy Policy — How We Handle Your Data",
+    "metaDescription": "Read the COCOJOJO privacy policy. Learn how we collect, use and protect your personal data, your privacy rights, and how to contact our team.",
     "blocks": [
       {
         "type": "paragraph",
@@ -27,7 +35,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "This Privacy Policy explains how we collect, receive, process, analyze, infer, generate, use, disclose, share, transfer, retain, monitor, secure, store, record, combine, and otherwise handle information when you interact with our websites, ecommerce systems, wholesale systems, private label services, OEM/ODM services, contract manufacturing services, customer support systems, AI systems, communications, advertisements, social media accounts, trade shows, digital properties, operational systems, technologies, products, and related services - including all current and future technologies, applications, integrations, software, systems, platforms, tools, and operational activities."
+        "text": "Specifically, this Privacy Policy explains how we collect, receive, process, analyze, infer, generate, use, disclose, share, transfer, retain, monitor, secure, store, record, combine, and otherwise handle information when you interact with our websites, ecommerce systems, wholesale systems, private label services, OEM/ODM services, contract manufacturing services, customer support systems, AI systems, communications, advertisements, social media accounts, trade shows, digital properties, operational systems, technologies, products, and related services - including all current and future technologies, applications, integrations, software, systems, platforms, tools, and operational activities."
       },
       {
         "type": "paragraph",
@@ -67,7 +75,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "This Privacy Policy applies to all websites, applications, customer portals, ecommerce systems, digital properties, operational systems, software, communications, and services owned, operated, managed, licensed, controlled, or provided by COCO JOJO LLC, including all brands, sub-brands, and affiliated operations."
+        "text": "In general, this Privacy Policy applies to all websites, applications, customer portals, ecommerce systems, digital properties, operational systems, software, communications, and services owned, operated, managed, licensed, controlled, or provided by COCO JOJO LLC, including all brands, sub-brands, and affiliated operations."
       },
       {
         "type": "heading2",
@@ -75,7 +83,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Depending on your interactions with us, we may collect, receive, process, infer, generate, analyze, combine, store, monitor, record, or share information including but not limited to the following categories. This list is illustrative, not exhaustive, and includes all categories of information we may collect in connection with our business operations."
+        "text": "Generally, depending on your interactions with us, we may collect, receive, process, infer, generate, analyze, combine, store, monitor, record, or share information including but not limited to the following categories. This list is illustrative, not exhaustive, and includes all categories of information we may collect in connection with our business operations."
       },
       {
         "type": "heading3",
@@ -367,7 +375,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may collect information through methods including but not limited to:"
+        "text": "In practice, we may collect information through methods including but not limited to:"
       },
       {
         "type": "listItem",
@@ -463,11 +471,11 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Our Google tags use Advanced Consent Mode. Before a choice is made, and when optional storage is denied, consent signals remain denied and Google may receive limited cookieless measurement pings. These pings do not permit optional analytics or advertising cookies. When analytics consent is granted, we may use consent-aware server measurement as a backup for completed purchases; the measurement payload excludes names, email addresses, postal addresses, phone numbers, and payment credentials."
+        "text": "Additionally, our Google tags use Advanced Consent Mode. Before a choice is made, and when optional storage is denied, consent signals remain denied and Google may receive limited cookieless measurement pings. These pings do not permit optional analytics or advertising cookies. When analytics consent is granted, we may use consent-aware server measurement as a backup for completed purchases; the measurement payload excludes names, email addresses, postal addresses, phone numbers, and payment credentials."
       },
       {
         "type": "paragraph",
-        "text": "We maintain an anonymous consent receipt containing a random browser identifier, receipt identifier, policy version, category choices, Global Privacy Control status, choice source, and timestamp. You may withdraw optional consent through the Cookie Preference Center. Withdrawal updates future browser and server measurement and removes optional cookies where technically possible."
+        "text": "In addition, we maintain an anonymous consent receipt containing a random browser identifier, receipt identifier, policy version, category choices, Global Privacy Control status, choice source, and timestamp. You may withdraw optional consent through the Cookie Preference Center. Withdrawal updates future browser and server measurement and removes optional cookies where technically possible."
       },
       {
         "type": "paragraph",
@@ -479,7 +487,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may use session replay technologies, heat mapping, behavioral analytics, and diagnostic monitoring for operational analysis, fraud prevention, troubleshooting, website optimization, and customer experience improvement. These technologies may monitor, record, replay, analyze, and store mouse movements, scroll behavior, navigation activity, click interactions, session activity, and website functionality data. Sensitive information including payment details and passwords is masked where commercially reasonable."
+        "text": "Similarly, we may use session replay technologies, heat mapping, behavioral analytics, and diagnostic monitoring for operational analysis, fraud prevention, troubleshooting, website optimization, and customer experience improvement. These technologies may monitor, record, replay, analyze, and store mouse movements, scroll behavior, navigation activity, click interactions, session activity, and website functionality data. Sensitive information including payment details and passwords is masked where commercially reasonable."
       },
       {
         "type": "heading3",
@@ -487,7 +495,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may use analytics services, third-party technology providers Ads, tag management tools, third-party technology providers Signals, third-party advertising providers Pixel, social media platforms Ads, social media platforms Ads, social media platforms Ads, marketplace service providers Advertising, email and SMS service providers, and related advertising, analytics, optimization, and attribution technologies. These may collect IP addresses, device identifiers, session behavior, website interactions, advertising interactions, purchase behavior, audience segmentation data, and attribution data for analytics, advertising optimization, audience creation, retargeting, conversion tracking, and marketing performance analysis."
+        "text": "Additionally, we may use analytics services, third-party technology providers Ads, tag management tools, third-party technology providers Signals, third-party advertising providers Pixel, social media platforms Ads, social media platforms Ads, social media platforms Ads, marketplace service providers Advertising, email and SMS service providers, and related advertising, analytics, optimization, and attribution technologies. These may collect IP addresses, device identifiers, session behavior, website interactions, advertising interactions, purchase behavior, audience segmentation data, and attribution data for analytics, advertising optimization, audience creation, retargeting, conversion tracking, and marketing performance analysis."
       },
       {
         "type": "heading3",
@@ -687,7 +695,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We share personal information with third party service providers who assist us in operating our business under appropriate data processing agreements, including but not limited to:"
+        "text": "Specifically, we share personal information with third party service providers who assist us in operating our business under appropriate data processing agreements, including but not limited to:"
       },
       {
         "type": "listItem",
@@ -735,7 +743,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may share certain identifiers - including hashed email addresses, cookie IDs, device identifiers, and browsing behavior data - with advertising platforms including third-party technology providers, third-party advertising providers, social media platforms, and marketplace service providers for targeted advertising and cross-context behavioral advertising. This sharing may constitute the 'sale' or 'sharing' of personal information under CPRA. California residents may opt out of this sharing using the mechanism described in Section 11."
+        "text": "In addition, we may share certain identifiers - including hashed email addresses, cookie IDs, device identifiers, and browsing behavior data - with advertising platforms including third-party technology providers, third-party advertising providers, social media platforms, and marketplace service providers for targeted advertising and cross-context behavioral advertising. This sharing may constitute the 'sale' or 'sharing' of personal information under CPRA. California residents may opt out of this sharing using the mechanism described in Section 11."
       },
       {
         "type": "heading3",
@@ -759,7 +767,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may share personal information with COCO JOJO LLC affiliated companies, related brands, and subsidiary operations for purposes consistent with this Privacy Policy."
+        "text": "Similarly, we may share personal information with COCO JOJO LLC affiliated companies, related brands, and subsidiary operations for purposes consistent with this Privacy Policy."
       },
       {
         "type": "heading3",
@@ -767,7 +775,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may share personal information with attorneys, accountants, auditors, insurers, and other professional advisors in connection with legal advice, compliance, and business operations, subject to applicable professional confidentiality obligations."
+        "text": "In addition, we may share personal information with attorneys, accountants, auditors, insurers, and other professional advisors in connection with legal advice, compliance, and business operations, subject to applicable professional confidentiality obligations."
       },
       {
         "type": "heading3",
@@ -775,7 +783,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may share aggregated, anonymized, or de-identified data that cannot reasonably be used to identify you, for research, analytics, product development, industry reporting, or marketing purposes."
+        "text": "Finally, we may share aggregated, anonymized, or de-identified data that cannot reasonably be used to identify you, for research, analytics, product development, industry reporting, or marketing purposes."
       },
       {
         "type": "heading2",
@@ -851,7 +859,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "When personal information is no longer necessary and no legal retention basis exists, we delete, anonymize, or securely destroy it in accordance with our data retention schedule. Where complete deletion is not technically feasible (such as in certain backup systems), we isolate data and protect it from further processing until deletion is possible."
+        "text": "Subsequently, when personal information is no longer necessary and no legal retention basis exists, we delete, anonymize, or securely destroy it in accordance with our data retention schedule. Where complete deletion is not technically feasible (such as in certain backup systems), we isolate data and protect it from further processing until deletion is possible."
       },
       {
         "type": "heading2",
@@ -891,7 +899,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "When we transfer personal information to third party service providers located outside the United States - including cloud providers, analytics platforms, advertising networks, and operational partners - we take commercially reasonable steps to ensure such providers maintain appropriate data protection standards. A list of key international service providers and applicable transfer mechanisms is available upon written request to support@cocojojo.com."
+        "text": "Similarly, when we transfer personal information to third party service providers located outside the United States - including cloud providers, analytics platforms, advertising networks, and operational partners - we take commercially reasonable steps to ensure such providers maintain appropriate data protection standards. A list of key international service providers and applicable transfer mechanisms is available upon written request to support@cocojojo.com."
       },
       {
         "type": "heading3",
@@ -907,7 +915,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "For questions about international data transfers, applicable safeguards, or to request information about specific transfer mechanisms, contact: support@cocojojo.com"
+        "text": "Finally, for questions about international data transfers, applicable safeguards, or to request information about specific transfer mechanisms, contact: support@cocojojo.com"
       },
       {
         "type": "heading2",
@@ -919,7 +927,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We may use AI systems, machine learning technologies, automated technologies, recommendation systems, fraud detection systems, customer support systems, operational monitoring systems, and related technologies for customer support, inquiry handling, fraud prevention, website optimization, marketing analysis, product recommendations, quality assurance, analytics, and business intelligence."
+        "text": "Notably, we may use AI systems, machine learning technologies, automated technologies, recommendation systems, fraud detection systems, customer support systems, operational monitoring systems, and related technologies for customer support, inquiry handling, fraud prevention, website optimization, marketing analysis, product recommendations, quality assurance, analytics, and business intelligence."
       },
       {
         "type": "paragraph",
@@ -982,6 +990,10 @@ export const legalPolicies = [
         "text": "Right to Limit Use of Sensitive Personal Information: You have the right to request that we limit our use and disclosure of sensitive personal information to purposes necessary to provide the services you request or as otherwise permitted by CPRA."
       },
       {
+        "type": "heading4",
+        "text": "Non-Discrimination and Portability Rights"
+      },
+      {
         "type": "paragraph",
         "text": "Right to Non-Discrimination: You have the right not to receive discriminatory treatment for exercising any of the rights described in this section. We will not deny goods or services, charge different prices, provide different quality of service, or suggest you will receive a different level of service solely for exercising your privacy rights."
       },
@@ -1003,7 +1015,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Your request must include: your full name, email address or other contact information, the specific right you are exercising, and sufficient information to verify your identity. We will acknowledge receipt of your request within ten (10) business days and provide a substantive response within forty-five (45) calendar days of receipt. Where reasonably necessary, we may extend the response period by an additional forty-five (45) calendar days, and we will notify you of any such extension."
+        "text": "Additionally, your request must include: your full name, email address or other contact information, the specific right you are exercising, and sufficient information to verify your identity. We will acknowledge receipt of your request within ten (10) business days and provide a substantive response within forty-five (45) calendar days of receipt. Where reasonably necessary, we may extend the response period by an additional forty-five (45) calendar days, and we will notify you of any such extension."
       },
       {
         "type": "heading3",
@@ -1011,7 +1023,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We will take reasonable steps to verify your identity before processing any consumer rights request. Verification may require you to provide: account login credentials, order confirmation numbers, the email address associated with your account, or other information that matches our records. For requests involving sensitive information or deletion, we may require stronger verification."
+        "text": "In all cases, we will take reasonable steps to verify your identity before processing any consumer rights request. Verification may require you to provide: account login credentials, order confirmation numbers, the email address associated with your account, or other information that matches our records. For requests involving sensitive information or deletion, we may require stronger verification."
       },
       {
         "type": "paragraph",
@@ -1239,7 +1251,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC strongly recommends that all customers independently verify payment instructions, banking information, invoice changes, and wire instructions through a previously verified telephone number or secure communication method before transmitting any funds. COCO JOJO LLC's official communications originate exclusively from @COCOJOJO.com email addresses and verified official channels."
+        "text": "Accordingly, COCO JOJO LLC strongly recommends that all customers independently verify payment instructions, banking information, invoice changes, and wire instructions through a previously verified telephone number or secure communication method before transmitting any funds. COCO JOJO LLC's official communications originate exclusively from @COCOJOJO.com email addresses and verified official channels."
       },
       {
         "type": "heading2",
@@ -1287,7 +1299,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Third party advertising partners, analytics providers, payment processors, and logistics providers operate under their own privacy policies. We select service providers with commercially reasonable privacy and security standards, but we cannot guarantee the practices of third party services."
+        "text": "Moreover, third party advertising partners, analytics providers, payment processors, and logistics providers operate under their own privacy policies. We select service providers with commercially reasonable privacy and security standards, but we cannot guarantee the practices of third party services."
       },
       {
         "type": "heading2",
@@ -1307,11 +1319,11 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Non-material changes, clarifications, and updates that do not affect your rights or our data practices take effect upon posting. Continued use of our services after the effective date of any change constitutes acceptance of the updated Privacy Policy."
+        "text": "By contrast, non-material changes, clarifications, and updates that do not affect your rights or our data practices take effect upon posting. Continued use of our services after the effective date of any change constitutes acceptance of the updated Privacy Policy."
       },
       {
         "type": "paragraph",
-        "text": "We maintain an archive of prior Privacy Policy versions. To request a prior version, email support@cocojojo.com."
+        "text": "In addition, we maintain an archive of prior Privacy Policy versions. To request a prior version, email support@cocojojo.com."
       },
       {
         "type": "heading2",
@@ -1339,7 +1351,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "California residents with unresolved privacy complaints, concerns about our data practices, or questions about their privacy rights may contact or file a complaint with:"
+        "text": "In particular, California residents with unresolved privacy complaints, concerns about our data practices, or questions about their privacy rights may contact or file a complaint with:"
       },
       {
         "type": "paragraph",
@@ -1363,7 +1375,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "We encourage you to contact us first at support@cocojojo.com so we can address your concerns directly before involving a regulatory authority."
+        "text": "However, we encourage you to contact us first at support@cocojojo.com so we can address your concerns directly before involving a regulatory authority."
       },
       {
         "type": "heading2",
@@ -1698,6 +1710,8 @@ export const legalPolicies = [
     "effectiveDate": "May 27, 2026",
     "lastUpdated": null,
     "summary": "The terms governing use of COCOJOJO websites, purchases, accounts, wholesale services, communications, content, and related digital services.",
+    "metaTitle": "Terms of Service — Orders & Site Use",
+    "metaDescription": "Read the COCOJOJO terms of service. Understand ordering, payment, shipping, returns and the rules that apply when you use our wholesale site.",
     "blocks": [
       {
         "type": "paragraph",
@@ -1729,7 +1743,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "This document is COCO JOJO LLC Terms of Service Version 5.0, effective May 27, 2026. Prior versions are archived and available upon written request to support@cocojojo.com."
+        "text": "For reference, this document is COCO JOJO LLC Terms of Service Version 5.0, effective May 27, 2026. Prior versions are archived and available upon written request to support@cocojojo.com."
       },
       {
         "type": "paragraph",
@@ -1777,7 +1791,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "At checkout and account creation, users are presented with the following acknowledgment which must be affirmatively accepted before proceeding:"
+        "text": "Specifically, at checkout and account creation, users are presented with the following acknowledgment which must be affirmatively accepted before proceeding:"
       },
       {
         "type": "paragraph",
@@ -1853,7 +1867,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Certain provisions of these Terms apply specifically to commercial purchasers, wholesale customers, distributors, resellers, OEM/ODM clients, private label clients, and contract manufacturing customers engaged in business-to-business commercial transactions."
+        "text": "In particular, certain provisions of these Terms apply specifically to commercial purchasers, wholesale customers, distributors, resellers, OEM/ODM clients, private label clients, and contract manufacturing customers engaged in business-to-business commercial transactions."
       },
       {
         "type": "paragraph",
@@ -1885,7 +1899,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Users must independently consult qualified, licensed professionals in the relevant field before relying upon any information, making any regulatory submission, commercializing any product, making any medical decision, or taking any action based on information received from COCO JOJO LLC."
+        "text": "Therefore, users must independently consult qualified, licensed professionals in the relevant field before relying upon any information, making any regulatory submission, commercializing any product, making any medical decision, or taking any action based on information received from COCO JOJO LLC."
       },
       {
         "type": "heading2",
@@ -1949,7 +1963,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC does not guarantee product availability, inventory accuracy, packaging compatibility, commercial success, product suitability, regulatory approval, retail or marketplace acceptance, continuous website functionality, or error-free operation of any system."
+        "text": "Accordingly, COCO JOJO LLC does not guarantee product availability, inventory accuracy, packaging compatibility, commercial success, product suitability, regulatory approval, retail or marketplace acceptance, continuous website functionality, or error-free operation of any system."
       },
       {
         "type": "heading2",
@@ -1969,7 +1983,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC reserves the right to substitute raw materials, ingredients, packaging components, manufacturing facilities, suppliers, carriers, logistics providers, testing laboratories, or operational methods with commercially reasonable equivalents at any time where necessary or advisable due to:"
+        "text": "Additionally, COCO JOJO LLC reserves the right to substitute raw materials, ingredients, packaging components, manufacturing facilities, suppliers, carriers, logistics providers, testing laboratories, or operational methods with commercially reasonable equivalents at any time where necessary or advisable due to:"
       },
       {
         "type": "listItem",
@@ -2017,7 +2031,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC does not guarantee acceptance, continued listing, ranking, visibility, suppression avoidance, advertising eligibility, Buy Box eligibility, or compliance status on any retail or marketplace platform including but not limited to:"
+        "text": "Consequently, COCO JOJO LLC does not guarantee acceptance, continued listing, ranking, visibility, suppression avoidance, advertising eligibility, Buy Box eligibility, or compliance status on any retail or marketplace platform including but not limited to:"
       },
       {
         "type": "listItem",
@@ -2073,7 +2087,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Nothing in this provision prohibits truthful factual statements, good faith reviews based on genuine experience, lawful whistleblower activity, communications with government agencies or regulators, legally protected activity under federal or California law, or testimony or statements made during legal proceedings."
+        "text": "However, nothing in this provision prohibits truthful factual statements, good faith reviews based on genuine experience, lawful whistleblower activity, communications with government agencies or regulators, legally protected activity under federal or California law, or testimony or statements made during legal proceedings."
       },
       {
         "type": "paragraph",
@@ -2369,7 +2383,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC strongly recommends that all users independently verify payment instructions, banking information, invoice changes, wire instructions, and account details through a previously verified telephone number or secure communication method before transmitting funds. Users are solely responsible for verifying the authenticity of all communications and payment instructions before acting."
+        "text": "Accordingly, COCO JOJO LLC strongly recommends that all users independently verify payment instructions, banking information, invoice changes, wire instructions, and account details through a previously verified telephone number or secure communication method before transmitting funds. Users are solely responsible for verifying the authenticity of all communications and payment instructions before acting."
       },
       {
         "type": "heading2",
@@ -2385,7 +2399,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC reserves all legal remedies against any party who creates, distributes, or uses unauthorized AI-generated impersonations or synthetic media falsely associated with COCO JOJO LLC."
+        "text": "Furthermore, COCO JOJO LLC reserves all legal remedies against any party who creates, distributes, or uses unauthorized AI-generated impersonations or synthetic media falsely associated with COCO JOJO LLC."
       },
       {
         "type": "heading2",
@@ -2401,7 +2415,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC may use AI systems, automated technologies, machine learning systems, recommendation systems, analytics systems, fraud prevention systems, and customer support systems."
+        "text": "Notably, COCO JOJO LLC may use AI systems, automated technologies, machine learning systems, recommendation systems, analytics systems, fraud prevention systems, and customer support systems."
       },
       {
         "type": "paragraph",
@@ -2433,7 +2447,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC reserves the right, but does not assume any obligation, to monitor, review, remove, restrict, or take action with respect to third party content on any platform or system it operates."
+        "text": "In addition, COCO JOJO LLC reserves the right, but does not assume any obligation, to monitor, review, remove, restrict, or take action with respect to third party content on any platform or system it operates."
       },
       {
         "type": "heading2",
@@ -2465,7 +2479,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "COCO JOJO LLC does not endorse the political, social, religious, or ideological views of any customer, influencer, affiliate, or third party. Nothing in these Terms creates any fiduciary duty, advisory relationship, professional relationship, employment relationship, partnership, joint venture, or agency relationship between users and COCO JOJO LLC."
+        "text": "Similarly, COCO JOJO LLC does not endorse the political, social, religious, or ideological views of any customer, influencer, affiliate, or third party. Nothing in these Terms creates any fiduciary duty, advisory relationship, professional relationship, employment relationship, partnership, joint venture, or agency relationship between users and COCO JOJO LLC."
       },
       {
         "type": "heading2",
@@ -2549,7 +2563,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Certain products may contain naturally occurring substances listed under California Proposition 65. Commercial customers purchasing for California resale are solely responsible for determining Proposition 65 warning requirements, conducting independent testing, providing required warnings to California consumers, and maintaining all compliance documentation."
+        "text": "Additionally, certain products may contain naturally occurring substances listed under California Proposition 65. Commercial customers purchasing for California resale are solely responsible for determining Proposition 65 warning requirements, conducting independent testing, providing required warnings to California consumers, and maintaining all compliance documentation."
       },
       {
         "type": "heading2",
@@ -2601,7 +2615,7 @@ export const legalPolicies = [
       },
       {
         "type": "paragraph",
-        "text": "Commercial customers, OEM/ODM clients, private label clients, and resellers are strongly advised and, for annual purchase volumes exceeding Twenty-Five Thousand Dollars ($25,000), expressly required to maintain the following insurance coverages during the term of any business relationship with COCO JOJO LLC:"
+        "text": "In particular, commercial customers, OEM/ODM clients, private label clients, and resellers are strongly advised and, for annual purchase volumes exceeding Twenty-Five Thousand Dollars ($25,000), expressly required to maintain the following insurance coverages during the term of any business relationship with COCO JOJO LLC:"
       },
       {
         "type": "listItem",

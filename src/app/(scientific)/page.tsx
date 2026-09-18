@@ -81,21 +81,21 @@ const INDUSTRIES = [
   {
     eyebrow: '01 / Beauty & wellness',
     title: ['Beauty &', 'personal care'],
-    body: 'Bring your next formulation to life with ingredients selected for your application.',
+    body: 'In brief, bring your next formulation to life with ingredients selected for your application. Moreover, our team ensures quality and consistency throughout.',
     image: '/scientific/industry-beauty.svg',
     href: '/products',
   },
   {
     eyebrow: '02 / Food ingredients',
     title: ['Food &', 'beverage'],
-    body: 'Source ingredients with purpose. Discuss the right grade for your product.',
+    body: 'For example, source ingredients with purpose. In addition, discuss the right grade for your product.',
     image: '/scientific/industry-food.svg',
     href: '/products',
   },
   {
     eyebrow: '03 / Product development',
     title: ['Formulation &', 'manufacturing'],
-    body: 'Take your ideas further, from raw materials to finished products.',
+    body: 'Consequently, take your ideas further, from raw materials to finished products. Furthermore, we provide ongoing support.',
     image: '/scientific/industry-formulation.svg',
     href: '/products',
   },
@@ -104,22 +104,22 @@ const INDUSTRIES = [
 const SERVICES = [
   {
     title: '01  Bulk ingredient sourcing',
-    body: 'Tell us the material, quantity, and packaging you need. We’ll help you explore your supply options.',
+    body: 'First, tell us the material, quantity, and packaging you need. Then, we’ll help you explore your supply options. Additionally, we provide sample guidance.',
   },
   {
     title: '02  Formulation support',
-    body: 'Move from an idea to a considered ingredient selection with support for your product development.',
+    body: 'Next, move from an idea to a considered ingredient selection with support for your product development. Subsequently, we review usage rates and compatibility.',
   },
   {
     title: '03  Private label & manufacturing',
-    body: 'Connect raw materials with finished products through COCOJOJO’s manufacturing capabilities.',
+    body: 'Finally, connect raw materials with finished products through COCOJOJO’s manufacturing capabilities. Therefore, we ensure scalable production from bench to market.',
   },
 ];
 
 const DOCUMENTS = [
-  { index: 'SDS', title: 'Safety data sheets', description: 'Handling and safety information' },
-  { index: 'TDS', title: 'Technical data sheets', description: 'Properties and specifications' },
-  { index: 'COA', title: 'Certificates of analysis', description: 'Material and batch information' },
+  { index: 'SDS', title: 'Safety data sheets', description: 'Handling and safety information. In particular, review SDS before use. '},
+  { index: 'TDS', title: 'Technical data sheets', description: 'Properties and specifications. Therefore, review TDS before formulation. '},
+  { index: 'COA', title: 'Certificates of analysis', description: 'Material and batch information. As a result, verify COA before production. '},
 ];
 
 export default async function ScientificHomePage() {
@@ -154,10 +154,9 @@ export default async function ScientificHomePage() {
         <Container className="flex flex-col gap-6 py-16">
           <Eyebrow>Our product portfolio</Eyebrow>
           <SectionHeading>Great products start with the right ingredients.</SectionHeading>
-          <Lead className="max-w-[920px]">
-            Discover the building blocks for your next innovation, from everyday essentials to
-            specialty materials.
-          </Lead>
+<Lead className="max-w-[920px]">
+              In addition, discover the building blocks for your next innovation, from everyday essentials to specialty materials.
+            </Lead>
 
           <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {categories.map((category, i) => (
@@ -178,9 +177,9 @@ export default async function ScientificHomePage() {
         <Container className="flex flex-col gap-6 py-16">
           <Eyebrow>The industries we serve</Eyebrow>
           <SectionHeading>Your industry. Our expertise.</SectionHeading>
-          <Lead className="max-w-[1000px]">
-            Find the materials and support that fit the way you work.
-          </Lead>
+<Lead className="max-w-[1000px]">
+              Therefore, find the materials and support that fit the way you work.
+            </Lead>
 
           <div className="mt-2 grid grid-cols-1 gap-6 lg:grid-cols-3">
             {INDUSTRIES.map((industry) => (
@@ -225,9 +224,8 @@ export default async function ScientificHomePage() {
               <br />
               partnerships.
             </h2>
-            <p className="max-w-[530px] font-sci-body text-sci-body text-white">
-              Connect ingredient sourcing, formulation, and manufacturing with a team that
-              understands your next product.
+<p className="max-w-[530px] font-sci-body text-sci-body text-white">
+              Specifically, connect ingredient sourcing, formulation, and manufacturing with a team that understands your next product. In practice, we streamline the process from concept to launch.
             </p>
             <SciButton href="/contact" variant="accent" className="self-start">
               Let&rsquo;s build something together →
@@ -254,9 +252,9 @@ export default async function ScientificHomePage() {
         <Container className="flex flex-col gap-6 py-16">
           <Eyebrow>Make informed decisions</Eyebrow>
           <SectionHeading>The details make the difference.</SectionHeading>
-          <Lead className="max-w-[1040px]">
-            Ask about documentation for the exact material and grade you&rsquo;re considering.
-          </Lead>
+<Lead className="max-w-[1040px]">
+              Therefore, ask about documentation for the exact material and grade you’re considering.
+            </Lead>
 
           <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {DOCUMENTS.map((doc) => (
@@ -285,12 +283,10 @@ export default async function ScientificHomePage() {
           </div>
           <div className="flex flex-col gap-4">
             <Lead>
-              COCOJOJO supplies cosmetic and food-grade raw materials and supports brands with
-              contract manufacturing and private label solutions.
+              Overall, COCOJOJO supplies cosmetic and food-grade raw materials. Moreover, we support brands with contract manufacturing and private label solutions.
             </Lead>
             <Lead>
-              Based in California, we bring together natural oils, functional ingredients, and
-              manufacturing experience to help turn your next idea into a product.
+              Based in California, we bring together natural oils, functional ingredients, and manufacturing experience. As a result, we help turn your next idea into a product.
             </Lead>
             <ArrowLink href="/contact" tone="navy">
               Connect with our team
@@ -305,7 +301,7 @@ export default async function ScientificHomePage() {
           <div className="flex flex-col gap-6">
             <Eyebrow>Let&rsquo;s move your next idea forward</Eyebrow>
             <SectionHeading>
-              The next great formula
+              Now, the next great formula
               <br />
               starts with a conversation.
             </SectionHeading>

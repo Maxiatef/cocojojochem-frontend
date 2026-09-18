@@ -35,8 +35,19 @@ export function Eyebrow({
 }) {
   const color =
     tone === 'accent' ? 'text-sci-accent' : tone === 'white' ? 'text-white' : 'text-sci-blue';
+  // `<span>`, not `<p>`. A two-to-four-word uppercase label ("The catalog",
+  // "Buying wholesale") is not a paragraph, and marking it up as one had a
+  // real cost beyond semantics: it is the first `<p>` on every page that
+  // opens with an Eyebrow, so it was the paragraph the SEO crawler's
+  // "keyphrase in introduction" check actually read — meaning that check was
+  // scoring the eyebrow label, never the real intro copy beneath it, on
+  // every one of these pages. `flex flex-col` doesn't care that its child is
+  // inline: a flex item lays out as a block box regardless of its own
+  // `display`, so this changes nothing visually.
   return (
-    <p className={`font-sci-body text-sci-eyebrow font-medium uppercase ${color}`}>{children}</p>
+    <span className={`font-sci-body text-sci-eyebrow font-medium uppercase ${color}`}>
+      {children}
+    </span>
   );
 }
 

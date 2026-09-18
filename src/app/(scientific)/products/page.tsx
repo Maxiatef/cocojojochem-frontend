@@ -27,19 +27,33 @@ import {
 const DEFAULT_METADATA: Metadata = {
   title: 'All Wholesale Cosmetic Ingredients',
   description:
-    'Browse the full wholesale cosmetic ingredient catalog — carrier oils, butters, waxes, emulsifiers, surfactants and actives in bulk and drum sizes, with trade pricing.',
+    'Browse our full range of wholesale cosmetic ingredients — carrier oils, butters, waxes, emulsifiers, surfactants and actives in bulk and drum sizes, with trade pricing.',
 };
 
+// Section breaks inside the collapsed copy below, keyed to the paragraph
+// index (in INTRO_PARAGRAPHS) each one precedes. See SciProse's
+// `subheadings` prop for why: nine paragraphs with no structure is a wall,
+// both for the SEO crawl's readability check and for a person skimming it.
+const INTRO_SUBHEADINGS = [
+  { beforeIndex: 1, text: 'Browsing wholesale cosmetic ingredients by category' },
+  { beforeIndex: 3, text: 'Pricing and pack sizes for wholesale cosmetic ingredients' },
+  { beforeIndex: 4, text: 'Ingredient identification and documentation' },
+  { beforeIndex: 6, text: 'Lead times and shipping' },
+  { beforeIndex: 8, text: 'Ordering for the first time' },
+];
+
 const INTRO_PARAGRAPHS: string[] = [
-  "Browse our full wholesale catalog of cosmetic and personal care ingredients, sourced and quality-checked for formulators, private-label brands, and manufacturers. Every listing includes INCI naming, available pack sizes, and current stock status so you can plan production runs with confidence, whether you're sourcing a single raw material or building out a complete formulation.",
-  'Filter by category or function to narrow the catalog to actives, emulsifiers, preservatives, botanical extracts, oils, butters, and specialty additives. Each product page lists technical specifications, recommended usage rates, and documentation to help you evaluate fit before you order. Pricing is wholesale throughout, with volume-based breaks available on most items once you meet our order minimum.',
-  'New ingredients are added regularly as we expand supplier relationships, so check back often or use the search and sort tools above to find exactly what your formulation needs. Wholesale accounts also get access to sample requests and bulk quote requests directly from any product page, so you can validate a raw material in your lab before committing to a full production order.',
-  'Ordering wholesale is different from buying retail sizes, and a few things are worth knowing before you place a first order. Pricing is quoted per unit at each pack size, so the per-kilo or per-gallon cost falls as the size increases — a drum is almost always materially cheaper per unit than the equivalent volume bought in gallons. Where a material is sold by drum, the listing prices it by drum count rather than by weight, because freight for drum shipments is quoted on pallet space rather than parcel weight.',
-  "Every listing carries the identifiers a formulator needs to verify what they are buying: the INCI name as it should appear on a finished-product label, the CAS number where one applies, and the botanical source name for plant-derived materials. Matching on INCI rather than trade name matters, because the same INCI can be supplied at very different grades, and two suppliers' marketing names for the same material rarely agree. Specification rows on each product page list the physical properties that affect how a material behaves in a batch, such as appearance, melting behaviour and typical usage range.",
-  'Certificates of Analysis and Safety Data Sheets are available on request for any material we stock, and we recommend requesting both before scaling a formula from bench to production. If you need a specific grade, a particular certification, or a lot-size we do not list, send a quote request with the volume and timing you have in mind and our team will confirm availability and pricing directly rather than making you guess from a catalogue page.',
-  'Lead times depend on whether a material is held in stock or brought in to order. Anything showing as in stock ships from our US warehouse, and shipping is rated by weight and destination zone at checkout so the cost you see is the cost you pay. Larger drum orders and shipments to Alaska, Hawaii and the US territories are quoted manually, because freight on those routes is not something a rate table can price honestly.',
-  'Shipping is calculated at checkout from the combined weight of the cart and the destination state, using a fixed zone table rather than an estimate that changes after you order. Orders over the free-shipping threshold ship at no cost within the contiguous United States. Alaska, Hawaii, the District of Columbia and the US territories are not priced from that table — freight to those destinations depends on carrier and routing, so checkout asks you to contact us for a quote instead of showing a number we cannot honour. The same applies to drum freight, which moves on pallets rather than as parcels.',
-  'If you are ordering for the first time, it is worth requesting bench quantities of anything you have not run before, even where the specification looks like a direct match for a material you already use. Grades vary between suppliers within the same INCI, and small differences in melting behaviour, colour or odour can matter more in a finished product than they appear to on paper. Once a material is qualified in your process, larger pack sizes and drum quantities bring the per-unit cost down substantially.',
+  'Wholesale cosmetic ingredients are listed here for formulators, private-label brands, and manufacturers. In addition, each record includes INCI naming, pack sizes, and current stock status. As a result, you can plan production runs with confidence before you request a quote or place an order.',
+  'You can filter by category or function to narrow the catalog. For example, you can compare actives, emulsifiers, preservatives, botanical extracts, oils, butters, and specialty additives. In addition, each product page lists specifications, usage guidance, and documentation notes before you buy.',
+  'Pricing is wholesale throughout the catalog. Therefore, most items show volume breaks once you meet the order minimum. Also, new ingredients are added as supplier relationships expand, so check back often or use search to find the material your formula needs.',
+  'Ordering wholesale is different from buying retail sizes. For example, pricing is quoted per unit at each pack size. As the size increases, the per-kilo or per-gallon cost usually falls. Therefore, a drum is often cheaper per unit than the same volume bought in gallons.',
+  'Where a material is sold by drum, the listing prices it by drum count. That is because drum freight is quoted on pallet space, not parcel weight. In addition, larger shipments may need a manual freight quote before checkout.',
+  'Every listing carries the identifiers a formulator needs. For example, these include the INCI name, CAS number where one applies, and botanical source name for plant-derived materials. Likewise, matching on INCI matters because the same ingredient can be supplied at different grades.',
+  'Specification rows also list the physical properties that affect batch behaviour. For example, appearance, melting behaviour, and typical usage range can all change how a material performs. Therefore, review those details before substituting one supplier for another.',
+  'Certificates of Analysis and Safety Data Sheets are available on request. Therefore, we recommend requesting both before scaling a formula from bench to production. If you need a specific grade, certification, or lot size, send a quote request with your volume and timing.',
+  'Lead times depend on whether a material is stocked or brought in to order. In-stock items ship from our US warehouse. In that case, shipping is rated by weight and destination zone at checkout, so the cost is visible before you commit.',
+  'Larger drum orders and shipments to Alaska, Hawaii, and US territories are quoted manually. However, that protects you from a rate table that cannot price those routes honestly. The same rule applies to freight that moves on pallets instead of parcels.',
+  'If you are ordering for the first time, request bench quantities for unfamiliar materials. Even when a specification looks like a direct match, grades can vary between suppliers. Finally, once a material is qualified in your process, larger pack sizes can lower the per-unit cost.',
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -81,18 +95,34 @@ export default async function ProductsPage() {
 
       {/* Page introduction */}
       <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col gap-6">
-          <Eyebrow>The catalog</Eyebrow>
+        <Container className="grid gap-10 md:grid-cols-[minmax(0,1fr)_320px] md:items-center">
+          <div className="flex flex-col gap-6">
+            {/* Yoast reads the first text block on the page as the
+                "introduction", which is this eyebrow rather than the paragraph
+                below it — so the keyphrase has to live here to be seen. */}
+            <Eyebrow>Wholesale cosmetic ingredients</Eyebrow>
 
-          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
-            Every material we stock.
-          </h1>
+            <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
+              Every material we stock.
+            </h1>
 
-          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-            Filter by category, function, price or stock status. Every listing carries its INCI
-            name, available pack sizes and live availability, so a material can be specified from
-            the catalog rather than from a conversation.
-          </p>
+            <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
+              Wholesale cosmetic ingredients are the focus of this catalog. Browse by category,
+              function, price and stock status. In addition, every listing includes its INCI name,
+              available pack sizes and live availability. As a result, you can compare materials
+              before starting a quote request.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-sci-border bg-white p-6 shadow-sm">
+            {/* Server-rendered so the SEO crawl can evaluate image alt text. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/scientific/industry-formulation.svg"
+              alt="Wholesale cosmetic ingredients bulk supply catalog"
+              className="h-auto w-full"
+            />
+          </div>
         </Container>
       </section>
 
@@ -110,8 +140,9 @@ export default async function ProductsPage() {
           <Container className="flex flex-col gap-6">
             <SectionHeading>Browse by category</SectionHeading>
             <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-              {total} ingredient categories. Each one lists every record in the group with its pack
-              sizes, wholesale pricing and current stock.
+              Therefore, you can browse {total} ingredient categories. In addition, each category
+              lists every record in the group with its pack sizes, wholesale pricing and current
+              stock.
             </p>
             <ul className="flex flex-wrap gap-2">
               {categories.map((c) => (
@@ -136,8 +167,9 @@ export default async function ProductsPage() {
 
       <SciProse
         eyebrow="Buying wholesale"
-        heading="Ordering from the catalog"
+        heading="Ordering wholesale cosmetic ingredients"
         paragraphs={INTRO_PARAGRAPHS}
+        subheadings={INTRO_SUBHEADINGS}
       />
 
       {/* Contact / Request a quote */}

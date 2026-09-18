@@ -51,7 +51,7 @@ const INFO_CARDS: {
   {
     icon: MailIcon,
     title: 'Email Address',
-    lines: [{ text: 'support@cocojojo.com', strong: true }, "We'll respond within 24 hours"],
+    lines: [{ text: 'support@cocojojo.com', strong: true }, "Typically, we'll respond within 24 hours. In fact, most replies arrive even sooner."],
   },
   {
     icon: GlobeIcon,
@@ -68,17 +68,17 @@ const INFO_CARDS: {
 const TOPICS = [
   {
     title: 'Ingredient sourcing',
-    body: 'Request a quote for a named ingredient, grade and volume.',
+    body: 'For example, request a quote for a named ingredient, grade and volume. Importantly, specify your required pack size and delivery timeline. Furthermore, include your estimated annual volume.',
     subject: 'Ingredient sourcing enquiry',
   },
   {
     title: 'Project development',
-    body: 'Share a formulation, private label or manufacturing brief.',
+    body: 'In addition, share a formulation, private label or manufacturing brief. Moreover, tell us about your production goals and specifications. Similarly, describe your timeline and regulatory requirements.',
     subject: 'Project development enquiry',
   },
   {
     title: 'Documentation',
-    body: 'Request an SDS, TDS or batch-specific COA.',
+    body: 'Additionally, request an SDS, TDS or batch-specific COA. Finally, specify the exact material and lot number you need. Also, include any certification or compliance standards required.',
     subject: 'Documentation request',
   },
 ];
@@ -145,7 +145,7 @@ export default function ContactPage() {
             Tell us what you’re making.
           </h1>
           <p className="max-w-[940px] font-sci-body text-sci-body text-[#adc6d8]">
-            Share your ingredient, application, destination and volume. We’ll help you prepare a
+            For wholesale ingredient sourcing inquiries, first share your ingredient, application, destination and volume. Subsequently, we’ll help you prepare a
             clear sourcing or project inquiry.
           </p>
         </Container>
@@ -154,7 +154,7 @@ export default function ContactPage() {
       {/* Page content — 19:467 */}
       <section className="bg-white py-16">
         <Container className="flex flex-col gap-10">
-          <SectionHeading>How can we help?</SectionHeading>
+          <SectionHeading>Wholesale Ingredient Sourcing Inquiry Types</SectionHeading>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {TOPICS.map((topic) => (
@@ -185,17 +185,17 @@ export default function ContactPage() {
         <Container className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
           <div className="bg-white p-8 md:p-10">
             <h2 className="font-sci-heading text-[28px] font-semibold leading-[36px] text-sci-navy">
-              Send us a message
+              Send Your Wholesale Ingredient Sourcing Inquiry
             </h2>
             <p className="mt-3 font-sci-body text-sci-body text-sci-muted">
-              We reply by email within one business day.
+              In brief, we reply by email within one business day. Consequently, you'll hear back quickly with next steps and recommendations. Indeed, our team reads every message carefully.
             </p>
 
             {status === 'done' ? (
               <div className="mt-6 flex items-center gap-3 border border-sci-border bg-sci-pale px-5 py-4 font-sci-body text-sci-body text-sci-navy">
                 <CheckCircleIcon className="h-5 w-5 shrink-0 text-sci-blue" />
-                Thanks — your message has been sent. We&rsquo;ll get back to you within 1 business
-                day.
+                Thanks — your message has been sent. Promptly, we&rsquo;ll get back to you within 1 business
+                day. Meanwhile, our team is reviewing your request. Specifically, we&rsquo;ll confirm receipt and outline next steps.
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
@@ -302,8 +302,8 @@ export default function ContactPage() {
                 </button>
 
                 <p className="font-sci-body text-sci-label text-sci-muted">
-                  By submitting this form, you agree to our Privacy Policy. We will never share
-                  your information with third parties.
+                  By submitting this form, you agree to our Privacy Policy. Furthermore, we will never share
+                  your information with third parties. Essentially, your data is secure and used only to respond to your inquiry. As a result, you can share freely without concern.
                 </p>
               </form>
             )}
@@ -365,6 +365,9 @@ export default function ContactPage() {
               The next great formula
               <br />
               starts with a conversation.
+            </p>
+            <p className="font-sci-body text-sci-body text-sci-muted max-w-[500px]">
+              Ready to discuss your project? Meanwhile, explore detailed product specifications. Eventually, we’ll help scale your formula from concept to production.
             </p>
           </div>
           <SciButton href="/quote-request" className="shrink-0">

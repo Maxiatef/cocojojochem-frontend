@@ -24,231 +24,54 @@ import {
 } from '@/components/ui';
 import { AlertTriangleIcon, ChartIcon, CheckCircleIcon, ClockIcon, GlobeIcon } from '@/components/icons';
 
-/* ---------------------------------------------------------------------------
- * Meta Tags editor — DISABLED, kept for reference in case it's needed again.
+/**
+ * Buckets a crawled path into the section it belongs under.
  *
- * This used to be a tab on this page (a per-path meta title/description/OG
- * image CRUD editor over the `SeoPage` entity), removed alongside disabling
- * the backend's SeoPagesModule (see the commented-out import + registration
- * in `cocojojochem-backend/src/app.module.ts`).
+ * `/products/[slug]` and `/categories/[slug]` are templates, not pages: the
+ * crawler scores one sampled record and files it under the template path, so
+ * the list stays the same size and the same shape whatever happens to the
+ * catalogue. They get their own section because reading them as ordinary
+ * rows invites the wrong conclusion — that one product was checked and the
+ * rest were not.
  *
- * To bring this back:
- *   1. Uncomment SeoPagesModule in the backend's app.module.ts.
- *   2. Uncomment the block below.
- *   3. Restore these imports at the top of this file:
- *      `FormEvent` from 'react' (add to the existing `useState` import line)
- *      `ConfirmDialog, IconButton, Modal, TextAreaField, TextField` from '@/components/ui'
- *      `EditIcon, PlusIcon, TrashIcon` from '@/components/icons'
- *      `SeoPage` from '@/lib/types'
- *   4. Add a tab switcher back to `SeoAdminPage()` below (it previously
- *      toggled between 'meta-tags' and 'site-analysis' with local useState),
- *      and render `<MetaTagsTab />` alongside `<SiteAnalysisTab />`.
- *
- * interface SeoFormState {
- *   id: string | null;
- *   path: string;
- *   metaTitle: string;
- *   metaDescription: string;
- *   ogImageUrl: string;
- * }
- *
- * const EMPTY_FORM: SeoFormState = {
- *   id: null,
- *   path: '',
- *   metaTitle: '',
- *   metaDescription: '',
- *   ogImageUrl: '',
- * };
- *
- * function MetaTagsTab() {
- *   const queryClient = useQueryClient();
- *   const [modalOpen, setModalOpen] = useState(false);
- *   const [form, setForm] = useState<SeoFormState>(EMPTY_FORM);
- *   const [error, setError] = useState<string | null>(null);
- *   const [pendingDelete, setPendingDelete] = useState<SeoPage | null>(null);
- *
- *   const { data, isLoading, isError } = useQuery({
- *     queryKey: ['admin-seo-pages'],
- *     queryFn: () => api.get<SeoPage[]>('/seo-pages'),
- *   });
- *
- *   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
- *
- *   const createMutation = useMutation({
- *     mutationFn: (body: Record<string, unknown>) => api.post('/seo-pages', body),
- *     onSuccess: () => {
- *       invalidate();
- *       closeModal();
- *     },
- *     onError: (err) => setError(getFriendlyErrorMessage(err)),
- *   });
- *
- *   const updateMutation = useMutation({
- *     mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
- *       api.patch(`/seo-pages/${id}`, body),
- *     onSuccess: () => {
- *       invalidate();
- *       closeModal();
- *     },
- *     onError: (err) => setError(getFriendlyErrorMessage(err)),
- *   });
- *
- *   const deleteMutation = useMutation({
- *     mutationFn: (id: string) => api.delete(`/seo-pages/${id}`),
- *     onSuccess: () => {
- *       invalidate();
- *       setPendingDelete(null);
- *     },
- *   });
- *
- *   function openCreateModal() {
- *     setForm(EMPTY_FORM);
- *     setError(null);
- *     setModalOpen(true);
- *   }
- *
- *   function openEditModal(p: SeoPage) {
- *     setForm({
- *       id: p.id,
- *       path: p.path,
- *       metaTitle: p.metaTitle || '',
- *       metaDescription: p.metaDescription || '',
- *       ogImageUrl: p.ogImageUrl || '',
- *     });
- *     setError(null);
- *     setModalOpen(true);
- *   }
- *
- *   function closeModal() {
- *     setModalOpen(false);
- *   }
- *
- *   function handleSubmit(e: FormEvent) {
- *     e.preventDefault();
- *     setError(null);
- *     const body = {
- *       path: form.path,
- *       metaTitle: form.metaTitle || null,
- *       metaDescription: form.metaDescription || null,
- *       ogImageUrl: form.ogImageUrl || null,
- *     };
- *     if (form.id) {
- *       updateMutation.mutate({ id: form.id, body });
- *     } else {
- *       createMutation.mutate(body);
- *     }
- *   }
- *
- *   const pages = data || [];
- *   const saving = createMutation.isPending || updateMutation.isPending;
- *
- *   return (
- *     <div>
- *       <div className="mb-4 flex items-center justify-between">
- *         <div>
- *           <h2 className="text-sm font-semibold text-slate-900">Meta Tags</h2>
- *           <p className="text-xs text-slate-500">Per-path meta title, description, and social image overrides.</p>
- *         </div>
- *         <Button onClick={openCreateModal} icon={PlusIcon}>
- *           Add SEO Page
- *         </Button>
- *       </div>
- *
- *         {isLoading && <LoadingState />}
- *         {isError && <ErrorState message="Couldn't load SEO pages." />}
- *         {!isLoading && !isError && pages.length === 0 && <EmptyState message="No SEO pages configured yet." />}
- *
- *         {!isLoading && pages.length > 0 && (
- *           <Card>
- *             <Table minWidth={640}>
- *               <TableHead>
- *                 <Th>Path</Th>
- *                 <Th>Meta Title</Th>
- *                 <Th>Has Description</Th>
- *                 <Th align="right">Actions</Th>
- *               </TableHead>
- *               <tbody>
- *                 {pages.map((p) => (
- *                   <Tr key={p.id}>
- *                     <Td className="font-medium text-slate-900">{p.path}</Td>
- *                     <Td className="text-slate-600">{p.metaTitle || '—'}</Td>
- *                     <Td>
- *                       {p.metaDescription ? (
- *                         <CheckCircleIcon className="h-4 w-4 text-green-600" />
- *                       ) : (
- *                         <span className="text-slate-300">—</span>
- *                       )}
- *                     </Td>
- *                     <Td align="right">
- *                       <div className="flex justify-end gap-1.5">
- *                         <IconButton icon={EditIcon} label="Edit" onClick={() => openEditModal(p)} />
- *                         <IconButton
- *                           icon={TrashIcon}
- *                           label="Delete"
- *                           variant="danger"
- *                           onClick={() => setPendingDelete(p)}
- *                         />
- *                       </div>
- *                     </Td>
- *                   </Tr>
- *                 ))}
- *               </tbody>
- *             </Table>
- *           </Card>
- *         )}
- *
- *         <Modal open={modalOpen} onClose={closeModal} title={form.id ? 'Edit SEO Page' : 'Add SEO Page'}>
- *           <form onSubmit={handleSubmit} className="space-y-4">
- *             <TextField
- *               label="Path"
- *               placeholder="/products/example-product"
- *               required
- *               value={form.path}
- *               onChange={(e) => setForm({ ...form, path: e.target.value })}
- *             />
- *             <TextField
- *               label="Meta Title"
- *               value={form.metaTitle}
- *               onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
- *             />
- *             <TextAreaField
- *               label="Meta Description"
- *               rows={3}
- *               value={form.metaDescription}
- *               onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
- *             />
- *             <TextField
- *               label="OG Image URL"
- *               value={form.ogImageUrl}
- *               onChange={(e) => setForm({ ...form, ogImageUrl: e.target.value })}
- *             />
- *
- *             {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
- *
- *             <div className="flex justify-end gap-2 pt-2">
- *               <Button type="button" variant="secondary" onClick={closeModal}>
- *                 Cancel
- *               </Button>
- *               <Button type="submit" loading={saving}>
- *                 {form.id ? 'Save Changes' : 'Create SEO Page'}
- *               </Button>
- *             </div>
- *           </form>
- *         </Modal>
- *
- *         <ConfirmDialog
- *           open={!!pendingDelete}
- *           title="Delete SEO page"
- *           message={`Delete SEO overrides for "${pendingDelete?.path}"? This cannot be undone.`}
- *           confirmLabel="Delete"
- *           loading={deleteMutation.isPending}
- *           onConfirm={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
- *           onCancel={() => setPendingDelete(null)}
- *         />
- *     </div>
- *   );
- * }
- * ------------------------------------------------------------------------- */
+ * Order matters: a template must be tested before the landing page whose
+ * prefix it shares.
+ */
+const TEMPLATE_PATHS = ['/products/[slug]', '/categories/[slug]'];
+
+const METRIC_GROUPS: { key: string; label: string; match: (path: string) => boolean }[] = [
+  { key: 'templates', label: 'Page templates', match: (p) => TEMPLATE_PATHS.includes(p) },
+  { key: 'legal', label: 'Legal', match: (p) => p.startsWith('/legal') },
+  {
+    key: 'main',
+    label: 'Main pages',
+    match: (p) => ['/', '/products', '/categories', '/functions', '/about', '/contact', '/quote-request'].includes(p),
+  },
+  // Anything an admin registered by hand that matches none of the above.
+  { key: 'other', label: 'Other', match: () => true },
+];
+
+function groupMetrics(metrics: SeoMetric[]) {
+  // Main first — they are the pages anyone actually asks about — then the
+  // long generated lists, then the tail.
+  const order = ['main', 'templates', 'legal', 'other'];
+  const buckets = new Map<string, SeoMetric[]>();
+
+  for (const metric of metrics) {
+    const group = METRIC_GROUPS.find((g) => g.match(metric.path))!;
+    const existing = buckets.get(group.key);
+    if (existing) existing.push(metric);
+    else buckets.set(group.key, [metric]);
+  }
+
+  return order
+    .filter((key) => buckets.has(key))
+    .map((key) => ({
+      key,
+      label: METRIC_GROUPS.find((g) => g.key === key)!.label,
+      rows: buckets.get(key)!,
+    }));
+}
 
 /** Row disclosure arrow. Rotates rather than swapping glyphs, so it animates. */
 function ChevronIcon({ open }: { open: boolean }) {
@@ -395,7 +218,14 @@ function SiteAnalysisTab() {
       )}
 
       <Card>
-        <div className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">Per-Page Metrics</div>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
+          <span className="text-sm font-semibold text-slate-900">Per-Page Metrics</span>
+          {metrics.length > 0 && (
+            <span className="text-xs text-slate-500">
+              {metrics.length} page{metrics.length === 1 ? '' : 's'} covered
+            </span>
+          )}
+        </div>
         {metricsQuery.isLoading && <LoadingState />}
         {metricsQuery.isError && <ErrorState message="Couldn't load SEO metrics." />}
         {!metricsQuery.isLoading && !metricsQuery.isError && metrics.length === 0 && (
@@ -413,7 +243,28 @@ function SiteAnalysisTab() {
               <Th align="right">To fix</Th>
             </TableHead>
             <tbody>
-              {metrics.map((m) => {
+              {groupMetrics(metrics).map((group) => (
+              <Fragment key={group.key}>
+                <tr className="border-b border-slate-100 bg-slate-50/70">
+                  <td colSpan={7} className="px-5 py-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {group.label}
+                    </span>
+                    <span className="ml-2 text-xs tabular-nums text-slate-400">
+                      {group.rows.length}
+                    </span>
+                    {/* Said once, on the section, rather than repeated on each
+                        row — otherwise a template row reads as "we checked
+                        this one product and skipped the others". */}
+                    {group.key === 'templates' && (
+                      <span className="ml-2 text-xs font-normal normal-case text-slate-400">
+                        — scored from one sample page each; per-product SEO is in the product
+                        editor
+                      </span>
+                    )}
+                  </td>
+                </tr>
+                {group.rows.map((m) => {
                 const isOpen = expandedMetricId === m.id;
                 const toFix = m.seoProblems + m.readabilityProblems;
                 const hasReport = !!m.yoastChecks?.length;
@@ -472,7 +323,9 @@ function SiteAnalysisTab() {
                     )}
                   </Fragment>
                 );
-              })}
+                })}
+              </Fragment>
+              ))}
             </tbody>
           </Table>
         )}

@@ -62,15 +62,23 @@ export default async function CategoriesPage() {
   const productTotal = productsRes?.pagination.total ?? 0;
 
   const introParagraphs = [
-    `We organize our wholesale ingredient catalog into ${categories.length} categories, covering everything from actives and acids to botanical extracts, oils, butters, emulsifiers, preservatives, and specialty additives. Browsing by category is the quickest way to compare materials within the same functional class — for example, weighing different humectants against each other, or reviewing every preservative system we stock before choosing one for a new formulation.`,
-    'Each category page lists every product currently available in that group, along with live stock status and wholesale pricing. Categories are updated as we add new ingredients, so the count above reflects our current live catalog. Select a category below to see the full product list, or use product search if you already know the specific ingredient you need.',
-    `Categories group materials by what they physically are, which is usually how procurement and inventory think about them: oils with oils, waxes with waxes, surfactants with surfactants. That makes categories the right way in when you are stocking a shelf, comparing grades of the same material type, or checking what else you could add to an order to consolidate freight.`,
-    `If you are solving a formulation problem rather than restocking, browsing by function is often faster, because it groups materials by the job they do instead of by their chemistry. Most buyers use both: category to see the range of a material type and its available pack sizes, function to find alternatives that behave the same way in a batch.`,
-    `Pack sizes vary by material. Fast-moving liquids such as carrier oils and glycerin are typically offered from a gallon up to a drum, while actives and peptides are sold in far smaller weights because typical use levels are a fraction of a percent. Where a material is sold by drum, the listing prices it per drum rather than per kilo, since freight on drum shipments is quoted on pallet space rather than parcel weight.`,
-    `Certificates of Analysis and Safety Data Sheets are available on request for anything we stock, and we recommend requesting both before scaling a formula from bench to production. If you need a grade, certification or pack size that is not shown, send a quote request rather than assuming it is unavailable — a significant share of what we ship is sourced to order against a customer's specification.`,
-    `Shipping is rated at checkout from cart weight and destination zone, so the cost is known before you commit rather than adjusted afterwards. Orders above the free-shipping threshold ship free within the contiguous United States. Freight to Alaska, Hawaii, the District of Columbia and the US territories, and any shipment moving as drum freight on pallets, is quoted manually — those routes cannot be priced honestly from a weight table, so we confirm them directly instead.`,
-    `Stock positions change as material moves, so a listing you checked last week may not reflect what is available today. If you are planning a production run some weeks ahead, confirm quantities with the sales team rather than relying on a cached page. For predictable repeat usage we can hold material against a blanket order and release it on a schedule, which removes both the stock risk and the price volatility from your planning.`,
-    `Minimum order values apply across the catalogue because this is a trade supply operation rather than a retail store. If your requirement sits below that threshold, the quote-request route is usually the better option — it lets us look at what you actually need and price it sensibly, including combining several small lines into one shipment to make the freight worthwhile.`,
+    `We organize our wholesale ingredient catalog into ${categories.length} categories. They cover actives, acids, botanical extracts, oils, butters, emulsifiers, preservatives, and specialty additives. As a result, browsing by category is the quickest way to compare materials within the same functional class. For example, you can weigh different humectants against each other before choosing one for a new formulation.`,
+    'Each category page lists every product currently available in that group. It also shows live stock status and wholesale pricing. We update categories as we add new ingredients, so the count above reflects our current live catalog. Select a category below to see the full product list. Alternatively, use product search if you already know the specific ingredient you need.',
+    `Categories group materials by what they physically are. That is usually how procurement and inventory think about them: oils with oils, waxes with waxes, and surfactants with surfactants. Therefore, categories are useful when you are stocking a shelf or comparing grades of the same material type. They also help you find what else you could add to consolidate freight.`,
+    `If you are solving a formulation problem rather than restocking, browsing by function is often faster. That route groups materials by the job they do instead of by their chemistry. Most buyers use both paths. Category pages show the range of a material type and its pack sizes. Meanwhile, function pages help you find alternatives that behave the same way in a batch.`,
+    `Pack sizes vary by material. Fast-moving liquids such as carrier oils and glycerin are often available from a gallon up to a drum. However, actives and peptides are typically available in smaller weights because typical use levels are low. Where a material is sold by drum, the listing prices it per drum rather than per kilo. That is because drum freight is typically quoted on pallet space, not parcel weight.`,
+    `Certificates of Analysis and Safety Data Sheets are available on request for anything we stock. As a result, we recommend requesting both before scaling a formula from bench to production. If you need a grade, certification, or pack size that is not shown, send a quote request. In many cases, we source materials to order against a customer's specification.`,
+    `We rate shipping at checkout from cart weight and destination zone. As a result, you know the cost before you commit. Orders above the free-shipping threshold ship free within the contiguous United States. However, we quote freight to Alaska, Hawaii, the District of Columbia, and US territories manually. We also quote drum freight manually, because a parcel-weight table cannot price pallet routes honestly.`,
+    `Stock positions change as material moves. Therefore, a listing you checked last week may not reflect what is available today. If you are planning a production run, confirm quantities with the sales team. For predictable repeat usage, we can hold material against a blanket order. This reduces stock risk and price volatility in your planning.`,
+    `Minimum order values apply across the catalogue. This is a trade supply operation rather than a retail store. If your requirement sits below that threshold, the quote-request route is usually better. It lets us review what you need and price it sensibly. In addition, we can sometimes combine several small lines into one shipment.`,
+  ];
+
+  const introSubheadings = [
+    { beforeIndex: 1, text: 'Finding the right category' },
+    { beforeIndex: 3, text: 'Category browsing versus function browsing' },
+    { beforeIndex: 4, text: 'Pack sizes and documentation' },
+    { beforeIndex: 6, text: 'Shipping and stock planning' },
+    { beforeIndex: 8, text: 'Minimum orders and quotes' },
   ];
 
   return (
@@ -131,6 +139,7 @@ export default async function CategoriesPage() {
                   href={`/categories/${c.slug}`}
                   name={c.name}
                   count={c.productCount}
+                  imageUrl={c.imageUrl}
                 />
               ))}
             </div>
@@ -164,6 +173,7 @@ export default async function CategoriesPage() {
         eyebrow="How the catalog is organized"
         heading="Choosing a category"
         paragraphs={introParagraphs}
+        subheadings={introSubheadings}
       />
 
       {/* Contact / Request a quote — 33:542 */}

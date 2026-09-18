@@ -100,9 +100,16 @@ export function ScientificHeader() {
       {/* Utility navigation */}
       <div className="bg-sci-navy text-white">
         <Container className="flex flex-wrap items-center gap-x-6 gap-y-1 py-1.5">
-          <p className="font-sci-body text-[10px] font-medium leading-4">
+          {/* `<span>`, not `<p>`: this bar sits in the DOM before any page
+              content, on every page in the site — so as a `<p>` it was the
+              literal first paragraph the SEO crawl's "keyphrase in
+              introduction" check read, on every single page, regardless of
+              what that page was actually about. Same fix as `Eyebrow`, same
+              reason. Visually identical: it's a flex item in a `flex-wrap`
+              row of nav links that are themselves inline elements. */}
+          <span className="font-sci-body text-[10px] font-medium leading-4">
             Your ingredient partner. From concept to scale.
-          </p>
+          </span>
           {/* Hidden below `md`: the mobile design (Figma 25:464) gives this
               bar a single line of text and nothing else, and these five items
               wrapped onto three lines at 390px — a 72px bar before the

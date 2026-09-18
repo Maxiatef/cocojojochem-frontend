@@ -47,13 +47,19 @@ const CAPABILITIES = [
 ];
 
 const STORY: string[] = [
-  'Founded in 1998, COCOJOJO was built on a simple belief: everyone deserves access to exceptional beauty and wellness products backed by both nature and science.',
-  'Long before our products were available directly to consumers, COCOJOJO worked behind the scenes of the beauty industry, supplying raw materials, developing custom formulations, and manufacturing products for brands across the United States and around the world. Through decades of serving manufacturers, retailers, salons, spas, and private label clients, we arrived at a realization that would change everything: the same quality ingredients, formulations, and manufacturing expertise trusted by established brands should not be reserved exclusively for industry insiders. That realization became the foundation of COCOJOJO’s retail division, and the reason we opened our doors directly to consumers.',
-  'For more than 25 years, we have dedicated ourselves to bridging the gap between the laboratory and the consumer. Whether you are an individual seeking premium skincare, a salon owner sourcing professional products, or an entrepreneur building the next great beauty brand, you deserve access to the same expertise and quality that major brands rely on every day.',
-  'Behind every product is an experienced team of PharmD professionals, cosmetic scientists, chemists, and formulators passionate about creating products that truly perform. Every formula begins with extensive research, careful ingredient selection, and a commitment to scientific excellence. We believe effective products are not built on marketing claims alone. They are built on superior ingredients, intelligent formulation, rigorous testing, and continuous innovation.',
-  'Today, COCOJOJO maintains a portfolio of more than 11,000 proprietary formulations spanning skincare, hair care, body care, botanical oils, butters, USDA Organic products, specialty treatments, and professional beauty solutions. Unlike brands that outsource development and production, we handle everything in-house, from formulation and ingredient sourcing to testing and manufacturing. When you purchase from COCOJOJO, you are buying directly from the people who made it.',
-  'All products are manufactured in California, USA, under strict quality control systems and industry-leading standards designed to ensure consistency, safety, and performance across every order, regardless of size.',
+  'Since 1998, COCOJOJO has been built on a simple belief: everyone deserves access to exceptional beauty and wellness products backed by both nature and science.',
+  'Long before our products were available directly to consumers, COCOJOJO worked behind the scenes of the beauty industry. In that role, we supplied raw materials, developed custom formulations, and manufactured products for brands across the United States and around the world. Over time, that work led to a realization: the same quality ingredients and expertise trusted by established brands should not be reserved only for industry insiders. Therefore, that belief became the foundation of COCOJOJO’s retail division and the reason we opened our doors directly to consumers.',
+  'For more than 25 years, we have worked to bridge the gap between the laboratory and the consumer. For example, you may be seeking premium skincare, sourcing professional products, or building the next great beauty brand. In each case, you deserve access to the same quality major brands rely on every day.',
+  'Behind every product is an experienced team of PharmD professionals, cosmetic scientists, chemists, and formulators. Together, they focus on products that truly perform. In addition, every formula begins with research, careful ingredient selection, and a commitment to scientific excellence. As a result, effective products are built on superior ingredients, intelligent formulation, rigorous testing, and continuous innovation.',
+  'Today, COCOJOJO maintains a portfolio of more than 11,000 proprietary formulations. In practice, these span skincare, hair care, body care, botanical oils, butters, USDA Organic products, specialty treatments, and professional beauty solutions. Unlike brands that outsource development and production, we handle everything in-house. Therefore, formulation, ingredient sourcing, testing, and manufacturing all stay connected. As a result, when you purchase from COCOJOJO, you are buying directly from the people who made it.',
+  'Finally, all products are manufactured in California, USA, under strict quality control systems. Because of that, these standards help ensure consistency, safety, and performance across every order, regardless of size.',
 ];
+
+const STORY_SUBHEADINGS: Record<number, string> = {
+  1: 'From industry supplier to direct access',
+  3: 'Formulation expertise behind every product',
+  4: 'In-house manufacturing and quality control',
+};
 
 /**
  * The closing two paragraphs sit apart from the narrative — they are the
@@ -61,8 +67,8 @@ const STORY: string[] = [
  * navy panel instead of continuing the column.
  */
 const CLOSING: string[] = [
-  'At COCOJOJO, we believe the future of beauty lies at the intersection of science and nature. Science without nature produces cold, synthetic results. Nature without science produces inconsistency. The combination of both is where truly exceptional products are born, and that has always been our approach.',
-  'More than 25 years after our founding, our mission remains unchanged: to make exceptional beauty and wellness accessible to everyone while helping shape the future of the industry through innovation, quality, integrity, and an uncompromising belief that better products are always possible.',
+  'At COCOJOJO, we believe the future of beauty lies at the intersection of science and nature. Without nature, science can produce cold, synthetic results. Likewise, without science, nature can produce inconsistency. Therefore, the combination of both is where truly exceptional products are born, and that has always been our approach.',
+  'More than 25 years after our founding, our mission remains unchanged. In short, we make exceptional beauty and wellness accessible to everyone while helping shape the future of the industry through innovation, quality, integrity, and an uncompromising belief that better products are always possible.',
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -114,8 +120,9 @@ export default async function AboutPage() {
           </h1>
 
           <p className="max-w-[940px] font-sci-body text-sci-body text-[#adc6d8]">
-            Founded in 1998, COCOJOJO bridges the laboratory, the manufacturer, the professional,
-            and the everyday consumer with formulas made for performance, consistency, and access.
+            Since 1998, COCOJOJO has bridged the laboratory, the manufacturer, the professional,
+            and the everyday consumer. As a result, our formulas are made for performance,
+            consistency, and access.
           </p>
         </Container>
       </section>
@@ -162,8 +169,15 @@ export default async function AboutPage() {
           </div>
 
           <div className="flex max-w-[760px] flex-col gap-5 font-sci-body text-sci-body text-sci-muted">
-            {STORY.map((paragraph) => (
-              <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+            {STORY.map((paragraph, index) => (
+              <div key={paragraph.slice(0, 48)} className="flex flex-col gap-3">
+                {STORY_SUBHEADINGS[index] && (
+                  <h2 className="font-sci-heading text-[24px] font-semibold leading-8 text-sci-navy">
+                    {STORY_SUBHEADINGS[index]}
+                  </h2>
+                )}
+                <p>{paragraph}</p>
+              </div>
             ))}
           </div>
         </Container>
@@ -210,7 +224,7 @@ export default async function AboutPage() {
           <div className="flex flex-col gap-6">
             <Eyebrow>Let’s move your next idea forward</Eyebrow>
             <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              The next great formula
+              Therefore, the next great formula
               <br />
               starts with a conversation.
             </p>

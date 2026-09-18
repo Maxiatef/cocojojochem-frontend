@@ -9,12 +9,13 @@ import { getCustomerToken, setCustomerToken } from '@/lib/customerAuth';
 import { addToCart, useCart, clearCart } from '@/lib/cartStore';
 import { formatUsd } from '@/lib/pricing';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { CheckoutResponse, CouponValidateResult, Paginated, Product, ServerCart, ShippingEstimate } from '@/lib/types';
+import { CheckoutResponse, CouponValidateResult, Product, ServerCart, ShippingEstimate } from '@/lib/types';
 import { COUNTRY_CODES } from '@/lib/countryCodes';
 import { US_STATES } from '@/lib/usStates';
 import { CheckoutStepper } from '@/components/commerce/CheckoutStepper';
 import { ImagePlaceholderIcon } from '@/components/icons';
 import { Container, Eyebrow } from '@/components/scientific/primitives';
+import { CheckoutSuggestions } from '@/components/scientific/CheckoutSuggestions';
 
 const DEFAULT_MINIMUM_DISPLAY = '$250.00';
 
@@ -142,16 +143,15 @@ export default function CheckoutPage() {
     return () => clearTimeout(t);
   }, [ready, countryIso2, stateCode, zip, estimateItems]);
 
-  // Cross-sell strip: 3 published products not already in the cart.
-  const cartVariantIds = new Set((items as any[]).map((i) => i.variantId ?? i.variant?.id));
-  const { data: crossSellRes } = useQuery({
-    queryKey: ['checkout-cross-sell'],
-    queryFn: () => customerApi.get<Paginated<Product>>('/wholesale/products?page=1&limit=8&sort=newest'),
-    enabled: ready,
-  });
-  const crossSellProducts = (crossSellRes?.data || [])
-    .filter((p) => !p.variants.some((v) => cartVariantIds.has(v.id)))
-    .slice(0, 3);
+  // The ids driving the cross-sell below. Previously this list also had to be
+  // filtered client-side against the suggestions, because the old strip asked
+  // for the 8 newest products and hoped none of them were already in the
+  // cart. The suggestions endpoint excludes them server-side now, so these
+  // ids are only an input.
+  const cartVariantIds = useMemo(
+    () => (items as any[]).map((i) => i.variantId ?? i.variant?.id).filter(Boolean),
+    [items],
+  );
 
   async function handleQuickAdd(product: Product) {
     const variant = product.variants.find((v) => v.stockStatus !== 'OUT_OF_STOCK') || product.variants[0];
@@ -515,6 +515,19 @@ export default function CheckoutPage() {
             </div>
           )}
 
+          {/* Last section of the form, directly above the terms and the
+              Continue button. The old strip sat beside the totals at
+              48px-thumbnail size, which is the size you use for something you
+              do not really want clicked. Here it is the final thing read
+              before committing — still in the customer's own column and their
+              own reading order, and it cannot push the Continue button around
+              because it sits above it rather than between its fields. */}
+          <CheckoutSuggestions
+            cartVariantIds={cartVariantIds}
+            enabled={ready}
+            onAdd={handleQuickAdd}
+          />
+
           <label className="flex items-start gap-2 text-sm text-sci-muted">
             <input
               type="checkbox"
@@ -688,41 +701,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {crossSellProducts.length > 0 && (
-            <div className="bg-white p-6">
-              <h2 className="mb-4 font-sci-heading text-[17px] font-semibold text-sci-navy">Complete your order</h2>
-              <div className="space-y-3">
-                {crossSellProducts.map((product) => {
-                  const variant = product.variants[0];
-                  return (
-                    <div key={product.id} className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-sci-pale">
-                        {product.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <ImagePlaceholderIcon className="h-5 w-5 text-sci-border" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-sci-navy">{product.name}</p>
-                        {variant && (
-                          <p className="text-xs text-sci-muted">{formatUsd(Number(variant.effectivePrice ?? variant.price))}</p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleQuickAdd(product)}
-                        className="shrink-0 border border-sci-blue px-3 py-1.5 text-xs font-medium text-sci-blue transition hover:bg-sci-pale"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
       </Container>

@@ -13,16 +13,37 @@ export function CategoryCard({
   href,
   name,
   count,
+  imageUrl,
 }: {
   href: string;
   name: string;
   count?: number;
+  imageUrl?: string | null;
 }) {
   return (
     <Link
       href={href}
       className="group flex flex-col gap-6 rounded-xl border border-sci-border bg-white p-6 transition hover:border-sci-blue hover:shadow-sm"
     >
+      {imageUrl && (
+        // Bleeds to the card edges: the padding belongs to the text, not to a
+        // banner sitting above it.
+        <div className="-mx-6 -mt-6 aspect-[16/9] overflow-hidden rounded-t-xl bg-sci-pale">
+          {/* Decorative — the category name is the next line of this same
+              link, so alt text here is announced twice over. Lazy because the
+              grid renders every category at once. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        </div>
+      )}
+
       {/* An empty category still needs this row, or its title would sit at a
           different height from its neighbours in the same grid row. */}
       <span className="font-sci-body text-sci-eyebrow font-medium uppercase text-sci-blue">
