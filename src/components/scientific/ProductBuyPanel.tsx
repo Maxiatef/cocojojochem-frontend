@@ -361,6 +361,30 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                   </button>
                 </div>
 
+                {/* The order subtotal, and the arithmetic behind it.
+                    The headline price above stays the UNIT price and never
+                    moves: it is what the pack-size buttons are being compared
+                    on, and a number that changes as you hold the + button is
+                    useless for that comparison. So the running total gets its
+                    own line instead, stating the multiplication rather than
+                    only its result — "3 × $20.00" is checkable at a glance,
+                    a bare $60.00 is not.
+
+                    Shown only past the minimum, because at the minimum the
+                    line would just repeat the price already set in 32px type
+                    directly above it. */}
+                {price != null && quantity > minQuantity && (
+                  <div className="mt-5 flex items-baseline justify-between gap-4 border-t border-sci-border pt-4">
+                    <span className="font-sci-body text-sci-label text-sci-muted">
+                      {quantity} &times; {formatUsd(price)}
+                      {variant?.label && ` per ${variant.label}`}
+                    </span>
+                    <span className="font-sci-heading text-[20px] font-semibold leading-7 text-sci-navy">
+                      {formatUsd(price * quantity)}
+                    </span>
+                  </div>
+                )}
+
                 <WishlistButton
                   productId={product.id}
                   variant="labelled"
