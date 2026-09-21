@@ -98,15 +98,6 @@ export function ScientificFooter() {
           ))}
         </div>
 
-        <a
-          href="https://cocojojo.com/wholesale"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-sci-body text-sci-label font-medium hover:underline"
-        >
-          Visit the official COCOJOJO wholesale website ↗
-        </a>
-
         <p className="font-sci-body text-sci-eyebrow font-medium">
           © {new Date().getFullYear()} COCOJOJO. Chemicals &amp; ingredients.
         </p>
