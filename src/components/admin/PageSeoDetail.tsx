@@ -117,10 +117,29 @@ export function PageSeoDetail({ metric }: { metric: SeoMetric }) {
   if (checks.length === 0) {
     return (
       <div className="space-y-4">
-        <p className="text-xs text-slate-500">
-          No Yoast analysis stored for this page yet — run{' '}
-          <span className="font-medium text-slate-700">Analyze Site</span> to generate it.
-        </p>
+        {metric.yoastError ? (
+          // The crawl reached the page — titles and word counts above are
+          // proof of that — and the analysis engine then failed on it. That
+          // distinction only ever existed in a server log, which is not where
+          // anyone looks when a dashboard shows a dash.
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-xs font-semibold text-amber-900">
+              The page was crawled, but the Yoast engine failed on it
+            </p>
+            <p className="mt-1 text-xs text-amber-800">
+              Everything above comes from the crawl and is accurate. Only the scores are
+              missing. The engine reported:
+            </p>
+            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded border border-amber-200 bg-white px-3 py-2 font-mono text-[11px] leading-relaxed text-amber-900">
+              {metric.yoastError}
+            </pre>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500">
+            No Yoast analysis stored for this page yet — run{' '}
+            <span className="font-medium text-slate-700">Analyze Site</span> to generate it.
+          </p>
+        )}
         <PageSeoFields path={metric.path} />
       </div>
     );

@@ -540,6 +540,8 @@ export interface SeoMetric {
   seoProblems: number;
   readabilityProblems: number;
   yoastChecks: PageYoastCheck[] | null;
+  /** Why the Yoast pass produced nothing. NULL when it succeeded. */
+  yoastError: string | null;
   /** Keyphrase assessments excluded — a crawled page has no keyphrase field. */
   skippedChecks: number;
   lastAnalyzed: string | null;

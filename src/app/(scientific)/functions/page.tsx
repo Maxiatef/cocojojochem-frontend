@@ -12,6 +12,8 @@ import {
   SciButton,
   SectionHeading,
 } from '@/components/scientific/primitives';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 /**
  * Ingredients by formulation function, in the "Scientific edition" design.
@@ -124,7 +126,13 @@ export default async function FunctionsPage() {
       />
 
       {/* Introduction */}
-      <section className="bg-sci-pale py-16">
+      <section className="relative isolate overflow-hidden bg-sci-pale py-16">
+        <HeroMedia
+          src={HERO_IMAGES.functions.src}
+          alt={HERO_IMAGES.functions.alt}
+          tone="light"
+          priority
+        />
         <Container className="flex flex-col gap-6">
           <Eyebrow>Targeted formulation</Eyebrow>
 

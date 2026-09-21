@@ -36,6 +36,13 @@ const NAV: {
   label: string;
   icon: (props: { className?: string }) => React.ReactElement;
   permission?: string;
+  /**
+   * Hides the entry when the account HAS this permission, the inverse of
+   * `permission`. For an entry that is a shortcut rather than a capability:
+   * an account holding the broader permission reaches the same thing by a
+   * better route, so the shortcut is noise on their sidebar.
+   */
+  hiddenBy?: string;
 }[] = [
   { href: '/admin', label: 'Overview', icon: DashboardIcon, permission: 'canViewDashboard' },
   { href: '/admin/messages', label: 'Messages', icon: MailIcon, permission: 'canViewContactMessages' },
@@ -50,7 +57,23 @@ const NAV: {
   { href: '/admin/users', label: 'Users', icon: UsersIcon, permission: 'canViewUsers' },
   // Sits next to Users because it is the same subject from the other side:
   // Users is every account, My Team is the handful this person is over.
-  { href: '/admin/my-team', label: 'My Team', icon: TeamIcon, permission: 'canViewOwnTeam' },
+  //
+  // Hidden from anyone who can see every team. Admin gets canViewOwnTeam from
+  // the bootstrap permission sync rather than from a deliberate grant, and an
+  // admin is not normally IN a team — so the entry led to "you are not in a
+  // team yet" and did nothing else. Whoever can administer teams reaches any
+  // of them, including their own, through Settings -> Teams.
+  //
+  // Keyed on the permission, not on the role being called "Admin": renaming
+  // the role, or granting canViewTeams to a second role, must not bring the
+  // dead entry back.
+  {
+    href: '/admin/my-team',
+    label: 'My Team',
+    icon: TeamIcon,
+    permission: 'canViewOwnTeam',
+    hiddenBy: 'canViewTeams',
+  },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClockIcon, permission: 'canViewAuditLog' },
   { href: '/admin/seo', label: 'SEO', icon: GlobeIcon, permission: 'canViewSeoPages' },
   { href: '/admin/settings', label: 'Settings', icon: SettingsIcon, permission: 'canViewSiteSettings' },
@@ -154,7 +177,11 @@ function SidebarContent({
   onLogout: () => void;
 }) {
   const permissions = usePermissions();
-  const nav = NAV.filter((item) => !item.permission || permissions?.[item.permission] === true);
+  const nav = NAV.filter(
+    (item) =>
+      (!item.permission || permissions?.[item.permission] === true) &&
+      !(item.hiddenBy && permissions?.[item.hiddenBy] === true),
+  );
 
   const { data: messageStats } = useQuery({
     queryKey: ['contact-messages-stats'],

@@ -10,6 +10,8 @@ import {
   SciButton,
   SectionHeading,
 } from '@/components/scientific/primitives';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 /**
  * About, rebuilt to the "Scientific edition" design.
@@ -111,7 +113,13 @@ export default async function AboutPage() {
 
       {/* Page header, full width on navy — the same treatment the quote
           request page uses, so the two "company" pages open the same way. */}
-      <section className="bg-sci-navy py-16 text-white">
+      <section className="relative isolate overflow-hidden bg-sci-navy py-16 text-white">
+        <HeroMedia
+          src={HERO_IMAGES.about.src}
+          alt={HERO_IMAGES.about.alt}
+          tone="dark"
+          priority
+        />
         <Container className="flex flex-col gap-6">
           <Eyebrow tone="accent">About COCOJOJO</Eyebrow>
 

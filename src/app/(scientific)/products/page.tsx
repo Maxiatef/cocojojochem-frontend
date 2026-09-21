@@ -43,17 +43,57 @@ const INTRO_SUBHEADINGS = [
 ];
 
 const INTRO_PARAGRAPHS: string[] = [
-  'Wholesale cosmetic ingredients are listed here for formulators, private-label brands, and manufacturers. In addition, each record includes INCI naming, pack sizes, and current stock status. As a result, you can plan production runs with confidence before you request a quote or place an order.',
+  'We list wholesale cosmetic ingredients here for formulators, private-label brands, and manufacturers. In addition, each record includes INCI naming, pack sizes, and current stock status. As a result, you can plan production runs with confidence before you request a quote or place an order.',
   'You can filter by category or function to narrow the catalog. For example, you can compare actives, emulsifiers, preservatives, botanical extracts, oils, butters, and specialty additives. In addition, each product page lists specifications, usage guidance, and documentation notes before you buy.',
-  'Pricing is wholesale throughout the catalog. Therefore, most items show volume breaks once you meet the order minimum. Also, new ingredients are added as supplier relationships expand, so check back often or use search to find the material your formula needs.',
-  'Ordering wholesale is different from buying retail sizes. For example, pricing is quoted per unit at each pack size. As the size increases, the per-kilo or per-gallon cost usually falls. Therefore, a drum is often cheaper per unit than the same volume bought in gallons.',
-  'Where a material is sold by drum, the listing prices it by drum count. That is because drum freight is quoted on pallet space, not parcel weight. In addition, larger shipments may need a manual freight quote before checkout.',
+  'Pricing is wholesale throughout the catalog. Therefore, most items show volume breaks once you meet the order minimum. We also add new ingredients as supplier relationships expand, so check back often or use search to find the material your formula needs.',
+  'Ordering wholesale is different from buying retail sizes. For example, we quote pricing per unit at each pack size. As the size increases, the per-kilo or per-gallon cost usually falls. Therefore, a drum is often cheaper per unit than the same volume bought in gallons.',
+  'Where we sell a material by drum, the listing prices it by drum count. That is because carriers quote drum freight on pallet space, not parcel weight. In addition, larger shipments may need a manual freight quote before checkout.',
   'Every listing carries the identifiers a formulator needs. For example, these include the INCI name, CAS number where one applies, and botanical source name for plant-derived materials. Likewise, matching on INCI matters because the same ingredient can be supplied at different grades.',
   'Specification rows also list the physical properties that affect batch behaviour. For example, appearance, melting behaviour, and typical usage range can all change how a material performs. Therefore, review those details before substituting one supplier for another.',
   'Certificates of Analysis and Safety Data Sheets are available on request. Therefore, we recommend requesting both before scaling a formula from bench to production. If you need a specific grade, certification, or lot size, send a quote request with your volume and timing.',
-  'Lead times depend on whether a material is stocked or brought in to order. In-stock items ship from our US warehouse. In that case, shipping is rated by weight and destination zone at checkout, so the cost is visible before you commit.',
-  'Larger drum orders and shipments to Alaska, Hawaii, and US territories are quoted manually. However, that protects you from a rate table that cannot price those routes honestly. The same rule applies to freight that moves on pallets instead of parcels.',
-  'If you are ordering for the first time, request bench quantities for unfamiliar materials. Even when a specification looks like a direct match, grades can vary between suppliers. Finally, once a material is qualified in your process, larger pack sizes can lower the per-unit cost.',
+  'Lead times depend on whether a material is stocked or brought in to order. In-stock items ship from our US warehouse. In that case, checkout rates shipping by weight and destination zone, so you see the cost before you commit.',
+  'We quote larger drum orders and shipments to Alaska, Hawaii, and US territories manually. However, that protects you from a rate table that cannot price those routes honestly. The same rule applies to freight that moves on pallets instead of parcels.',
+  'If you are ordering for the first time, request bench quantities for unfamiliar materials. Even when a specification looks like a direct match, grades can vary between suppliers. Finally, once you qualify a material in your process, larger pack sizes can lower the per-unit cost.',
+];
+
+/**
+ * Outbound references.
+ *
+ * Yoast flags a page with no outbound links, and the honest way to answer
+ * that is to point at the bodies whose naming and safety work this catalogue
+ * actually depends on — every listing here carries an INCI name, and INCI is
+ * PCPC's register, not ours. Linking them is what the page would do anyway if
+ * someone had written it as a reference rather than as a grid.
+ *
+ * Every URL was opened and confirmed to resolve. Note that two of these
+ * return 403 to a plain command-line fetch while loading normally in a
+ * browser — that is bot filtering, not a dead link, so do not "fix" them on
+ * the strength of a curl check.
+ *
+ * No `nofollow`: these are editorial links to standards bodies, which is
+ * precisely the case the attribute is not for.
+ */
+const REFERENCES = [
+  {
+    href: 'https://www.personalcarecouncil.org/resources/inci/',
+    label: 'INCI nomenclature (Personal Care Products Council)',
+    note: 'The register the INCI name on every listing here comes from.',
+  },
+  {
+    href: 'https://www.cir-safety.org/',
+    label: 'Cosmetic Ingredient Review',
+    note: 'Independent safety assessments of individual cosmetic ingredients.',
+  },
+  {
+    href: 'https://www.fda.gov/cosmetics/cosmetic-products-ingredients',
+    label: 'FDA — Cosmetic Products & Ingredients',
+    note: 'US regulatory position on ingredients and labelling.',
+  },
+  {
+    href: 'https://ec.europa.eu/growth/tools-databases/cosing/',
+    label: 'CosIng (European Commission)',
+    note: 'EU database of ingredients and their restrictions.',
+  },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -171,6 +211,37 @@ export default async function ProductsPage() {
         paragraphs={INTRO_PARAGRAPHS}
         subheadings={INTRO_SUBHEADINGS}
       />
+
+      {/* Standards and references — see REFERENCES above for why these are
+          here and why they are not nofollowed. */}
+      <section className="border-t border-sci-border bg-white py-16">
+        <Container className="flex flex-col gap-6">
+          <SectionHeading>Standards and references</SectionHeading>
+          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
+            Every listing in this catalog uses INCI naming, and grades follow the safety and
+            labelling positions published by the bodies below. Check a material against them
+            directly before you specify it.
+          </p>
+          <ul className="flex max-w-[900px] flex-col gap-4">
+            {REFERENCES.map((ref) => (
+              <li key={ref.href}>
+                <a
+                  href={ref.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
+                >
+                  {ref.label}
+                  <span aria-hidden className="ml-1">
+                    ↗
+                  </span>
+                </a>
+                <p className="mt-1 font-sci-body text-sci-body text-sci-muted">{ref.note}</p>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </section>
 
       {/* Contact / Request a quote */}
       <section className="bg-sci-pale py-16">

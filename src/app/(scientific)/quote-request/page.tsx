@@ -11,6 +11,8 @@ import { ServerQuoteListItem } from '@/lib/types';
 import { ImagePlaceholderIcon } from '@/components/icons';
 import { Container, Eyebrow } from '@/components/scientific/primitives';
 import { SciProse } from '@/components/scientific/SciProse';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 /**
  * Quote request, restyled to the "Scientific edition" design
@@ -57,7 +59,13 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
  */
 function SourcingIntro() {
   return (
-    <section className="bg-sci-navy py-16 text-white">
+    <section className="relative isolate overflow-hidden bg-sci-navy py-16 text-white">
+        <HeroMedia
+          src={HERO_IMAGES.quoteRequest.src}
+          alt={HERO_IMAGES.quoteRequest.alt}
+          tone="dark"
+          priority
+        />
       <Container className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col gap-6">
           <Eyebrow tone="white">Let’s make the right connection</Eyebrow>

@@ -12,6 +12,8 @@ import {
   SciButton,
   SectionHeading,
 } from '@/components/scientific/primitives';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 /**
  * Ingredient categories, rebuilt to the "Scientific edition" design
@@ -105,7 +107,13 @@ export default async function CategoriesPage() {
       />
 
       {/* Expanded catalog introduction — 33:479 */}
-      <section className="bg-sci-pale py-16">
+      <section className="relative isolate overflow-hidden bg-sci-pale py-16">
+        <HeroMedia
+          src={HERO_IMAGES.categories.src}
+          alt={HERO_IMAGES.categories.alt}
+          tone="light"
+          priority
+        />
         <Container className="flex flex-col gap-6">
           <Eyebrow>The ingredient directory</Eyebrow>
           <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">

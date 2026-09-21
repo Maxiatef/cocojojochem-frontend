@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Product, ProductDocType, ProductDocumentRow } from '@/lib/types';
 import { ChevronLeftIcon, ChevronRightIcon, FileIcon, ImagePlaceholderIcon } from '@/components/icons';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 // Human labels for the document types. Kept here rather than reusing the
 // admin form's list because the customer-facing wording is spelled out —
@@ -107,7 +108,25 @@ export function ProductMediaGallery({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
         ) : (
-          <ImagePlaceholderIcon className="h-14 w-14 text-sci-border" />
+          // Most of the catalogue has no photograph yet, and an empty grey
+          // square told a visitor nothing and left the page with no image at
+          // all. This is a stand-in, and it says so: the caption keeps it from
+          // reading as a photograph OF this material, which would be a small
+          // lie on a page whose whole job is accurate specification.
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={HERO_IMAGES.product.src}
+              alt={`Laboratory glassware — no product photograph of ${product.name} is available yet`}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover opacity-70 grayscale-[0.25]"
+            />
+            <span className="absolute inset-x-0 bottom-0 bg-sci-navy/70 px-3 py-2 text-center font-sci-body text-xs text-white">
+              Photograph coming soon
+            </span>
+            <ImagePlaceholderIcon aria-hidden className="absolute h-14 w-14 text-white drop-shadow" />
+          </>
         )}
 
         {showArrows && (

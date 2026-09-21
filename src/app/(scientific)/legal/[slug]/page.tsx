@@ -7,6 +7,8 @@ import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
 import { LegalDocument } from '@/components/scientific/LegalDocument';
 import { LegalNav } from '@/components/scientific/LegalNav';
 import { Container, Eyebrow } from '@/components/scientific/primitives';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 /**
  * One legal policy. The text is copied verbatim from the COCOJOJO retail site
@@ -56,7 +58,13 @@ export default function LegalPolicyPage({ params }: { params: { slug: string } }
         ])}
       />
 
-      <section className="border-b border-sci-border bg-sci-pale py-10">
+      <section className="relative isolate overflow-hidden border-b border-sci-border bg-sci-pale py-10">
+        <HeroMedia
+          src={HERO_IMAGES.legal.src}
+          alt={HERO_IMAGES.legal.alt}
+          tone="light"
+          priority
+        />
         <Container className="flex flex-col gap-5">
           <Eyebrow>COCOJOJO legal</Eyebrow>
 

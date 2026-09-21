@@ -80,6 +80,7 @@ const VALUE_STRIP = [
 const INDUSTRIES = [
   {
     eyebrow: '01 / Beauty & wellness',
+    imageAlt: 'Illustration of beauty and personal care manufacturing',
     title: ['Beauty &', 'personal care'],
     body: 'In brief, bring your next formulation to life with ingredients selected for your application. Moreover, our team ensures quality and consistency throughout.',
     image: '/scientific/industry-beauty.svg',
@@ -87,6 +88,7 @@ const INDUSTRIES = [
   },
   {
     eyebrow: '02 / Food ingredients',
+    imageAlt: 'Illustration of food and beverage ingredient production',
     title: ['Food &', 'beverage'],
     body: 'For example, source ingredients with purpose. In addition, discuss the right grade for your product.',
     image: '/scientific/industry-food.svg',
@@ -94,6 +96,7 @@ const INDUSTRIES = [
   },
   {
     eyebrow: '03 / Product development',
+    imageAlt: 'Illustration of formulation and manufacturing equipment',
     title: ['Formulation &', 'manufacturing'],
     body: 'Consequently, take your ideas further, from raw materials to finished products. Furthermore, we provide ongoing support.',
     image: '/scientific/industry-formulation.svg',
@@ -189,11 +192,20 @@ export default async function ScientificHomePage() {
                 className="flex flex-col gap-5 rounded-[14px] border border-sci-border bg-white p-7 transition hover:border-sci-blue hover:shadow-sm"
               >
                 {/* Exported from Figma — the illustration IS the design, so it
-                    is rendered from its own asset rather than reconstructed. */}
+                    is rendered from its own asset rather than reconstructed.
+
+                    Described rather than hidden. These were aria-hidden to
+                    stop the crawler flagging them for missing alt text, but
+                    that fixed the warning by removing the page's only images
+                    instead of by describing them — so the homepage read as
+                    having no imagery at all. The alt describes the drawing;
+                    the heading beside it already names the industry, so it
+                    does not repeat it. */}
                 <img
                   src={industry.image}
-                  alt=""
-                  aria-hidden
+                  alt={industry.imageAlt}
+                  loading="lazy"
+                  decoding="async"
                   className="h-[134px] w-full object-contain"
                 />
                 <Eyebrow>{industry.eyebrow}</Eyebrow>

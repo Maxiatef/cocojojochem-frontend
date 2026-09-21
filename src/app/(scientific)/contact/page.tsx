@@ -7,6 +7,8 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { CheckCircleIcon, GlobeIcon, MailIcon, PhoneIcon } from '@/components/icons';
 import { Container, Eyebrow, SciButton, SectionHeading } from '@/components/scientific/primitives';
 import { FollowUs } from '@/components/scientific/FollowUs';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
 
 /**
  * Contact, rebuilt to the "Scientific edition" design
@@ -138,7 +140,13 @@ export default function ContactPage() {
       {/* Page introduction — 19:463, reversed onto navy. The eyebrow goes teal
           rather than blue: sci-blue on sci-navy is too close in value to read
           as a separate element. */}
-      <section className="bg-sci-navy py-16 text-white">
+      <section className="relative isolate overflow-hidden bg-sci-navy py-16 text-white">
+        <HeroMedia
+          src={HERO_IMAGES.contact.src}
+          alt={HERO_IMAGES.contact.alt}
+          tone="dark"
+          priority
+        />
         <Container className="flex flex-col gap-6">
           <Eyebrow tone="accent">Let’s talk chemistry</Eyebrow>
           <h1 className="max-w-[1150px] font-sci-heading text-[40px] font-semibold leading-[48px] md:text-[64px] md:leading-[72px]">

@@ -7,6 +7,9 @@ import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonL
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
 import { IngredientRow } from '@/components/scientific/IngredientRow';
 import { ArrowLink, Container, Eyebrow, SciButton } from '@/components/scientific/primitives';
+import { HeroMedia } from '@/components/scientific/HeroMedia';
+import { HERO_IMAGES } from '@/lib/heroImages';
+import { SciProse } from '@/components/scientific/SciProse';
 
 /**
  * A single ingredient category, rebuilt to the "Scientific edition" design
@@ -38,6 +41,54 @@ function categoryKeywords(name: string): string[] {
     `buy ${lower} in bulk`,
     `${lower} for cosmetics`,
     `${lower} raw materials`,
+  ];
+}
+
+/**
+ * The buying guidance below every category listing.
+ *
+ * Category pages ran to roughly 150 words — a heading, a count and a list of
+ * product names — which is thin for a page meant to rank, and thin for a buyer
+ * too: the listing says WHAT we carry and nothing about how to purchase it.
+ * This is the part of a quote conversation that repeats for every category, so
+ * it is worth writing down once.
+ *
+ * It is generated from the category rather than stored per-category because
+ * none of the 41 categories has a description, and every statement here is
+ * true of all of them. Where a category eventually earns copy of its own, that
+ * copy should replace this rather than sit on top of it.
+ *
+ * Nothing here claims anything the site does not already state elsewhere:
+ * documentation on request, manual freight on drums, sourcing to order, and a
+ * minimum order value are all repeated from /products and /categories.
+ */
+function buyingGuidance(name: string, total: number) {
+  const lower = name.toLowerCase();
+  const some = total > 0 ? `the ${total === 1 ? 'material' : `${total} materials`} above` : 'this group';
+
+  return [
+    `Buying ${lower} wholesale differs from buying retail sizes, because the pack size changes the unit price rather than just the quantity. We quote every listing per pack, so the per-kilo or per-gallon cost usually falls as the pack grows. Compare ${some} on that basis rather than on headline price alone.`,
+    `Pack sizes vary by material. We supply fast-moving liquids from a gallon up to a drum, while actives and concentrates come in smaller weights because typical use levels are low. Where we sell a material by drum, the listing prices it by drum count — carriers quote that freight on pallet space, not parcel weight, so we confirm it manually instead of guessing from a rate table.`,
+    `Ask for documentation before you specify. Certificates of Analysis and Safety Data Sheets are available on request for anything we stock, and we recommend requesting both before you scale a formula from bench to production. Grades of the same INCI name differ between suppliers, so match on specification rather than on name alone.`,
+    `Stock moves, so a listing you checked last week may not reflect what is available today. Confirm quantities with the sales team when you are planning a production run. For predictable repeat usage we can hold material against a blanket order, which takes some of the stock risk and price movement out of your planning.`,
+    `If you need a grade, certification or pack size that is not shown here, send a quote request. We source to order against a customer specification in many cases, and our team can suggest alternatives within ${lower} when your first choice is unavailable. A minimum order value applies across the catalog, since this is a trade supply operation rather than a retail store.`,
+  ];
+}
+
+/**
+ * Named after the category rather than generic, because these headings are
+ * the page's only H3s and "Pack sizes and freight" is the same sentence on all
+ * 41 of them. Saying which material it refers to is more use to a reader
+ * skimming, and it stops the section reading as boilerplate pasted under every
+ * listing.
+ */
+function guidanceSubheadings(name: string) {
+  const lower = name.toLowerCase();
+  return [
+    { beforeIndex: 1, text: `Pack sizes and freight for ${lower}` },
+    { beforeIndex: 2, text: `${name} specifications and documentation` },
+    { beforeIndex: 3, text: `Stock and planning` },
+    { beforeIndex: 4, text: `Sourcing ${lower} to order` },
   ];
 }
 
@@ -136,7 +187,7 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
           </h1>
 
           <p className="font-sci-body text-sci-label font-medium text-sci-navy">
-            Specifically, {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · Sorted A–Z
+            {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · Sorted A–Z
           </p>
 
           <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
@@ -144,21 +195,33 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
               `First, every ${category.name.toLowerCase()} record we list includes pack sizes, wholesale pricing and live stock status. Importantly, all products carry full specification data and usage guidance. Furthermore, certificates of analysis and safety data sheets are available on request. Therefore, you can confirm grade and availability during quotation. Additionally, our sourcing team can suggest alternatives if your first choice isn't available. In fact, we handle custom volumes and sourcing to order. In particular, bulk quantities are available with trade pricing. As a result, you can compare options by price, function or stock status. Ultimately, browse this complete directory or contact us for your specific sourcing needs.`}
           </p>
 
-          {category.imageUrl && (
-            <div className="aspect-[21/9] w-full max-w-[900px] overflow-hidden rounded-xl bg-white">
-              {/* The <h1> above names the category, so a description here would
-                  restate it. Lazy: it sits below the fold on a phone. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* Described, not hidden. This was aria-hidden on the argument that
+              the <h1> already names the category — true, but it left the page
+              with no images at all as far as any crawler is concerned, and a
+              category page with nothing to look at is the weaker outcome. The
+              alt says what the picture IS rather than repeating the heading.
+
+              The category's own photograph is used where there is one; the
+              shared placeholder only stands in when there is not, so a real
+              asset always wins over stock imagery. */}
+          <div className="relative isolate aspect-[21/9] w-full max-w-[900px] overflow-hidden rounded-xl bg-white">
+            {category.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={category.imageUrl}
-                alt=""
-                aria-hidden
+                alt={`Photograph illustrating the ${category.name} ingredient category`}
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover"
               />
-            </div>
-          )}
+            ) : (
+              <HeroMedia
+                src={HERO_IMAGES.categories.src}
+                alt={HERO_IMAGES.categories.alt}
+                tone="light"
+              />
+            )}
+          </div>
 
           {(category.children?.length ?? 0) > 0 && (
             <div className="flex flex-col gap-3">
@@ -209,6 +272,13 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
           )}
         </Container>
       </section>
+
+      <SciProse
+        eyebrow={`Buying ${category.name.toLowerCase()}`}
+        heading={`How to order ${category.name.toLowerCase()} wholesale`}
+        paragraphs={buyingGuidance(category.name, total)}
+        subheadings={guidanceSubheadings(category.name)}
+      />
 
       {/* Contact / Request a quote — 21:1078 */}
       <section className="bg-sci-pale py-16">
