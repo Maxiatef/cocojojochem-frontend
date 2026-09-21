@@ -43,7 +43,14 @@ function money(value: number) {
  * numbers honest about what they measure: activity on orders, and what those
  * orders are worth.
  */
-export function TeamReportPanel({ endpoint }: { endpoint: string }) {
+export function TeamReportPanel({
+  endpoint,
+  teamId,
+}: {
+  endpoint: string;
+  /** See TeamActivityFeed — selects among the caller's own teams, nothing more. */
+  teamId?: string;
+}) {
   const tz = useSiteTimezone();
   const [days, setDays] = useState<number | null>(30);
   const [from, setFrom] = useState(isoDaysAgo(30));
@@ -55,13 +62,15 @@ export function TeamReportPanel({ endpoint }: { endpoint: string }) {
   }, [days, from, to]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['team-report', endpoint, range.from, range.to],
-    queryFn: () =>
-      api.get<TeamReport>(
-        `${endpoint}?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(
-          `${range.to}T23:59:59.999Z`,
-        )}`,
-      ),
+    queryKey: ['team-report', endpoint, teamId ?? '', range.from, range.to],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        from: range.from,
+        to: `${range.to}T23:59:59.999Z`,
+      });
+      if (teamId) params.set('teamId', teamId);
+      return api.get<TeamReport>(`${endpoint}?${params.toString()}`);
+    },
   });
 
   const peakDay = useMemo(() => {

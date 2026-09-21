@@ -51,10 +51,18 @@ const ACTIONS = [
 export function TeamActivityFeed({
   endpoint,
   members,
+  teamId,
 }: {
   endpoint: string;
   /** Used only to populate the per-member filter. */
   members: Pick<TeamMemberSummary, 'id' | 'fullName'>[];
+  /**
+   * Which of the caller's managed teams to read, for someone over more than
+   * one. Only the /teams/my-team/* endpoint takes it — the admin endpoint
+   * carries the team in its path — and the server still pins it to the
+   * caller, so it selects rather than grants.
+   */
+  teamId?: string;
 }) {
   const tz = useSiteTimezone();
   const [page, setPage] = useState(1);
@@ -73,9 +81,10 @@ export function TeamActivityFeed({
   if (actorId) params.set('actorId', actorId);
   if (action) params.set('action', action);
   if (search.trim()) params.set('search', search.trim());
+  if (teamId) params.set('teamId', teamId);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['team-activity', endpoint, page, actorId, action, search],
+    queryKey: ['team-activity', endpoint, teamId ?? '', page, actorId, action, search],
     queryFn: () => api.get<Paginated<AuditLogEntry>>(`${endpoint}?${params.toString()}`),
   });
 

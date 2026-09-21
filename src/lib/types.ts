@@ -869,6 +869,14 @@ export interface TeamOption {
 }
 
 /** A staff account the admin can drop into a team, with where they sit today. */
+/** One entry in the My Team switcher — every team the signed-in user manages. */
+export interface ManagedTeamOption {
+  id: string;
+  name: string;
+  description: string | null;
+  memberCount: number;
+}
+
 export interface AssignableStaff {
   id: string;
   fullName: string;
@@ -876,6 +884,10 @@ export interface AssignableStaff {
   roleName: string | null;
   teamId: string | null;
   teamName: string | null;
+  /** Their role grants canViewOwnTeam or canManageOwnTeam — i.e. they can actually run a team. */
+  canManageTeam: boolean;
+  /** The teams they already manage. Empty for most people. */
+  managesTeams: { id: string; name: string }[];
 }
 
 export interface TeamMemberSummary {
@@ -894,6 +906,12 @@ export interface TeamOverview {
   members: TeamMemberSummary[];
   memberCount: number;
   totalActions: number;
+  /**
+   * How the signed-in user relates to this team. MEMBER gets the roster only,
+   * and its actionCount / lastActiveAt / totalActions are never populated —
+   * the server does not run that query for them.
+   */
+  viewerRole?: 'MANAGER' | 'MEMBER';
 }
 
 export interface TeamReportMember {

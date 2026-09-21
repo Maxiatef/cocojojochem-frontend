@@ -80,6 +80,28 @@ export function TeamsTab() {
     enabled: modalOpen && canManage,
   });
 
+  // Anyone may be a *member*; only someone whose role can open a team view is
+  // offered as its *manager*. The team being edited is subtracted from each
+  // person's "already manages" list, so reopening a team doesn't report its
+  // own manager as double-booked.
+  const managerOptions = useMemo(
+    () =>
+      (staff ?? [])
+        .filter((s) => s.canManageTeam)
+        .map((s) => ({
+          ...s,
+          elsewhere: s.managesTeams.filter((t) => t.id !== form.id),
+        })),
+    [staff, form.id],
+  );
+
+  // A team saved before its manager's role lost the permission would otherwise
+  // silently drop to "No manager yet" on the next save. Keeping the current
+  // pick in the list makes that visible instead.
+  const currentManagerMissing =
+    form.managerId !== '' && !managerOptions.some((s) => s.id === form.managerId);
+  const currentManager = (staff ?? []).find((s) => s.id === form.managerId);
+
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: ['admin-teams'] });
     queryClient.invalidateQueries({ queryKey: ['assignable-staff'] });
@@ -274,19 +296,34 @@ export function TeamsTab() {
               placeholder="e.g. Wholesale Sales"
               disabled={!canManage}
             />
-            <SelectField
-              label="Manager"
-              value={form.managerId}
-              onChange={(e) => setForm((p) => ({ ...p, managerId: e.target.value }))}
-              disabled={!canManage}
-            >
-              <option value="">No manager yet</option>
-              {(staff ?? []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.fullName} {s.roleName ? `(${s.roleName})` : ''}
-                </option>
-              ))}
-            </SelectField>
+            <div>
+              <SelectField
+                label="Manager"
+                value={form.managerId}
+                onChange={(e) => setForm((p) => ({ ...p, managerId: e.target.value }))}
+                disabled={!canManage}
+              >
+                <option value="">No manager yet</option>
+                {currentManagerMissing && (
+                  <option value={form.managerId}>
+                    {currentManager?.fullName ?? 'Current manager'} — role can no longer open a
+                    team
+                  </option>
+                )}
+                {managerOptions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.fullName}
+                    {s.roleName ? ` (${s.roleName})` : ''}
+                    {s.elsewhere.length > 0 ? ` — already manages ${s.elsewhere.map((t) => t.name).join(', ')}` : ''}
+                  </option>
+                ))}
+              </SelectField>
+              <p className="mt-1 text-xs text-slate-500">
+                {managerOptions.length === 0
+                  ? 'No role currently grants “View your own team’s activity”, so there is nobody to manage a team yet.'
+                  : 'Only staff whose role can open a team view are listed. One person may manage several teams.'}
+              </p>
+            </div>
           </div>
 
           <TextAreaField
