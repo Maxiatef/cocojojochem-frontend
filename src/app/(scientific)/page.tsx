@@ -55,9 +55,17 @@ export async function generateMetadata(): Promise<Metadata> {
     images: [seo?.ogImageUrl],
   });
 
-  // The home page leads with the brand already, so it opts out of the
-  // "| BRAND" title template the rest of the site uses.
-  return { ...meta, title: { absolute: `${SITE_NAME} — ${seo?.metaTitle || HOME_TITLE}` } };
+  // The home page opens with the brand rather than trailing it, so it opts out
+  // of the "| BRAND" template the rest of the site uses.
+  //
+  // The prefix is conditional: HOME_TITLE carries no brand, but a title typed
+  // into the SEO editor usually does. Prefixing unconditionally produced
+  // "CocoJojoChem — CocoJojoChem — Wholesale Cosmetic Ingredients", which is
+  // both a repeated word and 628px wide against a ~580px budget.
+  const raw = seo?.metaTitle || HOME_TITLE;
+  const homeTitle = new RegExp(SITE_NAME, 'i').test(raw) ? raw : `${SITE_NAME} — ${raw}`;
+
+  return { ...meta, title: { absolute: homeTitle } };
 }
 
 /** Used when the catalogue has no categories yet — the design's own copy. */

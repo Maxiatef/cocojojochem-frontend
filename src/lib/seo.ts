@@ -107,8 +107,20 @@ export function pageMetadata({
   const url = absoluteUrl(path);
   const ogImages = (images || []).filter(Boolean).map((src) => absoluteUrl(src as string));
 
+  // The root layout appends ` | CocoJojoChem` to every bare title. Right for
+  // "About COCOJOJO"; wrong for a title that already names the brand — which
+  // is what the admin SEO editor produces, because someone writing the
+  // headline they want in Google naturally types the company name. The stored
+  // override for `/categories` is "Ingredient Categories | CocoJojoChem" and
+  // was rendering as "Ingredient Categories | CocoJojoChem | CocoJojoChem".
+  //
+  // Fixed here rather than by cleaning the stored rows: editing the data fixes
+  // today and not tomorrow, since the next person to touch that field will
+  // type the brand again.
+  const titleField = new RegExp(SITE_NAME, 'i').test(title) ? { absolute: title } : title;
+
   return {
-    title,
+    title: titleField,
     description,
     keywords: buildKeywords(keywords, BASE_KEYWORDS),
     alternates: { canonical: url },

@@ -99,14 +99,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const category = await serverFetch<Category>(`/wholesale/categories/${params.slug}`);
 
-  if (!category) {
-    return pageMetadata({
-      title: 'Category Not Found',
-      description: `Browse the full ${SITE_NAME} wholesale cosmetic ingredient catalog by category.`,
-      path: `/categories/${params.slug}`,
-      noIndex: true,
-    });
-  }
+  // See products/[slug] — same soft-404 fix, same reason.
+  if (!category) notFound();
 
   const count = category.productCount ?? 0;
   return pageMetadata({

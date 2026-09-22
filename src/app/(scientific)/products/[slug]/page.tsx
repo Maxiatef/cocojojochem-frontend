@@ -55,14 +55,15 @@ export async function generateMetadata({
     cache: 'no-store',
   });
 
-  if (!product) {
-    return pageMetadata({
-      title: 'Product Not Found',
-      description: `This product is no longer listed. Browse the full ${SITE_NAME} wholesale ingredient catalog.`,
-      path: `/products/${params.slug}`,
-      noIndex: true,
-    });
-  }
+  // notFound() here, not a "Product Not Found" Metadata object.
+  //
+  // The page body already calls notFound(), but by the time it runs the
+  // response has begun streaming and the status is fixed — so a missing
+  // product answered HTTP 200 with a titled, heading-less page. That is a
+  // soft 404: Google treats it as a quality problem and will happily index
+  // the empty shell. generateMetadata runs before the stream opens, which is
+  // the last point a real 404 can still be sent.
+  if (!product) notFound();
 
   // The admin's per-product SEO fields (ProductSeo) take priority over the
   // derived defaults, so anything typed in the product editor's SEO tab
