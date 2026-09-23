@@ -42,6 +42,19 @@ export function organizationSchema() {
     url: SITE_URL,
     description:
       'Wholesale supplier of cosmetic and personal-care ingredients — carrier oils, butters, waxes, emulsifiers, surfactants, actives and peptides in bulk and drum quantities.',
+    // Tells search engines and AI models this is the B2B ingredients business,
+    // so it isn't merged with other brands that share the COCOJOJO name.
+    disambiguatingDescription:
+      'CocoJojoChem is the B2B wholesale ingredients supplier, selling raw materials in bulk to formulators and manufacturers — not a consumer skincare brand.',
+    knowsAbout: [
+      'cosmetic ingredients',
+      'carrier oils',
+      'emulsifiers',
+      'surfactants',
+      'cosmetic actives',
+      'peptides',
+      'INCI nomenclature',
+    ],
     logo: {
       '@type': 'ImageObject',
       url: absoluteUrl('/icon.svg'),
