@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 /**
@@ -9,6 +10,20 @@ import Link from 'next/link';
  * clickable but only responds on its last line is a small, repeated annoyance
  * across twelve of them.
  */
+// Must match images.remotePatterns in next.config.js. next/image throws on any
+// other host, so an image uploaded somewhere else (e.g. the API's own
+// /uploads) is passed through unoptimised rather than taking the page down.
+const OPTIMISABLE_HOSTS = ['static.cocojojo.com', 'images.unsplash.com'];
+
+function isOptimisable(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && OPTIMISABLE_HOSTS.includes(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function CategoryCard({
   href,
   name,
@@ -28,18 +43,19 @@ export function CategoryCard({
       {imageUrl && (
         // Bleeds to the card edges: the padding belongs to the text, not to a
         // banner sitting above it.
-        <div className="-mx-6 -mt-6 aspect-[16/9] overflow-hidden rounded-t-xl bg-sci-pale">
+        <div className="relative -mx-6 -mt-6 aspect-[16/9] overflow-hidden rounded-t-xl bg-sci-pale">
           {/* Decorative — the category name is the next line of this same
-              link, so alt text here is announced twice over. Lazy because the
-              grid renders every category at once. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+              link, so alt text here is announced twice over. next/image
+              lazy-loads by default and, with `sizes`, fetches a card-sized
+              file rather than the multi-megabyte original. */}
+          <Image
             src={imageUrl}
             alt=""
             aria-hidden
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            fill
+            unoptimized={!isOptimisable(imageUrl)}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>
       )}

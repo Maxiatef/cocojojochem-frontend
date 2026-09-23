@@ -2,6 +2,19 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // Hosts next/image may resize. Category photos are multi-megabyte PNGs on
+  // static.cocojojo.com; served raw, /categories downloaded ~5.9 MB of them.
+  // Through the optimizer each card gets a right-sized AVIF/WebP instead,
+  // cached for a year (the source files are content-addressed, never edited).
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
+    remotePatterns: [
+      { protocol: 'https', hostname: 'static.cocojojo.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
+  },
+
   // Lets a one-off build run somewhere other than .next, so it does not fight
   // a dev server that is already using it. Unset in normal use.
   ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
