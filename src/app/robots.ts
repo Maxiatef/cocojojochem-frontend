@@ -23,6 +23,7 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    // No `host:` — Host is a non-standard Yandex directive, and validators
+    // flag it as invalid syntax. Google ignores it.
   };
 }
