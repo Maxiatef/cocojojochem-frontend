@@ -1,3 +1,6 @@
+import Image from 'next/image';
+import { isOptimisable } from '@/lib/images';
+
 /**
  * A photograph behind a hero section, under a blue wash.
  *
@@ -38,14 +41,24 @@ export function HeroMedia({
 
   return (
     <div className="absolute inset-0 -z-10">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      {/* next/image rather than a plain <img>, for three reasons Lighthouse
+          measured on /about:
+          - `priority` puts a <link rel="preload"> in the <head>, so the
+            browser starts the download before it has parsed down to the
+            hero. Without it the LCP image waited ~0.3–0.9 s to be discovered.
+          - It is served from this origin via /_next/image, so there is no
+            extra DNS + TLS handshake to images.unsplash.com on the
+            critical path.
+          - `sizes` lets a phone fetch a phone-width file; the fixed w=1600
+            source was 1600x2180 for a 721x1084 slot. */}
+      <Image
         src={src}
         alt={alt}
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
-        decoding="async"
-        className={`h-full w-full object-cover ${dark ? '' : 'opacity-90'}`}
+        fill
+        priority={priority}
+        sizes="100vw"
+        unoptimized={!isOptimisable(src)}
+        className={`object-cover ${dark ? '' : 'opacity-90'}`}
       />
 
       {/* Two washes, not one, because the copy moves.
