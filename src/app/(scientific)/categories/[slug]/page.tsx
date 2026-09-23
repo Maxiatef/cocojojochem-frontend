@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
+import { isOptimisable } from '@/lib/images';
 import { notFound } from 'next/navigation';
 import { serverFetch } from '@/lib/serverFetch';
 import { Category, Paginated, Product } from '@/lib/types';
@@ -200,13 +202,16 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
               asset always wins over stock imagery. */}
           <div className="relative isolate aspect-[21/9] w-full max-w-[900px] overflow-hidden rounded-xl bg-white">
             {category.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              // Through next/image: the source files are multi-megabyte PNGs
+              // (1.6 MB for Acids) with a 4-hour cache on their host. This
+              // serves a banner-sized AVIF/WebP cached for a year instead.
+              <Image
                 src={category.imageUrl}
                 alt={`Photograph illustrating the ${category.name} ingredient category`}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover"
+                fill
+                sizes="(min-width: 900px) 900px, 100vw"
+                unoptimized={!isOptimisable(category.imageUrl)}
+                className="object-cover"
               />
             ) : (
               <HeroMedia

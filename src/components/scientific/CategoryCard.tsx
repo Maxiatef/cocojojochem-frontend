@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { isOptimisable } from '@/lib/images';
 
 /**
  * A category tile from the "Ingredient catalog" design
@@ -10,20 +11,6 @@ import Link from 'next/link';
  * clickable but only responds on its last line is a small, repeated annoyance
  * across twelve of them.
  */
-// Must match images.remotePatterns in next.config.js. next/image throws on any
-// other host, so an image uploaded somewhere else (e.g. the API's own
-// /uploads) is passed through unoptimised rather than taking the page down.
-const OPTIMISABLE_HOSTS = ['static.cocojojo.com', 'images.unsplash.com'];
-
-function isOptimisable(url: string): boolean {
-  try {
-    const u = new URL(url);
-    return u.protocol === 'https:' && OPTIMISABLE_HOSTS.includes(u.hostname);
-  } catch {
-    return false;
-  }
-}
-
 export function CategoryCard({
   href,
   name,
