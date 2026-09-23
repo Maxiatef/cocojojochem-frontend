@@ -57,7 +57,7 @@ export function organizationSchema() {
     ],
     logo: {
       '@type': 'ImageObject',
-      url: absoluteUrl('/icon.svg'),
+      url: absoluteUrl('/icon.png'),
     },
     contactPoint: {
       '@type': 'ContactPoint',

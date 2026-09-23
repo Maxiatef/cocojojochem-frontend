@@ -17,6 +17,9 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://cocojojoch
 );
 
 export const SITE_NAME = 'CocoJojoChem';
+
+/** Fallback share image for pages without a photo. Lives in /public. */
+export const DEFAULT_SHARE_IMAGE = '/brand/cocojojo-logo.png';
 export const SITE_TAGLINE = 'Wholesale Cosmetic Ingredients';
 
 /** Absolute URL for a site-relative path. JSON-LD requires absolute URLs. */
@@ -105,7 +108,12 @@ export function pageMetadata({
   noIndex?: boolean;
 }): Metadata {
   const url = absoluteUrl(path);
-  const ogImages = (images || []).filter(Boolean).map((src) => absoluteUrl(src as string));
+  const own = (images || []).filter(Boolean).map((src) => absoluteUrl(src as string));
+  // A page with no photograph of its own still gets the brand logo, so a
+  // share preview or search result has a picture rather than a blank. Only
+  // for Open Graph / Twitter — never in Product JSON-LD, where a logo would
+  // be claiming to be a photo of the product.
+  const ogImages = own.length ? own : [absoluteUrl(DEFAULT_SHARE_IMAGE)];
 
   // The root layout appends ` | CocoJojoChem` to every bare title. Right for
   // "About COCOJOJO"; wrong for a title that already names the brand — which
