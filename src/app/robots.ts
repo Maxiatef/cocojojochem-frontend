@@ -9,7 +9,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        // Sign-in and sign-up may be listed; the rest of /account may not.
+        // Google applies the most specific (longest) matching rule, so these
+        // win over the '/account' disallow below.
+        allow: ['/', '/account/login', '/account/register'],
         disallow: [
           '/admin',
           '/api',
