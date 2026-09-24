@@ -100,6 +100,23 @@ export async function generateMetadata({
   });
 }
 
+/** "Same category · Emulsifier" — names the shared function where there is one. */
+function relatedReason(
+  by: NonNullable<Product['relatedBy']>,
+  current: Product,
+  other: Product,
+): string {
+  const parts: string[] = [];
+  if (by.includes('category') && other.category) parts.push(`Same category: ${other.category.name}`);
+  if (by.includes('brand') && other.brand) parts.push(`Same brand: ${other.brand}`);
+  if (by.includes('function')) {
+    const mine = new Set((current.functions || []).map((f) => f.id));
+    const shared = (other.functions || []).filter((f) => mine.has(f.id)).map((f) => f.name);
+    parts.push(shared.length ? `Also ${shared.slice(0, 2).join(', ')}` : 'Similar function');
+  }
+  return parts.join(' · ');
+}
+
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   const product = await serverFetch<Product>(`/wholesale/products/${params.slug}`, {
     cache: 'no-store',
@@ -188,10 +205,23 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               <h2 className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy">
                 You may also need
               </h2>
+              <p className="font-sci-body text-sci-body text-sci-muted">
+                Materials from the same category, the same brand or with the same functions as{' '}
+                {product.name}.
+              </p>
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {related.map((p) => (
-                <ProductTile key={p.id} product={p} />
+                <div key={p.id} className="flex flex-col gap-2">
+                  <ProductTile product={p} />
+                  {/* Why it's here — ranked by the API on category, brand and
+                      shared functions, most-alike first. */}
+                  {p.relatedBy && p.relatedBy.length > 0 && (
+                    <p className="font-sci-body text-[12px] leading-4 text-sci-muted">
+                      {relatedReason(p.relatedBy, product, p)}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
           </Container>

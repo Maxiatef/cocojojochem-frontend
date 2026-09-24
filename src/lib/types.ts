@@ -99,6 +99,8 @@ export interface Product {
   visibility: ProductVisibility;
   visibilityPassword: string | null;
   scheduledPublishAt: string | null;
+  /** Only on /related results: which signals made this a recommendation. */
+  relatedBy?: ('category' | 'brand' | 'function')[];
   brand: string | null;
   description: string | null;
   specs: ProductSpecRow[];
