@@ -35,8 +35,12 @@ const DEFAULT_METADATA: Metadata = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+    // Cached for 5 minutes rather than no-store. no-store made the whole page
+    // render per request (~1.4 s on the server), and Next streamed the loading
+    // spinner first with the real hero after it — a 1.7 s LCP render delay on
+    // /functions. SEO text edited in the admin still shows within 5 minutes.
   const seo = await serverFetch<SeoPage>(`/seo-pages/by-path?path=${encodeURIComponent('/categories')}`, {
-    cache: 'no-store',
+    revalidate: 300,
   });
   return pageMetadata({
     title: seo?.metaTitle || (DEFAULT_METADATA.title as string),
