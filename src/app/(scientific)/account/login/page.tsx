@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent, Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
 import { setCustomerTokens } from '@/lib/customerAuth';
@@ -17,8 +17,6 @@ import { EyeIcon, EyeOffIcon } from '@/components/icons';
 
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,7 +62,11 @@ function LoginForm() {
         clearWishlist();
       }
 
-      router.push(redirectTo);
+      // Read at submit time rather than with useSearchParams: that hook
+      // forces a <Suspense> boundary, so the server sent an empty page and
+      // the form popped in on hydration — a 0.24 layout shift in Lighthouse.
+      // The redirect is only needed here, after the user has submitted.
+      router.push(new URLSearchParams(window.location.search).get('redirect') || '/');
     } catch (err) {
       setError(getFriendlyErrorMessage(err, 'login'));
     } finally {
@@ -109,6 +111,9 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
               tabIndex={-1}
               className="absolute inset-y-0 right-0 flex items-center px-3 text-sci-muted hover:text-sci-navy"
             >
@@ -141,9 +146,5 @@ function LoginForm() {
 }
 
 export default function CustomerLoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
-  );
+  return <LoginForm />;
 }
