@@ -1,4 +1,5 @@
 import { ArrowLink, Container, Eyebrow, SciButton } from '@/components/scientific/primitives';
+import { HeroVideo } from '@/components/scientific/HeroVideo';
 
 /**
  * "The right chemistry. For what's next." — Figma 33:236.
@@ -34,17 +35,7 @@ export function Hero() {
     <section className="relative isolate overflow-hidden bg-gradient-to-r from-sci-deep to-[#0b3556]">
       {/* The film. `muted` + `playsInline` are what make autoplay legal on
           iOS and in Chrome; the file carries no audio track at all. */}
-      <video
-        aria-hidden
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover motion-safe:md:block"
-      >
-        <source src="/scientific/hero-molecular.mp4" type="video/mp4" />
-      </video>
+      <HeroVideo src="/scientific/hero-molecular.mp4" className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover motion-safe:md:block" />
 
       <div
         aria-hidden
@@ -158,16 +149,7 @@ export function Hero() {
         className="pointer-events-none absolute bottom-0 right-0 w-[282.05%] max-w-[1100px] translate-x-[5.45%] translate-y-[32.72%] md:hidden"
       >
         <div className="relative aspect-[2/1] w-full [mask-image:linear-gradient(to_bottom,transparent_0%,#000_24%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,#000_24%)]">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
-          >
-            <source src="/scientific/hero-molecular.mp4" type="video/mp4" />
-          </video>
+          <HeroVideo src="/scientific/hero-molecular.mp4" className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden" />
 
           {/* Reduced-motion fallback. The box is 2:1 like the desktop frame,
               so the layers keep their original percentage offsets. */}
