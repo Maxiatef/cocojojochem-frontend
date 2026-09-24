@@ -1,4 +1,15 @@
+import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+
+// Sign-in, sign-up and the signed-in account pages are not search results.
+// robots.txt already disallows /account, but a disallowed URL can still be
+// indexed from links elsewhere — noindex is what actually keeps it out.
+// No canonical either: these pages used to inherit the root layout's
+// canonical of "/", telling crawlers the login form was the homepage.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+  alternates: { canonical: null },
+};
 
 /**
  * The account section used to declare its own display face (Space Grotesk)

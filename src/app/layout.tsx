@@ -34,7 +34,9 @@ export const metadata: Metadata = {
   publisher: SITE_NAME,
   category: 'Cosmetic Ingredients',
 
-  alternates: { canonical: '/' },
+  // No site-wide canonical. A default of '/' was inherited by every page
+  // that didn't set its own (login, register, cart), declaring each of them
+  // a duplicate of the homepage. Pages set their own via pageMetadata().
 
   openGraph: {
     type: 'website',

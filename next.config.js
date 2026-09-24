@@ -27,6 +27,15 @@ const nextConfig = {
     return [
       { source: '/terms-of-service', destination: '/legal/terms-of-service', permanent: true },
       { source: '/privacy-policy', destination: '/legal/privacy-policy', permanent: true },
+      // Addresses people (and SEO tools) guess for sign-in and sign-up. The
+      // real pages live under /account; without these the guesses 404.
+      { source: '/signup', destination: '/account/register', permanent: true },
+      { source: '/sign-up', destination: '/account/register', permanent: true },
+      { source: '/register', destination: '/account/register', permanent: true },
+      { source: '/account/signup', destination: '/account/register', permanent: true },
+      { source: '/login', destination: '/account/login', permanent: true },
+      { source: '/signin', destination: '/account/login', permanent: true },
+      { source: '/sign-in', destination: '/account/login', permanent: true },
     ];
   },
 };
