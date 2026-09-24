@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent, Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -11,10 +11,8 @@ import { EyeIcon, EyeOffIcon } from '@/components/icons';
 // The token in the URL was minted already code-verified, so there's no
 // 5-digit step here — this posts straight to the same /auth/reset-password
 // endpoint the self-service flow finishes on.
-function SetPasswordForm() {
+function SetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -172,19 +170,15 @@ function SetPasswordForm() {
   );
 }
 
-// useSearchParams needs a Suspense boundary above it, or Next fails the
-// production build for this route with a prerender error.
-export default function SetPasswordPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-[460px] px-6 py-16">
-          <h1 className="font-sci-heading text-[32px] font-semibold leading-10 text-sci-navy">Set your password</h1>
-          <p className="mt-2 font-sci-body text-sci-body text-sci-muted">Loading…</p>
-        </div>
-      }
-    >
-      <SetPasswordForm />
-    </Suspense>
-  );
+// The token comes in as a page prop rather than through useSearchParams.
+// That hook needs a <Suspense> boundary, so the server sent a short
+// "Loading…" placeholder and swapped the taller form in on hydration — a 0.09
+// layout shift. As a prop, the finished form is in the server HTML.
+export default function SetPasswordPage({
+  searchParams,
+}: {
+  searchParams: { token?: string | string[] };
+}) {
+  const raw = searchParams.token;
+  return <SetPasswordForm token={(Array.isArray(raw) ? raw[0] : raw) || ''} />;
 }

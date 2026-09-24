@@ -260,13 +260,7 @@ function CustomerCartView() {
     onError: (err) => setError(getFriendlyErrorMessage(err)),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
-      </div>
-    );
-  }
+  if (isLoading) return <CartSpinner />;
 
   const items = data?.items || [];
   const subtotal = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
@@ -338,6 +332,14 @@ function ServerCartRow({
         />
       )}
     </>
+  );
+}
+
+function CartSpinner() {
+  return (
+    <div className="flex justify-center py-24" aria-busy="true">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
+    </div>
   );
 }
 
@@ -422,7 +424,12 @@ export default function CartPage() {
 
       <section className="bg-white py-12">
         <Container>
-          {isAuthed === null ? null : isAuthed ? <CustomerCartView /> : <GuestCartView />}
+          {/* The sign-in check needs localStorage, so the first render can't
+              know which cart to show. Rendering nothing here let the footer
+              paint high and then get pushed down (0.12 CLS). The spinner is
+              the same size as the loading state and close to the empty-cart
+              box, so whichever arrives, nothing below it moves. */}
+          {isAuthed === null ? <CartSpinner /> : isAuthed ? <CustomerCartView /> : <GuestCartView />}
         </Container>
       </section>
     </>
