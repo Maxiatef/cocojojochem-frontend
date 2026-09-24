@@ -84,8 +84,9 @@ export default function ForgotPasswordPage() {
       {step === 'email' && (
         <form onSubmit={handleSendCode} className="mt-8 space-y-4">
           <div>
-            <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
+            <label htmlFor="f-email" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
             <input
+            id="f-email"
               type="email"
               required
               value={email}
@@ -107,10 +108,11 @@ export default function ForgotPasswordPage() {
       {step === 'code' && (
         <form onSubmit={handleVerifyCode} className="mt-8 space-y-4">
           <div>
-            <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
+            <label htmlFor="f-5-digit-code" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
               5-digit code
             </label>
             <input
+            id="f-5-digit-code"
               type="text"
               required
               inputMode="numeric"
@@ -146,10 +148,11 @@ export default function ForgotPasswordPage() {
       {step === 'password' && (
         <form onSubmit={handleResetPassword} className="mt-8 space-y-4">
           <div>
-            <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
+            <label htmlFor="f-new-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
               New password
             </label>
             <input
+            id="f-new-password"
               type="password"
               required
               minLength={8}
@@ -160,10 +163,11 @@ export default function ForgotPasswordPage() {
             />
           </div>
           <div>
-            <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
+            <label htmlFor="f-confirm-new-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
               Confirm new password
             </label>
             <input
+            id="f-confirm-new-password"
               type="password"
               required
               minLength={8}

@@ -79,8 +79,9 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
+          <label htmlFor="f-email" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
           <input
+            id="f-email"
             type="email"
             required
             value={email}
@@ -91,13 +92,14 @@ function LoginForm() {
 
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-sci-muted">Password</label>
+            <label htmlFor="f-password" className="block text-xs font-semibold uppercase tracking-wide text-sci-muted">Password</label>
             <Link href="/account/forgot-password" className="text-xs font-medium text-sci-blue hover:underline">
               Forgot password?
             </Link>
           </div>
           <div className="relative">
             <input
+            id="f-password"
               type={showPassword ? 'text' : 'password'}
               required
               value={password}

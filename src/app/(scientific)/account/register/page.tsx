@@ -156,8 +156,9 @@ function RegisterForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Full name</label>
+          <label htmlFor="f-full-name" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Full name</label>
           <input
+            id="f-full-name"
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -166,8 +167,9 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Company name (optional)</label>
+          <label htmlFor="f-company-name-optional" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Company name (optional)</label>
           <input
+            id="f-company-name-optional"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
@@ -176,10 +178,11 @@ function RegisterForm() {
 
         {companyName && (
           <div>
-            <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
+            <label htmlFor="f-company-website-optional" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
               Company website (optional)
             </label>
             <input
+            id="f-company-website-optional"
               type="text"
               placeholder="yourcompany.com"
               value={companyWebsite}
@@ -190,10 +193,11 @@ function RegisterForm() {
         )}
 
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Phone</label>
+          <label htmlFor="f-phone" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Phone</label>
           <div className="flex gap-2">
             <PhoneCountrySelect value={countryIso2} onChange={setCountryIso2} />
             <input
+            id="f-phone"
               type="tel"
               required
               inputMode="numeric"
@@ -210,8 +214,9 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
+          <label htmlFor="f-email" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
           <input
+            id="f-email"
             type="email"
             required
             value={email}
@@ -221,9 +226,10 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Password</label>
+          <label htmlFor="f-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Password</label>
           <div className="relative">
             <input
+            id="f-password"
               type={showPassword ? 'text' : 'password'}
               required
               minLength={8}
@@ -244,9 +250,10 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Confirm Password</label>
+          <label htmlFor="f-confirm-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Confirm Password</label>
           <div className="relative">
             <input
+            id="f-confirm-password"
               type={showConfirmPassword ? 'text' : 'password'}
               required
               minLength={8}

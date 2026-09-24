@@ -92,11 +92,12 @@ function SetPasswordForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
+          <label htmlFor="f-new-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
             New password
           </label>
           <div className="relative">
             <input
+            id="f-new-password"
               type={showNew ? 'text' : 'password'}
               required
               minLength={8}
@@ -120,11 +121,12 @@ function SetPasswordForm() {
           <p className="mt-1.5 text-xs text-sci-muted">At least 8 characters.</p>
         </div>
         <div>
-          <label className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
+          <label htmlFor="f-confirm-new-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
             Confirm new password
           </label>
           <div className="relative">
             <input
+            id="f-confirm-new-password"
               type={showConfirm ? 'text' : 'password'}
               required
               minLength={8}

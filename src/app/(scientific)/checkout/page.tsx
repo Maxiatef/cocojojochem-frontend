@@ -339,8 +339,9 @@ export default function CheckoutPage() {
             <h2 className="mb-5 font-sci-heading text-[20px] font-semibold text-sci-navy">Contact Information</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className={labelClass}>Email</label>
+                <label htmlFor="f-email" className={labelClass}>Email</label>
                 <input
+            id="f-email"
                   type="email"
                   required
                   disabled={isAuthed}
@@ -365,8 +366,9 @@ export default function CheckoutPage() {
                 </label>
                 {createAccount && (
                   <div className="mt-3">
-                    <label className={labelClass}>Password</label>
+                    <label htmlFor="f-password" className={labelClass}>Password</label>
                     <input
+            id="f-password"
                       type="password"
                       required={createAccount}
                       minLength={8}
@@ -384,24 +386,28 @@ export default function CheckoutPage() {
             <h2 className="mb-5 font-sci-heading text-[20px] font-semibold text-sci-navy">Shipping Address</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className={labelClass}>First name</label>
-                <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
+                <label htmlFor="f-first-name" className={labelClass}>First name</label>
+                <input
+            id="f-first-name" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Last name</label>
-                <input required value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
+                <label htmlFor="f-last-name" className={labelClass}>Last name</label>
+                <input
+            id="f-last-name" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelClass}>Company name (optional)</label>
-                <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
+                <label htmlFor="f-company-name-optional" className={labelClass}>Company name (optional)</label>
+                <input
+            id="f-company-name-optional" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
               </div>
               {/* International shipping disabled for now — US only. Country is
                   fixed to 'US' (see countryIso2 initial state above) instead of
                   offering a picker here. Re-enable by uncommenting this block
                   and the InternationalShippingNotice usage below. */}
               {/* <div className="sm:col-span-2">
-                <label className={labelClass}>Country</label>
+                <label htmlFor="f-country" className={labelClass}>Country</label>
                 <select
+            id="f-country"
                   required
                   value={countryIso2}
                   onChange={(e) => {
@@ -418,8 +424,9 @@ export default function CheckoutPage() {
                 </select>
               </div> */}
               <div className="sm:col-span-2">
-                <label className={labelClass}>State</label>
+                <label htmlFor="f-state" className={labelClass}>State</label>
                 <select
+            id="f-state"
                   required
                   value={stateCode}
                   onChange={(e) => setStateCode(e.target.value)}
@@ -434,24 +441,29 @@ export default function CheckoutPage() {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className={labelClass}>Street address</label>
-                <input required value={street} onChange={(e) => setStreet(e.target.value)} className={inputClass} />
+                <label htmlFor="f-street-address" className={labelClass}>Street address</label>
+                <input
+            id="f-street-address" required value={street} onChange={(e) => setStreet(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>City</label>
-                <input required value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
+                <label htmlFor="f-city" className={labelClass}>City</label>
+                <input
+            id="f-city" required value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>ZIP / Postal code</label>
-                <input required value={zip} onChange={(e) => setZip(e.target.value)} className={inputClass} />
+                <label htmlFor="f-zip-postal-code" className={labelClass}>ZIP / Postal code</label>
+                <input
+            id="f-zip-postal-code" required value={zip} onChange={(e) => setZip(e.target.value)} className={inputClass} />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelClass}>Phone</label>
-                <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+                <label htmlFor="f-phone" className={labelClass}>Phone</label>
+                <input
+            id="f-phone" required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelClass}>Order notes (optional)</label>
+                <label htmlFor="f-order-notes-optional" className={labelClass}>Order notes (optional)</label>
                 <textarea
+            id="f-order-notes-optional"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
@@ -644,9 +656,10 @@ export default function CheckoutPage() {
 
               {showCoupon && !appliedCoupon && (
                 <div>
-                  <label className={labelClass}>Coupon code</label>
+                  <label htmlFor="f-coupon-code" className={labelClass}>Coupon code</label>
                   <div className="flex gap-2">
                     <input
+            id="f-coupon-code"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
                       placeholder="Enter code"
