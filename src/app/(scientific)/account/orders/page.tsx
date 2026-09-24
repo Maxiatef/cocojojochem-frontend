@@ -30,7 +30,8 @@ export default function CustomerOrdersPage() {
 
   useEffect(() => {
     if (!getCustomerToken()) {
-      router.replace('/account/login?redirect=/account/orders');
+      // Full page load, not router.replace — see account/page.tsx.
+      window.location.replace('/account/login?redirect=/account/orders');
       return;
     }
     setReady(true);
@@ -80,7 +81,8 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  if (!ready) return null;
+  // Reserve the screen until the sign-in check runs — see account/page.tsx.
+  if (!ready) return <div className="min-h-screen" aria-busy="true" />;
 
   const allOrders = data || [];
   const ongoingOrders = allOrders.filter((o) => !COMPLETED_STATUSES.has(o.status));

@@ -133,7 +133,10 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!getCustomerToken()) {
-      router.replace('/account/login?redirect=/account');
+      // A full page load, not router.replace. The in-app swap drew this empty
+      // page, then slid the login form in underneath the footer — a 0.47
+      // layout shift on mobile. Login as a fresh document shifts nothing.
+      window.location.replace('/account/login?redirect=/account');
       return;
     }
     setReady(true);
@@ -180,7 +183,10 @@ export default function AccountPage() {
     router.push('/account/login');
   }
 
-  if (!ready) return null;
+  // The sign-in check needs localStorage, so it can't run on the server.
+  // Until it has, hold a full screen of space: returning nothing let the
+  // footer paint at the top, only to be pushed away a moment later.
+  if (!ready) return <div className="min-h-screen" aria-busy="true" />;
 
   // Cancelled orders are excluded from lifetime value — money that was never
   // taken shouldn't inflate a figure a buyer may quote back to us.
