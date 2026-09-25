@@ -74,8 +74,8 @@ export function IngredientRow({ product }: { product: Product }) {
           {product.inciName ? ` · ${product.inciName}` : ''}
         </p>
 
-        {/* What the material does in a formulation. Each one links into the
-            catalogue filtered to that function, which is the question these
+        {/* What the material does in a formulation. Each one links to that
+            function's page (/functions/<slug>), which answers the question these
             labels tend to raise — "what else does this job?". Distinct from
             the pack sizes below: tinted rather than bordered, so the two rows
             of chips don't read as one list of interchangeable facts. */}
@@ -84,7 +84,7 @@ export function IngredientRow({ product }: { product: Product }) {
             {shownFunctions.map((f) => (
               <li key={f.id}>
                 <Link
-                  href={`/products?functionSlug=${f.slug}`}
+                  href={`/functions/${f.slug}`}
                   className="inline-block rounded-full bg-sci-blue/10 px-2.5 py-0.5 font-sci-body text-sci-label font-medium text-sci-blue transition hover:bg-sci-blue/20"
                 >
                   {f.name}

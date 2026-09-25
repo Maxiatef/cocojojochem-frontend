@@ -69,15 +69,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  // There are no /functions/[slug] pages — a function links to a filtered
-  // catalog view, so that filtered URL is what gets indexed.
+  // /functions/[slug], not /products?functionSlug= — that filtered view is
+  // disallowed in robots.txt and canonicalises to /products, so listing it
+  // here asked Google to index URLs it was told not to crawl. Same
+  // productCount > 0 rule the function page uses to decide noindex.
   const functionRoutes: MetadataRoute.Sitemap = (functionsRes?.data || [])
     .filter((f) => (f.productCount ?? 0) > 0)
     .map((f) => ({
-      url: `${SITE_URL}/products?functionSlug=${encodeURIComponent(f.slug)}`,
+      url: `${SITE_URL}/functions/${f.slug}`,
       lastModified: now,
       changeFrequency: 'weekly' as const,
-      priority: 0.5,
+      priority: 0.6,
     }));
 
   return [...staticRoutes, ...productRoutes, ...categoryRoutes, ...functionRoutes];

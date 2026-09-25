@@ -75,7 +75,7 @@ function FunctionTile({ fn }: { fn: ProductFunction }) {
   const count = fn.productCount ?? 0;
   return (
     <Link
-      href={`/products?functionSlug=${fn.slug}`}
+      href={`/functions/${fn.slug}`}
       className="group flex items-center justify-between gap-4 rounded-xl border border-sci-border bg-white px-5 py-4 transition hover:border-sci-blue hover:shadow-sm"
     >
       <span className="min-w-0">
@@ -121,7 +121,7 @@ export default async function FunctionsPage() {
                   path: '/functions',
                   items: stocked.map((f) => ({
                     name: f.name,
-                    path: `/products?functionSlug=${f.slug}`,
+                    path: `/functions/${f.slug}`,
                   })),
                 }),
               ]

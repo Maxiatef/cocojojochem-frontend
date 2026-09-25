@@ -180,13 +180,13 @@ export function ProductBuyPanel({ product }: { product: Product }) {
 
           {hasTags && (
             <div className="mt-5 flex flex-wrap gap-2">
-              {/* Functions link into the catalog filtered to that function —
+              {/* Functions link to that function's page (/functions/<slug>) —
                   "what else does this job?" is the question these labels
                   raise. Certifications don't: they describe this material. */}
               {product.functions?.map((f) => (
                 <Link
                   key={f.id}
-                  href={`/products?functionSlug=${f.slug}`}
+                  href={`/functions/${f.slug}`}
                   className="rounded-full bg-sci-blue/10 px-3 py-1 font-sci-body text-sci-label font-medium text-sci-blue transition hover:bg-sci-blue/20"
                 >
                   {f.name}
