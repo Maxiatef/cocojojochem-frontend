@@ -78,6 +78,19 @@ function buyingGuidance(name: string, total: number) {
 }
 
 /**
+ * The category's own description (Admin → Categories), split on blank lines.
+ * The first paragraph is the intro and the search snippet; any further
+ * paragraphs replace the shared buying guidance, because copy written for this
+ * category says more than a template that only swaps in its name.
+ */
+function descriptionParagraphs(description: string | null | undefined): string[] {
+  return (description || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+/**
  * Named after the category rather than generic, because these headings are
  * the page's only H3s and "Pack sizes and freight" is the same sentence on all
  * 41 of them. Saying which material it refers to is more use to a reader
@@ -108,7 +121,7 @@ export async function generateMetadata({
   return pageMetadata({
     title: `Wholesale ${category.name}`,
     description: clampDescription(
-      category.description,
+      descriptionParagraphs(category.description)[0],
       `Shop ${count > 0 ? `${count} ` : ''}wholesale ${category.name.toLowerCase()} in bulk and drum quantities. Trade pricing, INCI and spec data, fast US shipping from ${SITE_NAME}.`,
     ),
     path: `/categories/${category.slug}`,
@@ -129,6 +142,7 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
   // The API is asked for name_asc, but the directory's promise is "A-Z" — so
   // it sorts locally too rather than trusting the collation to match.
   const records = [...products].sort((a, b) => a.name.localeCompare(b.name));
+  const [intro, ...moreDescription] = descriptionParagraphs(category.description);
 
   return (
     <>
@@ -186,9 +200,14 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
             {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · Sorted A–Z
           </p>
 
+          {/* The fallback is deliberately one plain sentence. It used to be a
+              paragraph of chained transition words ("First… Importantly…
+              Furthermore… Therefore…") repeated verbatim on all 41 categories —
+              written for a readability score, not a reader, and duplicate
+              content as far as a search engine is concerned. */}
           <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-            {category.description ||
-              `First, every ${category.name.toLowerCase()} record we list includes pack sizes, wholesale pricing and live stock status. Importantly, all products carry full specification data and usage guidance. Furthermore, certificates of analysis and safety data sheets are available on request. Therefore, you can confirm grade and availability during quotation. Additionally, our sourcing team can suggest alternatives if your first choice isn't available. In fact, we handle custom volumes and sourcing to order. In particular, bulk quantities are available with trade pricing. As a result, you can compare options by price, function or stock status. Ultimately, browse this complete directory or contact us for your specific sourcing needs.`}
+            {intro ||
+              `Wholesale ${category.name.toLowerCase()} for cosmetic and personal care formulation, listed A–Z with INCI names, pack sizes, trade pricing and current stock.`}
           </p>
 
           {/* Described, not hidden. This was aria-hidden on the argument that
@@ -272,12 +291,20 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
         </Container>
       </section>
 
-      <SciProse
-        eyebrow={`Buying ${category.name.toLowerCase()}`}
-        heading={`How to order ${category.name.toLowerCase()} wholesale`}
-        paragraphs={buyingGuidance(category.name, total)}
-        subheadings={guidanceSubheadings(category.name)}
-      />
+      {moreDescription.length > 0 ? (
+        <SciProse
+          eyebrow={`About ${category.name.toLowerCase()}`}
+          heading={`${category.name} in formulation`}
+          paragraphs={moreDescription}
+        />
+      ) : (
+        <SciProse
+          eyebrow={`Buying ${category.name.toLowerCase()}`}
+          heading={`How to order ${category.name.toLowerCase()} wholesale`}
+          paragraphs={buyingGuidance(category.name, total)}
+          subheadings={guidanceSubheadings(category.name)}
+        />
+      )}
 
       {/* Contact / Request a quote — 21:1078 */}
       <section className="bg-sci-pale py-16">
