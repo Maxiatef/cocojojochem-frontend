@@ -158,7 +158,9 @@ export function IndexCard({
         <span className="font-sci-body text-[17px] font-medium leading-6 text-sci-navy">
           {title}
         </span>
-        <span className="font-sci-body text-sci-label font-medium text-sci-muted">
+        {/* Two lines, then an ellipsis. Category descriptions are now full
+            paragraphs, and the card is a teaser for the page, not the page. */}
+        <span className="line-clamp-2 font-sci-body text-sci-label font-medium text-sci-muted">
           {description}
         </span>
       </span>

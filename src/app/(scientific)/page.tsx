@@ -145,7 +145,9 @@ export default async function ScientificHomePage() {
   const categories = categoriesRes?.data?.length
     ? categoriesRes.data.map((c) => ({
         name: c.name,
-        description: c.description || 'Explore this category',
+        // First paragraph only: the rest belongs on the category page, and
+        // repeating six full descriptions here would duplicate that copy.
+        description: c.description?.split(/\n\s*\n/)[0].trim() || 'Explore this category',
         slug: c.slug,
       }))
     : FALLBACK_CATEGORIES;
