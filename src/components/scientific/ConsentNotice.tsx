@@ -24,7 +24,6 @@ import { useConsent, writeConsent } from '@/lib/consent';
  */
 export function ConsentNotice() {
   const consent = useConsent();
-  const [expanded, setExpanded] = useState(false);
   // Separate from `consent` so the entrance plays after mount rather than
   // snapping in during hydration.
   const [entered, setEntered] = useState(false);
@@ -63,66 +62,16 @@ export function ConsentNotice() {
           the rest just help us count visits.
         </p>
 
-        {/* "Manage" has to mean something, so this opens the itemised list
-            rather than navigating away. With one optional category the two
-            buttons below already are the controls — what was missing was
-            being told what you are agreeing to. */}
-        <button
-          type="button"
-          onClick={() => setExpanded((open) => !open)}
-          aria-expanded={expanded}
-          aria-controls="consent-details"
+        {/* The itemised "Learn more and manage" list was removed to keep the
+            card short. The two buttons below are the only controls anyway
+            (one optional category), and the policy link keeps the full
+            explanation one click away. */}
+        <Link
+          href="/legal/cookie-policy"
           className="mt-2.5 inline-block font-sci-body text-[15px] text-sci-navy underline underline-offset-[3px] transition hover:text-sci-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-sci-blue focus-visible:ring-offset-2"
         >
-          {expanded ? 'Hide details' : 'Learn more and manage'}
-        </button>
-
-        {expanded && (
-          <dl
-            id="consent-details"
-            className="mt-4 divide-y divide-sci-border border-y border-sci-border"
-          >
-            <div className="grid grid-cols-[1fr_auto] items-baseline gap-3 py-3">
-              <div>
-                <dt className="font-sci-body text-sci-label font-semibold text-sci-navy">
-                  Essential
-                </dt>
-                <dd className="mt-0.5 font-sci-body text-[13px] leading-5 text-sci-muted">
-                  Your cart, and this choice.
-                </dd>
-              </div>
-              <span className="whitespace-nowrap font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-muted">
-                Always on
-              </span>
-            </div>
-
-            <div className="grid grid-cols-[1fr_auto] items-baseline gap-3 py-3">
-              <div>
-                <dt className="font-sci-body text-sci-label font-semibold text-sci-navy">
-                  Analytics
-                </dt>
-                <dd className="mt-0.5 font-sci-body text-[13px] leading-5 text-sci-muted">
-                  A random ID so we can count unique visits. Not linked to you,
-                  your account or your orders.
-                </dd>
-              </div>
-              <span className="whitespace-nowrap font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-muted">
-                Optional
-              </span>
-            </div>
-
-            <p className="py-3 font-sci-body text-[13px] leading-5 text-sci-muted">
-              Full detail in the{' '}
-              <Link
-                href="/legal/cookie-policy"
-                className="font-medium text-sci-blue underline-offset-2 hover:underline"
-              >
-                Cookie Policy
-              </Link>
-              .
-            </p>
-          </dl>
-        )}
+          Read the Cookie Policy
+        </Link>
 
         <div className="mt-6 flex flex-col gap-2.5">
           <button
