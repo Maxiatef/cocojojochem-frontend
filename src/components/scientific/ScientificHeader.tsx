@@ -85,6 +85,64 @@ function BadgeLink({
   );
 }
 
+/**
+ * The account entry, drawn as a periodic-table tile rather than a button.
+ *
+ * The audience reads element tiles all day, so the signed-in user's initials
+ * are set like a symbol — capital then lowercase, "De" for dexter@… — in a
+ * square tile, with a teal dot for "signed in". Signed out, the tile is empty
+ * and dashed: a slot waiting to be filled.
+ *
+ * Deliberately not a filled button. "Request a quote" beside it is the one
+ * primary action in this row; a second navy block made the two compete, and
+ * an email address is not a call to action.
+ */
+function AccountTile({ email }: { email: string | null | undefined }) {
+  const local = email ? email.split('@')[0] : '';
+  const letters = local.replace(/[^a-z]/gi, '');
+  const symbol = letters
+    ? letters[0].toUpperCase() + (letters[1] ? letters[1].toLowerCase() : '')
+    : '';
+  const name = local
+    ? local.split(/[._-]+/)[0].replace(/^./, (c) => c.toUpperCase())
+    : '';
+
+  return (
+    <Link
+      href={email ? '/account' : '/account/login'}
+      aria-label={email ? `Your account (${email})` : 'Sign in'}
+      title={email || 'Sign in or create an account'}
+      className="group hidden items-center gap-3 rounded-lg py-1.5 pl-1.5 pr-3 transition hover:bg-sci-pale focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sci-blue md:flex"
+    >
+      <span
+        aria-hidden
+        className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-md border bg-white transition group-hover:border-sci-blue ${
+          email ? 'border-sci-navy' : 'border-dashed border-sci-border'
+        }`}
+      >
+        {email ? (
+          <span className="font-sci-heading text-[18px] font-semibold leading-none tracking-tight text-sci-navy">
+            {symbol}
+          </span>
+        ) : (
+          <UserCircleIcon className="h-5 w-5 text-sci-muted" />
+        )}
+        {email && (
+          <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-sci-accent" />
+        )}
+      </span>
+      <span className="flex flex-col leading-tight">
+        <span className="font-sci-body text-[10px] font-semibold uppercase tracking-[0.12em] text-sci-muted">
+          {email ? 'Your account' : 'Welcome'}
+        </span>
+        <span className="max-w-[140px] truncate font-sci-body text-sm font-medium text-sci-navy group-hover:text-sci-blue">
+          {email ? name : 'Sign in'}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
 /** The count beside a menu row — the badge overlay has no room to sit here. */
 function MenuCount({ children }: { children: React.ReactNode }) {
   return (
@@ -171,14 +229,7 @@ export function ScientificHeader() {
           <SciButton href="/quote-request" variant="navy" className="hidden md:inline-flex">
             Request a quote →
           </SciButton>
-          <SciButton
-            href={customerEmail ? '/account' : '/account/login'}
-            variant="navy"
-            className="hidden gap-2 md:inline-flex"
-          >
-            <UserCircleIcon className="h-5 w-5 shrink-0" />
-            <span className="max-w-[160px] truncate">{customerEmail ? customerEmail : 'Sign in'}</span>
-          </SciButton>
+          <AccountTile email={customerEmail} />
           <div className="hidden items-center gap-1 md:flex">
             <BadgeLink
               tone="dark"
