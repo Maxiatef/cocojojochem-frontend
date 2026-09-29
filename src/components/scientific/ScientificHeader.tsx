@@ -40,9 +40,9 @@ function isNavItemActive(pathname: string, href: string) {
  * An icon link carrying a count badge — the cart and the quote list differ
  * only in icon and destination.
  *
- * Lives in the navy utility bar next to the account, so it is drawn in white:
- * on the white band below it the same icons read as faint grey marks and are
- * easy to miss entirely.
+ * `tone` picks the ink: 'light' (white) for the navy utility bar, 'dark' (navy)
+ * for the white brand row beside "Request a quote". On the white band, white
+ * icons would vanish and pale grey ones read as faint marks.
  *
  * The label sits beside the icon from `sm` up rather than relying on the glyph
  * alone — a cart is unambiguous, a quote list is not. Below `sm` the label is
@@ -54,19 +54,23 @@ function BadgeLink({
   count,
   children,
   labelClassName = 'hidden sm:inline',
+  tone = 'light',
 }: {
   href: string;
   label: string;
   count: number;
   children: React.ReactNode;
   labelClassName?: string;
+  tone?: 'light' | 'dark';
 }) {
   return (
     <Link
       href={href}
       title={label}
       aria-label={count > 0 ? `${label} (${count})` : label}
-      className="relative flex items-center gap-1.5 rounded-md px-2 py-1 font-sci-body text-xs font-medium leading-5 text-white transition hover:bg-white/10"
+      className={`relative flex items-center gap-1.5 rounded-md px-2 py-1 font-sci-body text-xs font-medium leading-5 transition ${
+        tone === 'dark' ? 'text-sci-navy hover:bg-sci-pale' : 'text-white hover:bg-white/10'
+      }`}
     >
       <span className="relative flex items-center">
         {children}
@@ -121,36 +125,6 @@ export function ScientificHeader() {
             <Link href="/contact" className="font-sci-body text-xs font-medium leading-5 hover:underline">
               Contact us
             </Link>
-            {/* Signed-out state is a plain link; signed-in shows the account
-                area. The old header's AccountMenu dropdown is styled in the
-                sand/olive palette, so it is not reused here — the account page
-                itself carries the same actions. */}
-            <Link
-              href={customerEmail ? '/account' : '/account/login'}
-              className="flex items-center gap-1.5 font-sci-body text-xs font-medium leading-5 hover:underline"
-            >
-              <UserCircleIcon className="h-3.5 w-3.5 shrink-0" />
-              <span className="max-w-[180px] truncate">
-                {customerEmail ? customerEmail : 'Sign in'}
-              </span>
-            </Link>
-
-            <BadgeLink
-              href="/account/wishlist"
-              label="Saved"
-              count={wishlistCount}
-              labelClassName="hidden lg:inline"
-            >
-              <HeartIcon className="h-4 w-4" />
-            </BadgeLink>
-
-            <BadgeLink href="/quote-request" label="Quote list" count={quoteListCount}>
-              <QuoteIcon className="h-4 w-4" />
-            </BadgeLink>
-
-            <BadgeLink href="/cart" label="Cart" count={itemCount}>
-              <CartIcon className="h-4 w-4" />
-            </BadgeLink>
           </div>
         </Container>
       </div>
@@ -182,17 +156,46 @@ export function ScientificHeader() {
             at 342px, which is what made the mobile header nearly 200px tall. */}
         <Link
           href="/products"
-          className="order-last w-full rounded-lg border border-sci-border bg-sci-pale p-4 font-sci-body text-sci-label text-sci-muted transition hover:border-sci-blue md:order-none md:w-[650px] md:text-sci-body"
+          className="order-last w-full rounded-lg border border-sci-border bg-sci-pale p-4 font-sci-body text-sci-label text-sci-muted transition hover:border-sci-blue md:text-sci-body lg:order-none lg:w-auto lg:min-w-0 lg:flex-1 lg:max-w-[650px]"
         >
           <span className="md:hidden">Find an ingredient →</span>
           <span className="hidden md:inline">Search products, ingredients or categories ↗</span>
         </Link>
 
         <div className="flex items-center gap-3">
-          {/* The design's mobile brand row is wordmark + burger only. */}
+          {/* Desktop order, left to right: Request a quote, Sign in (same
+              size and style, so the two main actions read as a pair), then the
+              saved / quote list / cart icons. The mobile design is wordmark +
+              burger only, so all of this is desktop-only; the burger menu
+              carries the same links on a phone. */}
           <SciButton href="/quote-request" variant="navy" className="hidden md:inline-flex">
             Request a quote →
           </SciButton>
+          <SciButton
+            href={customerEmail ? '/account' : '/account/login'}
+            variant="navy"
+            className="hidden gap-2 md:inline-flex"
+          >
+            <UserCircleIcon className="h-5 w-5 shrink-0" />
+            <span className="max-w-[160px] truncate">{customerEmail ? customerEmail : 'Sign in'}</span>
+          </SciButton>
+          <div className="hidden items-center gap-1 md:flex">
+            <BadgeLink
+              tone="dark"
+              href="/account/wishlist"
+              label="Saved"
+              count={wishlistCount}
+              labelClassName="hidden xl:inline"
+            >
+              <HeartIcon className="h-4 w-4" />
+            </BadgeLink>
+            <BadgeLink tone="dark" href="/quote-request" label="Quote list" count={quoteListCount} labelClassName="hidden xl:inline">
+              <QuoteIcon className="h-4 w-4" />
+            </BadgeLink>
+            <BadgeLink tone="dark" href="/cart" label="Cart" count={itemCount} labelClassName="hidden xl:inline">
+              <CartIcon className="h-4 w-4" />
+            </BadgeLink>
+          </div>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
