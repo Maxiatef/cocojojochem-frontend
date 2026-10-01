@@ -1,31 +1,33 @@
-import { ScientificHeader } from '@/components/scientific/ScientificHeader';
-import { ScientificFooter } from '@/components/scientific/ScientificFooter';
+import '@/styles/gloss.css';
+import '@/styles/gloss-overrides.css';
+import '@/styles/gloss-home.css';
+import '@/styles/gloss-catalog.css';
+import '@/styles/gloss-categories.css';
+import '@/styles/gloss-library.css';
+import '@/styles/gloss-content.css';
+import '@/styles/gloss-workspace.css';
+import '@/styles/gloss-account.css';
+import { GlossShell } from '@/components/gloss/GlossShell';
 import { VisitorTracker } from '@/components/commerce/VisitorTracker';
 import { ConsentNotice } from '@/components/scientific/ConsentNotice';
 import { SCI_FONT_VARS } from '@/lib/fonts';
 
 /**
- * Route group for pages migrated to the COCOJOJO "Scientific edition" design.
+ * The storefront, in the Gloss Studio design.
  *
- * It exists as its own group rather than as a change to `(shop)/layout.tsx`
- * because the rebrand is landing page by page: everything still on the old
- * sand/olive design keeps `(shop)`'s header, footer and fonts until it moves
- * across. Both groups map to the same URL space, so nothing about the site's
- * routing changes as pages migrate.
+ * `gloss-theme` is the scope the ported stylesheet hangs off (see
+ * src/styles/gloss.css): every rule in it is prefixed with `.gloss-theme`, so
+ * the design applies here and nowhere else — the admin dashboard, which shares
+ * the root layout, is untouched.
  *
- * The typefaces themselves live in `@/lib/fonts` — the admin dashboard is
- * outside this group and needs the same two families.
+ * SCI_FONT_VARS stays because a few older components still read the
+ * Scientific-edition font variables while they are being migrated.
  */
-
-export default function ScientificLayout({ children }: { children: React.ReactNode }) {
+export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={`${SCI_FONT_VARS} flex min-h-screen flex-col bg-white font-sci-body text-sci-navy`}
-    >
+    <div className={`${SCI_FONT_VARS} gloss-theme antialiased`}>
       <VisitorTracker />
-      <ScientificHeader />
-      <main className="flex-1">{children}</main>
-      <ScientificFooter />
+      <GlossShell>{children}</GlossShell>
       <ConsentNotice />
     </div>
   );

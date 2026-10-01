@@ -1,0 +1,19 @@
+/*
+ * Small additions on top of the ported Gloss Studio stylesheet (gloss.css).
+ * Everything stays under .gloss-theme so the admin dashboard is unaffected.
+ * Keep this file short: it is for things the prototype did not have.
+ */
+
+/* The cookie-settings control in the footer is a <button>; style it like the
+   links beside it. */
+.gloss-theme .r-footer-bottom button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.gloss-theme .r-footer-bottom button:hover {
+  text-decoration: underline;
+}
