@@ -45,47 +45,32 @@ export function ConsentNotice() {
       role="dialog"
       aria-labelledby="consent-heading"
       aria-describedby="consent-body"
-      className={`fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:inset-x-auto sm:bottom-6 sm:left-6 sm:px-0 sm:pb-0 motion-safe:transition motion-safe:duration-300 motion-safe:ease-out ${
-        entered ? 'translate-y-0 opacity-100' : 'motion-safe:translate-y-2 motion-safe:opacity-0'
-      }`}
+      className={`ga-consent${entered ? '' : ' is-pending'}`}
     >
-      <div className="w-full rounded-[22px] bg-white p-7 shadow-[0_18px_50px_-18px_rgba(11,41,69,0.45)] sm:w-[440px]">
-        <h2
-          id="consent-heading"
-          className="font-sci-heading text-[26px] font-bold leading-8 tracking-[-0.3px] text-sci-navy"
-        >
-          Choose your cookies
-        </h2>
+      <div className="ga-consent-card r-glass">
+        <span className="r-eyebrow">Your privacy</span>
+        <h2 id="consent-heading">Choose your cookies</h2>
 
-        <p id="consent-body" className="mt-3 font-sci-body text-[15px] leading-6 text-sci-muted">
-          We use cookies and similar browser storage. Some keep your cart working;
-          the rest just help us count visits.
+        <p id="consent-body">
+          We use cookies and similar browser storage. Some keep your cart working; the rest just help us count
+          visits.
         </p>
 
         {/* The itemised "Learn more and manage" list was removed to keep the
             card short. The two buttons below are the only controls anyway
             (one optional category), and the policy link keeps the full
             explanation one click away. */}
-        <Link
-          href="/legal/cookie-policy"
-          className="mt-2.5 inline-block font-sci-body text-[15px] text-sci-navy underline underline-offset-[3px] transition hover:text-sci-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-sci-blue focus-visible:ring-offset-2"
-        >
-          Read the Cookie Policy
-        </Link>
+        <Link href="/legal/cookie-policy">Read the Cookie Policy</Link>
 
-        <div className="mt-6 flex flex-col gap-2.5">
-          <button
-            type="button"
-            onClick={() => writeConsent(true)}
-            className="rounded-full bg-sci-navy px-5 py-3.5 font-sci-body text-[15px] font-semibold text-white transition hover:bg-sci-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-sci-blue focus-visible:ring-offset-2"
-          >
+        {/* Equal weight on purpose: same size, side by side, both solid
+            enough to read as a real choice. */}
+        <div className="ga-consent-actions">
+          <button type="button" onClick={() => writeConsent(true)} className="r-btn r-primary">
             Accept all
           </button>
-          <button
-            type="button"
-            onClick={() => writeConsent(true)}
-            className="rounded-full border border-sci-navy bg-sci-pale px-5 py-3.5 font-sci-body text-[15px] font-semibold text-sci-navy transition hover:bg-sci-border/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sci-blue focus-visible:ring-offset-2"
-          >
+          {/* false: this records a refusal. It wrote `true` until 2026-10,
+              so "reject" silently opted visitors in to analytics. */}
+          <button type="button" onClick={() => writeConsent(false)} className="r-btn r-outline">
             Reject non-essential
           </button>
         </div>

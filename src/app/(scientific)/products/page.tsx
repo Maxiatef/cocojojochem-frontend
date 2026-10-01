@@ -4,18 +4,12 @@ import { serverFetch } from '@/lib/serverFetch';
 import { clampDescription, pageMetadata } from '@/lib/seo';
 import { Category, Paginated, SeoPage } from '@/lib/types';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
-import { SciProse } from '@/components/scientific/SciProse';
-import { ProductCatalog } from '@/components/scientific/ProductCatalog';
-import {
-  ArrowLink,
-  Container,
-  Eyebrow,
-  SciButton,
-  SectionHeading,
-} from '@/components/scientific/primitives';
+import { BookOpen } from 'lucide-react';
+import { CatalogBrowser, CatalogSearch } from '@/components/gloss/catalog/CatalogBrowser';
+import { CatalogProse } from '@/components/gloss/catalog/CatalogProse';
 
 /**
- * The full catalog, in the Scientific edition.
+ * The full catalog, in the Gloss Studio markup (prototype /shop).
  *
  * The filter engine below is client-side, which means the page ships almost
  * no catalog links in its HTML. The category row at the foot is what fixes
@@ -137,79 +131,60 @@ export default async function ProductsPage() {
         ])}
       />
 
-      {/* Page introduction */}
-      <section className="bg-sci-pale py-16">
-        <Container className="grid gap-10 md:grid-cols-[minmax(0,1fr)_320px] md:items-center">
-          <div className="flex flex-col gap-6">
-            {/* Yoast reads the first text block on the page as the
-                "introduction", which is this eyebrow rather than the paragraph
-                below it — so the keyphrase has to live here to be seen. */}
-            <Eyebrow>Wholesale cosmetic ingredients</Eyebrow>
+      <div className="r-catalog-head r-wrap">
+        <div>
+          {/* Yoast reads the first text block as the introduction, so the
+              keyphrase stays in the eyebrow and the lead line. */}
+          <span className="r-eyebrow">Wholesale cosmetic ingredients</span>
+          <h1>Your next creation starts here.</h1>
+          <p>
+            Wholesale cosmetic ingredients with their INCI names, pack sizes and live availability.
+            Choose a published pack or request the size you need.
+          </p>
+        </div>
+        <CatalogSearch action="/products" />
+      </div>
 
-            <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
-              Every material we stock.
-            </h1>
+      <div className="r-wrap r-source-bar">
+        <Link href="/products" aria-current="page">
+          All ingredients
+        </Link>
+        <Link href="/categories">By category</Link>
+        <Link href="/functions">By function</Link>
+        <Link href="/ingredients-a-z">A–Z view</Link>
+      </div>
 
-            <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-              Wholesale cosmetic ingredients are the focus of this catalog. Browse by category,
-              function, price and stock status. In addition, every listing includes its INCI name,
-              available pack sizes and live availability. As a result, you can compare materials
-              before starting a quote request.
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-sci-border bg-white p-6 shadow-sm">
-            {/* Server-rendered so the SEO crawl can evaluate image alt text. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/scientific/industry-formulation.svg"
-              alt="Wholesale cosmetic ingredients bulk supply catalog"
-              className="h-auto w-full"
-            />
-          </div>
-        </Container>
-      </section>
-
-      {/* The catalog itself */}
-      <section className="bg-white py-16">
-        <Container>
-          <ProductCatalog />
-        </Container>
-      </section>
+      <CatalogBrowser basePath="/products" />
 
       {/* Server-rendered category links. The grid above is client-side, so
           without this the page ships no catalog links in its HTML at all. */}
       {categories.length > 0 && (
-        <section className="border-t border-sci-border bg-sci-pale py-16">
-          <Container className="flex flex-col gap-6">
-            <SectionHeading>Browse by category</SectionHeading>
-            <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-              Therefore, you can browse {total} ingredient categories. In addition, each category
-              lists every record in the group with its pack sizes, wholesale pricing and current
-              stock.
-            </p>
-            <ul className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/categories/${c.slug}`}
-                    className="inline-flex items-center gap-2 rounded-full border border-sci-border bg-white px-4 py-2 font-sci-body text-sci-label text-sci-navy transition hover:border-sci-blue hover:text-sci-blue"
-                  >
-                    {c.name}
-                    <span className="text-sci-muted">{c.productCount}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-x-8 gap-y-3">
-              <ArrowLink href="/categories">All ingredient categories</ArrowLink>
-              <ArrowLink href="/functions">Browse by function</ArrowLink>
+        <section className="r-wrap r-section g-cat-browse">
+          <div className="r-section-heading">
+            <div>
+              <span className="r-eyebrow">Browse by category</span>
+              <h2>Every material we stock.</h2>
             </div>
-          </Container>
+            <Link href="/categories">All ingredient categories</Link>
+          </div>
+          <p className="g-cat-lead">
+            Therefore, you can browse {total} ingredient categories. In addition, each category
+            lists every record in the group with its pack sizes, wholesale pricing and current
+            stock.
+          </p>
+          <div className="r-filter-chips g-cat-links">
+            {categories.map((c) => (
+              <Link key={c.id} href={`/categories/${c.slug}`}>
+                {c.name}
+                <span>{c.productCount}</span>
+              </Link>
+            ))}
+            <Link href="/functions">Browse by function</Link>
+          </div>
         </section>
       )}
 
-      <SciProse
+      <CatalogProse
         eyebrow="Buying wholesale"
         heading="Ordering wholesale cosmetic ingredients"
         paragraphs={INTRO_PARAGRAPHS}
@@ -218,50 +193,28 @@ export default async function ProductsPage() {
 
       {/* Standards and references — see REFERENCES above for why these are
           here and why they are not nofollowed. */}
-      <section className="border-t border-sci-border bg-white py-16">
-        <Container className="flex flex-col gap-6">
-          <SectionHeading>Standards and references</SectionHeading>
-          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-            Every listing in this catalog uses INCI naming, and grades follow the safety and
-            labelling positions published by the bodies below. Check a material against them
-            directly before you specify it.
-          </p>
-          <ul className="flex max-w-[900px] flex-col gap-4">
-            {REFERENCES.map((ref) => (
-              <li key={ref.href}>
-                <a
-                  href={ref.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
-                >
-                  {ref.label}
-                  <span aria-hidden className="ml-1">
-                    ↗
-                  </span>
-                </a>
-                <p className="mt-1 font-sci-body text-sci-body text-sci-muted">{ref.note}</p>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
-
-      {/* Contact / Request a quote */}
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Let’s move your next idea forward</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              The next great formula
-              <br />
-              starts with a conversation.
-            </p>
+      <section className="r-wrap r-section g-cat-references">
+        <div className="r-section-heading">
+          <div>
+            <span className="r-eyebrow">Know the standard</span>
+            <h2>Standards and references</h2>
           </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
+        </div>
+        <p className="g-cat-lead">
+          Every listing in this catalog uses INCI naming, and grades follow the safety and labelling
+          positions published by the bodies below. Check a material against them directly before
+          you specify it.
+        </p>
+        <div className="r-doc-grid">
+          {REFERENCES.map((ref) => (
+            <a key={ref.href} href={ref.href} target="_blank" rel="noopener noreferrer">
+              <BookOpen size={24} aria-hidden />
+              <h3>{ref.label}</h3>
+              <p>{ref.note}</p>
+              <span>Open source ↗</span>
+            </a>
+          ))}
+        </div>
       </section>
     </>
   );

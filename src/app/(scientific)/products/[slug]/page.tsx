@@ -3,14 +3,23 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { serverFetch } from '@/lib/serverFetch';
 import { Product } from '@/lib/types';
-import { ProductBuyPanel } from '@/components/scientific/ProductBuyPanel';
-import { ProductTile } from '@/components/scientific/ProductTile';
+import { BookOpen, Download, FileText } from 'lucide-react';
+import { ProductCard } from '@/components/gloss/ProductCard';
+import { ProductDetailHero } from '@/components/gloss/catalog/ProductDetailHero';
+import {
+  documentKind,
+  documentTitle,
+  fileExtension,
+  stockLabel,
+  unitPrice,
+} from '@/components/gloss/catalog/productInfo';
 import { JsonLd, breadcrumbSchema, productSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
-import { Container, Eyebrow, SciButton } from '@/components/scientific/primitives';
+import { formatUsd } from '@/lib/pricing';
 
 /**
- * A single product, in the Scientific edition.
+ * A single product, in the Gloss Studio markup (prototype
+ * /products/jojoba-golden-retail).
  *
  * The metadata block below is unchanged from the storefront version — the
  * per-product SEO overrides, the description clamping and the derived
@@ -145,105 +154,299 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
     { name: product.name, path: `/products/${product.slug}` },
   ];
 
+
+  const documents = product.documents || [];
+  const specRows = specificationRows(product);
+  const faq = faqItems(product);
+  const descriptionParas = (product.description || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const docRequestHref = `/contact?subject=${encodeURIComponent(
+    `Documentation request: ${product.name}`,
+  )}`;
+
   return (
     <>
       {/* Product + BreadcrumbList: this is what upgrades the Google listing to
           a rich result showing price, availability and a readable path. */}
       <JsonLd data={[productSchema(product), breadcrumbSchema(breadcrumbTrail)]} />
 
-      <section className="bg-white pt-8">
-        <Container>
-          {/* Client-side <Link> rather than a raw <a> so the breadcrumb doesn't
-              force a full document reload, and the visible trail mirrors the
-              structured data above (including the category level). */}
-          <nav
-            aria-label="Breadcrumb"
-            className="flex flex-wrap items-center gap-1.5 font-sci-body text-sci-label text-sci-muted"
-          >
-            <Link href="/products" className="text-sci-blue hover:underline">
-              Products
-            </Link>
-            {product.category?.parent && (
-              <>
-                <span aria-hidden>/</span>
-                <Link
-                  href={`/categories/${product.category.parent.slug}`}
-                  className="text-sci-blue hover:underline"
-                >
-                  {product.category.parent.name}
-                </Link>
-              </>
-            )}
-            {product.category && (
-              <>
-                <span aria-hidden>/</span>
-                <Link
-                  href={`/categories/${product.category.slug}`}
-                  className="text-sci-blue hover:underline"
-                >
-                  {product.category.name}
-                </Link>
-              </>
-            )}
+      <nav className="r-breadcrumb r-wrap" aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span aria-hidden>/</span>
+        <Link href="/products">Shop</Link>
+        {product.category?.parent && (
+          <>
             <span aria-hidden>/</span>
-            <span className="text-sci-navy">{product.name}</span>
-          </nav>
-        </Container>
-      </section>
+            <Link href={`/categories/${product.category.parent.slug}`}>
+              {product.category.parent.name}
+            </Link>
+          </>
+        )}
+        {product.category && (
+          <>
+            <span aria-hidden>/</span>
+            <Link href={`/categories/${product.category.slug}`}>{product.category.name}</Link>
+          </>
+        )}
+      </nav>
 
-      <section className="bg-white py-10 md:py-14">
-        <Container>
-          <ProductBuyPanel product={product} />
-        </Container>
-      </section>
+      <ProductDetailHero product={product} />
 
-      {related && related.length > 0 && (
-        <section className="border-t border-sci-border bg-sci-pale py-16">
-          <Container className="flex flex-col gap-8">
-            <div className="flex flex-col gap-3">
-              <Eyebrow>Related materials</Eyebrow>
-              <h2 className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy">
-                You may also need
-              </h2>
-              <p className="font-sci-body text-sci-body text-sci-muted">
-                Materials from the same category, the same brand or with the same functions as{' '}
-                {product.name}.
+      <nav className="r-wrap r-product-tabs" aria-label="Product information">
+        <a href="#overview">Overview</a>
+        <a href="#specifications">Specifications</a>
+        <a href="#formulation">Formulation</a>
+        <a href="#documents">Documents</a>
+        <a href="#questions">Questions</a>
+      </nav>
+
+      <div className="r-wrap r-detail-content">
+        <div>
+          <section id="overview">
+            <span className="r-eyebrow">Get to know the ingredient</span>
+            <h2>
+              Small details.
+              <br />
+              Better decisions.
+            </h2>
+            {descriptionParas.length > 0 ? (
+              descriptionParas.map((para, i) => (
+                <p key={i} className="g-cat-pre">
+                  {para}
+                </p>
+              ))
+            ) : (
+              <p>
+                {product.shortDescription ||
+                  `Specifications, pack sizes and documents for ${product.name} are listed below.`}
               </p>
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {related.map((p) => (
-                <div key={p.id} className="flex flex-col gap-2">
-                  <ProductTile product={p} />
-                  {/* Why it's here — ranked by the API on category, brand and
-                      shared functions, most-alike first. */}
-                  {p.relatedBy && p.relatedBy.length > 0 && (
-                    <p className="font-sci-body text-[12px] leading-4 text-sci-muted">
-                      {relatedReason(p.relatedBy, product, p)}
-                    </p>
-                  )}
+            )}
+          </section>
+
+          <section id="specifications">
+            <span className="r-eyebrow">Know the material</span>
+            <h2>Technical specifications.</h2>
+            <dl className="r-specifications">
+              {specRows.map((r, i) => (
+                <div key={i}>
+                  <dt>{r.label}</dt>
+                  <dd>{r.value}</dd>
                 </div>
               ))}
+            </dl>
+          </section>
+
+          <section id="formulation">
+            <span className="r-eyebrow">From ingredient to formula</span>
+            <h2>Formulation notes.</h2>
+            <p>
+              Check the technical data sheet for processing sequence, concentration and
+              compatibility. Material pH is not automatically the target pH of a finished formula.
+            </p>
+            <p className="r-fine">
+              Confirm the grade and validate stability and preservation for your intended
+              application.
+            </p>
+            <Link className="r-btn r-outline" href="/formulation-tools">
+              Calculate ingredient weights
+            </Link>
+          </section>
+
+          <section id="documents">
+            <span className="r-eyebrow">Technical library</span>
+            <h2>The source behind the specification.</h2>
+            <div className="r-doc-grid">
+              {documents.map((doc) => {
+                const ext = fileExtension(doc.url);
+                return (
+                  <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer">
+                    <Download size={24} aria-hidden />
+                    <h3>{documentTitle(doc)}</h3>
+                    <p>
+                      {documentKind(doc)}
+                      {ext ? ` · ${ext}` : ''}
+                    </p>
+                    <span>Open document</span>
+                  </a>
+                );
+              })}
+              <Link href={docRequestHref}>
+                <FileText size={24} aria-hidden />
+                <h3>Request grade &amp; batch documents</h3>
+                <p>Ask for the SDS, specification and batch-specific COA.</p>
+                <span>Request documents</span>
+              </Link>
             </div>
-          </Container>
+            <p className="r-fine">
+              Certificates of Analysis and Safety Data Sheets are available on request. Request
+              both before scaling a formula from bench to production.
+            </p>
+          </section>
+
+          <section id="questions">
+            <h2>A few useful answers.</h2>
+            <div className="r-faq">
+              {faq.map((item) => (
+                <details key={item.q}>
+                  <summary>{item.q}</summary>
+                  <p>{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside className="r-reading-aside">
+          <BookOpen size={28} aria-hidden />
+          <h3>Good formulas start with good information.</h3>
+          <p>Review the current grade and batch documentation before choosing your material.</p>
+          <Link href="/compare">Compare ingredients</Link>
+          <Link href="/contact">Ask a technical question</Link>
+        </aside>
+      </div>
+
+      {related && related.length > 0 && (
+        <section className="r-wrap r-section">
+          <div className="r-section-heading">
+            <h2>Keep exploring.</h2>
+            {product.category && (
+              <Link href={`/categories/${product.category.slug}`}>Explore this category</Link>
+            )}
+          </div>
+          <div className="r-product-grid g-cat-related">
+            {related.map((p) => (
+              <div key={p.id}>
+                <ProductCard product={p} />
+                {/* Why it's here — ranked by the API on category, brand and
+                    shared functions, most-alike first. */}
+                {p.relatedBy && p.relatedBy.length > 0 && (
+                  <p className="r-fine g-cat-reason">{relatedReason(p.relatedBy, product, p)}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
       )}
-
-      {/* Contact / Request a quote */}
-      <section className="bg-white py-16">
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Need a different grade or volume?</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              Tell us the specification
-              <br />
-              and we&rsquo;ll confirm what we can supply.
-            </p>
-          </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
-      </section>
     </>
   );
+}
+
+/**
+ * The specification list: identifiers first (INCI and CAS always shown, as
+ * the prototype does), then every admin-entered spec row.
+ */
+function specificationRows(product: Product): { label: string; value: string }[] {
+  const ask = 'Request the current technical data sheet.';
+  const rows: { label: string; value: string }[] = [
+    { label: 'INCI', value: product.inciName || ask },
+    { label: 'CAS', value: product.casNumber || ask },
+  ];
+  if (product.botanicalName) rows.push({ label: 'Botanical name', value: product.botanicalName });
+  if (product.brand) rows.push({ label: 'Brand', value: product.brand });
+  if (product.category?.name) rows.push({ label: 'Category', value: product.category.name });
+  if (product.functions?.length) {
+    rows.push({ label: 'Functions', value: product.functions.map((f) => f.name).join(', ') });
+  }
+  if (product.certifications?.length) {
+    rows.push({
+      label: 'Certifications',
+      value: product.certifications.map((c) => c.name).join(', '),
+    });
+  }
+  const variants = product.variants || [];
+  if (variants.length) {
+    rows.push({ label: 'Pack sizes', value: variants.map((v) => v.label || v.sku).join(', ') });
+    const prices = variants.map(unitPrice).filter((n) => !isNaN(n) && n > 0);
+    if (prices.length) {
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      rows.push({
+        label: 'Price range',
+        value: min === max ? formatUsd(min) : `${formatUsd(min)} – ${formatUsd(max)}`,
+      });
+    }
+    const statuses = variants.map((v) => v.stockStatus);
+    rows.push({
+      label: 'Stock',
+      value: statuses.includes('OUT_OF_STOCK')
+        ? 'Out of stock'
+        : statuses.includes('ON_BACKORDER')
+          ? 'On backorder'
+          : 'In stock',
+    });
+  }
+  for (const spec of product.specs || []) rows.push({ label: spec.key, value: spec.value });
+  if (product.chemicalDescriptions) {
+    rows.push({ label: 'Chemical description', value: product.chemicalDescriptions });
+  }
+  return rows;
+}
+
+/** FAQ answers built only from this product's own data. */
+function faqItems(product: Product): { q: string; a: React.ReactNode }[] {
+  const variants = product.variants || [];
+  const buyable = variants.filter((v) => v.stockStatus !== 'OUT_OF_STOCK' && unitPrice(v) > 0);
+  const items: { q: string; a: React.ReactNode }[] = [];
+
+  items.push({
+    q: 'Is this ingredient available to buy?',
+    a: buyable.length
+      ? `Yes. Choose a published pack size (${buyable
+          .map((v) => `${v.label || v.sku}, ${stockLabel(v).toLowerCase()}`)
+          .join('; ')}) and add it to your cart. Prices are in USD before shipping and tax.`
+      : variants.length
+        ? 'No published pack size can be added to the cart right now. Add it to your quote list and we will confirm price and availability.'
+        : 'This product has no purchasable sizes yet. Add it to your quote list and we will confirm what we can supply.',
+  });
+
+  const moqs = variants.filter((v) => v.moq && v.moq > 1);
+  if (moqs.length) {
+    items.push({
+      q: 'Is there a minimum order?',
+      a: `Yes, for ${moqs.length === variants.length ? 'every' : 'some'} pack size${
+        moqs.length === variants.length ? '' : 's'
+      }: ${moqs.map((v) => `${v.label || v.sku}, minimum ${v.moq}`).join('; ')}.`,
+    });
+  }
+
+  const limits = variants.filter((v) => v.limitPerOrder && v.maxOrderQuantity);
+  if (limits.length) {
+    items.push({
+      q: 'Is there a limit per order?',
+      a: `Yes: ${limits
+        .map((v) => `${v.label || v.sku}, up to ${v.maxOrderQuantity} per order`)
+        .join('; ')}. For larger volumes, add it to your quote list.`,
+    });
+  }
+
+  const documents = product.documents || [];
+  items.push({
+    q: 'Which documents are available?',
+    a: documents.length
+      ? `${documents
+          .map((d) => documentTitle(d))
+          .join(', ')}, under Documents above. Ask us for a batch-specific COA or anything else you need.`
+      : 'No documents are attached to this listing yet. Use “Request grade & batch documents” to ask for the SDS, specification or a batch COA.',
+  });
+
+  items.push({
+    q: 'Can I get a different pack size?',
+    a: 'Choose “Request a size” in the pack size menu, tell us the amount you need and add it to your quote list. A requested size is confirmed individually.',
+  });
+
+  items.push({
+    q: 'How is shipping calculated?',
+    a: (
+      <>
+        In-stock items ship from our US warehouse, and checkout rates shipping by weight and
+        destination zone, so you see the cost before you commit. Larger drum orders and shipments
+        to Alaska, Hawaii and US territories are quoted manually. See{' '}
+        <Link href="/shipping-returns">shipping &amp; returns</Link>.
+      </>
+    ),
+  });
+
+  return items;
 }

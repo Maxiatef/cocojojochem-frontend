@@ -15,7 +15,9 @@ import {
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { PhoneCountrySelect } from '@/components/PhoneCountrySelect';
 import { COUNTRY_CODES } from '@/lib/countryCodes';
-import { EyeIcon, EyeOffIcon } from '@/components/icons';
+import { Check, LoaderCircle } from 'lucide-react';
+import { AuthLayout } from '@/components/gloss/account/AuthLayout';
+import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 
 const PHONE_DIGITS_REGEX = /^\d{6,14}$/;
 
@@ -32,27 +34,14 @@ function PasswordStrengthChecklist({ password }: { password: string }) {
   const allPassed = results.every((r) => r.passed);
 
   return (
-    <ul className="mt-2 space-y-1">
+    <ul className="ga-checklist">
       {results.map((r) => (
-        <li
-          key={r.label}
-          className={`flex items-center gap-1.5 text-xs ${
-            r.passed ? 'text-emerald-600' : 'text-sci-muted'
-          }`}
-        >
-          <span
-            className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] ${
-              r.passed ? 'bg-emerald-600 text-white' : 'bg-sci-border text-sci-muted'
-            }`}
-          >
-            {r.passed ? '✓' : ''}
-          </span>
+        <li key={r.label} className={r.passed ? 'is-ok' : undefined}>
+          <span aria-hidden>{r.passed && <Check size={10} strokeWidth={3} />}</span>
           {r.label}
         </li>
       ))}
-      {allPassed && (
-        <li className="mt-1 text-xs font-medium text-emerald-600">✓ Strong password</li>
-      )}
+      {allPassed && <li className="is-ok">Strong password</li>}
     </ul>
   );
 }
@@ -69,8 +58,6 @@ function RegisterForm() {
   const [countryIso2, setCountryIso2] = useState('us');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -149,192 +136,170 @@ function RegisterForm() {
     }
   }
 
+  const confirmState =
+    confirmPassword.length > 0 ? (confirmPassword === password ? 'is-ok' : 'is-bad') : undefined;
+
   return (
-    <div className="mx-auto max-w-[460px] px-6 py-16">
-      <h1 className="font-sci-heading text-[32px] font-semibold leading-10 text-sci-navy">Create your account</h1>
-      <p className="mt-2 font-sci-body text-sci-body text-sci-muted">
-        Wholesale accounts get order history and faster checkout.
-      </p>
+    <AuthLayout
+      title="Create your account."
+      intro="Wholesale accounts get order history, saved quote lists and faster checkout."
+    >
+      <form onSubmit={handleSubmit} className="r-form-card">
+        <h2>Open a trade account</h2>
+        <p>It takes a minute. Company details are optional and can be added later.</p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div>
-          <label htmlFor="f-full-name" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Full name</label>
-          <input
-            id="f-full-name"
-            required
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
-          />
-        </div>
+        <div className="r-form-grid">
+          <div className="r-field r-full">
+            <label htmlFor="f-full-name">Full name</label>
+            <input
+              id="f-full-name"
+              required
+              autoComplete="name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </div>
 
-        <div>
-          <label htmlFor="f-company-name-optional" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Company name (optional)</label>
-          <input
-            id="f-company-name-optional"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
-          />
-        </div>
-
-        {companyName && (
-          <div>
-            <label htmlFor="f-company-website-optional" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
-              Company website (optional)
+          <div className={companyName ? 'r-field' : 'r-field r-full'}>
+            <label htmlFor="f-company-name-optional">
+              Company <small>optional</small>
             </label>
             <input
-            id="f-company-website-optional"
-              type="text"
-              placeholder="yourcompany.com"
-              value={companyWebsite}
-              onChange={(e) => setCompanyWebsite(e.target.value)}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
+              id="f-company-name-optional"
+              autoComplete="organization"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
             />
           </div>
-        )}
 
-        <div>
-          <label htmlFor="f-phone" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Phone</label>
-          <div className="flex gap-2">
-            <PhoneCountrySelect value={countryIso2} onChange={setCountryIso2} />
-            <input
-            id="f-phone"
-              type="tel"
-              required
-              inputMode="numeric"
-              placeholder="5551234567"
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value.replace(/\D/g, ''));
-                setPhoneError(null);
-              }}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
-            />
-          </div>
-          {phoneError && <p className="mt-1 text-xs text-red-600">{phoneError}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="f-email" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
-          <input
-            id="f-email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="f-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Password</label>
-          <div className="relative">
-            <input
-            id="f-password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 pr-12 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              title={showPassword ? 'Hide password' : 'Show password'}
-              aria-pressed={showPassword}
-              tabIndex={-1}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-sci-muted hover:text-sci-navy"
-            >
-              {showPassword ? <EyeOffIcon className="h-[18px] w-[18px]" /> : <EyeIcon className="h-[18px] w-[18px]" />}
-            </button>
-          </div>
-          {password.length > 0 && <PasswordStrengthChecklist password={password} />}
-        </div>
-
-        <div>
-          <label htmlFor="f-confirm-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Confirm Password</label>
-          <div className="relative">
-            <input
-            id="f-confirm-password"
-              type={showConfirmPassword ? 'text' : 'password'}
-              required
-              minLength={8}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full border px-3.5 py-2.5 pr-10 text-sm text-sci-navy outline-none focus:border-sci-blue ${
-                confirmPassword.length > 0
-                  ? confirmPassword === password
-                    ? 'border-emerald-500'
-                    : 'border-red-400'
-                  : 'border-sci-border'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword((v) => !v)}
-              aria-label={showConfirmPassword ? 'Hide confirmation' : 'Show confirmation'}
-              title={showConfirmPassword ? 'Hide confirmation' : 'Show confirmation'}
-              aria-pressed={showConfirmPassword}
-              tabIndex={-1}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-sci-muted hover:text-sci-navy"
-            >
-              {showConfirmPassword ? (
-                <EyeOffIcon className="h-[18px] w-[18px]" />
-              ) : (
-                <EyeIcon className="h-[18px] w-[18px]" />
-              )}
-            </button>
-          </div>
-          {confirmPassword.length > 0 && (
-            <p className={`mt-1 text-xs ${confirmPassword === password ? 'text-emerald-600' : 'text-red-600'}`}>
-              {confirmPassword === password ? '✓ Passwords match' : 'Passwords do not match'}
-            </p>
+          {companyName && (
+            <div className="r-field">
+              <label htmlFor="f-company-website-optional">
+                Company website <small>optional</small>
+              </label>
+              <input
+                id="f-company-website-optional"
+                type="text"
+                placeholder="yourcompany.com"
+                value={companyWebsite}
+                onChange={(e) => setCompanyWebsite(e.target.value)}
+              />
+            </div>
           )}
+
+          <div className="r-field r-full">
+            <label htmlFor="f-phone">Phone</label>
+            <div className="ga-phone">
+              <PhoneCountrySelect value={countryIso2} onChange={setCountryIso2} />
+              <input
+                id="f-phone"
+                type="tel"
+                required
+                inputMode="numeric"
+                autoComplete="tel-national"
+                placeholder="5551234567"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value.replace(/\D/g, ''));
+                  setPhoneError(null);
+                }}
+                className={phoneError ? 'is-bad' : undefined}
+                aria-invalid={phoneError ? true : undefined}
+                aria-describedby={phoneError ? 'f-phone-error' : undefined}
+              />
+            </div>
+            {phoneError && (
+              <span id="f-phone-error" className="ga-hint is-bad">
+                {phoneError}
+              </span>
+            )}
+          </div>
+
+          <div className="r-field r-full">
+            <label htmlFor="f-email">Email address</label>
+            <input
+              id="f-email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="r-field">
+            <label htmlFor="f-password">Password</label>
+            <PasswordInput
+              id="f-password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={password}
+              onChange={setPassword}
+            />
+            {password.length > 0 && <PasswordStrengthChecklist password={password} />}
+          </div>
+
+          <div className="r-field">
+            <label htmlFor="f-confirm-password">Confirm password</label>
+            <PasswordInput
+              id="f-confirm-password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              className={confirmState}
+              showLabel="Show confirmation"
+              hideLabel="Hide confirmation"
+            />
+            {confirmPassword.length > 0 && (
+              <span className={`ga-hint ${confirmState}`}>
+                {confirmPassword === password ? 'Passwords match' : 'Passwords do not match'}
+              </span>
+            )}
+          </div>
         </div>
 
-        <label className="flex items-start gap-2 text-sm text-sci-muted">
+        <label className="r-consent">
           <input
             type="checkbox"
             checked={agreedToTerms}
             onChange={(e) => setAgreedToTerms(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-sci-border text-sci-blue focus:ring-sci-blue"
           />
-          <span>
-            I agree to the{' '}
-            <Link href="/legal/terms-of-service" target="_blank" className="font-medium text-sci-blue hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/legal/privacy-policy" target="_blank" className="font-medium text-sci-blue hover:underline">
-              Privacy Policy
-            </Link>
-            .
-          </span>
+          I agree to the{' '}
+          <Link href="/legal/terms-of-service" target="_blank">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/legal/privacy-policy" target="_blank">
+            Privacy Policy
+          </Link>
+          .
         </label>
 
         {error && (
-          <div className="bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>
+          <p className="r-error" role="alert">
+            {error}
+          </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading || !agreedToTerms}
-          className="w-full rounded-md bg-sci-accent px-6 py-4 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Creating account…' : 'Create account'}
+        <button type="submit" disabled={loading || !agreedToTerms} className="r-btn r-primary">
+          {loading ? (
+            <>
+              <LoaderCircle className="r-spin" size={17} aria-hidden />
+              Creating account…
+            </>
+          ) : (
+            'Create account'
+          )}
         </button>
-      </form>
 
-      <p className="mt-6 text-center text-sm text-sci-muted">
-        Already have an account?{' '}
-        <Link href="/account/login" className="font-medium text-sci-blue hover:underline">
-          Sign in
-        </Link>
-      </p>
-    </div>
+        <p className="ga-auth-switch">
+          Already have an account? <Link href="/account/login">Sign in</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }
 

@@ -1,1 +1,465 @@
 /* Gloss Studio additions for the content pages. Scope every rule under .gloss-theme. */
+
+/* ---- Shared: FAQ links, fine print ------------------------------------- */
+.gloss-theme .r-faq-link {
+  color: #075f77;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.gloss-theme .r-policy-copy a:not(.r-btn) {
+  color: #075f77;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gloss-theme .r-policy-copy > .r-btn {
+  margin-top: 6px;
+}
+
+/* ---- Services ----------------------------------------------------------- */
+.gloss-theme .r-services-grid > a > svg,
+.gloss-theme .r-services-grid > div > svg {
+  color: #1e7b8d;
+}
+.gloss-theme .r-services-terms {
+  margin-top: 28px;
+}
+
+/* ---- Contact ------------------------------------------------------------ */
+.gloss-theme .r-summary > p {
+  font-size: 14px;
+  line-height: 1.8;
+}
+.gloss-theme .r-summary > .r-contact-hours {
+  margin-top: 13px;
+}
+.gloss-theme .r-summary > .r-contact-hours + .r-contact-hours {
+  margin-top: 2px;
+}
+.gloss-theme .r-form-card .r-confirmation {
+  padding: 10px 0;
+}
+.gloss-theme .r-form-card .r-confirmation .r-eyebrow {
+  margin-bottom: 12px;
+}
+
+/* ---- Shipping & returns ------------------------------------------------- */
+.gloss-theme .r-ship-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 18px;
+}
+.gloss-theme .r-ship-facts > div {
+  background: linear-gradient(130deg, #f0f8fa, #fff);
+  border: 1px solid #d6e6eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.gloss-theme .r-ship-facts dt {
+  color: #267585;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.gloss-theme .r-ship-facts dd {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ---- About -------------------------------------------------------------- */
+.gloss-theme .r-about-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 50px 0 0;
+  background: #d7e8f1;
+  border: 1px solid #d7e8f1;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.gloss-theme .r-about-stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  background: #fff;
+  padding: 28px 26px;
+}
+.gloss-theme .r-about-stats dd {
+  margin: 0;
+  color: #123f5b;
+  font-size: clamp(32px, 3.4vw, 44px);
+  font-weight: 550;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+.gloss-theme .r-about-stats dt {
+  color: var(--r-muted);
+  font-size: 14px;
+}
+
+.gloss-theme .r-about-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 60px;
+  align-items: start;
+}
+.gloss-theme .r-about-story h2 {
+  font-size: clamp(29px, 3.1vw, 40px);
+}
+.gloss-theme .r-about-story ul {
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+}
+.gloss-theme .r-about-story li {
+  position: relative;
+  padding: 12px 0 12px 22px;
+  border-bottom: 1px solid #d6e5eb;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.gloss-theme .r-about-story li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 21px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1e7b8d;
+}
+.gloss-theme .r-policy-copy h3 {
+  margin: 10px 0 12px;
+  font-size: 23px;
+}
+
+.gloss-theme .r-about-mission {
+  background: linear-gradient(130deg, #073e51, #0b5f78);
+  color: #fff;
+  border-radius: 28px;
+  padding: 55px 56px;
+}
+.gloss-theme .r-about-mission .r-eyebrow {
+  color: #9fdef2;
+}
+.gloss-theme .r-about-mission h2 {
+  max-width: 820px;
+  margin-bottom: 22px;
+  font-size: clamp(30px, 3.4vw, 46px);
+}
+.gloss-theme .r-about-mission p {
+  max-width: 860px;
+  color: #d5ecf3;
+  font-size: 16px;
+  line-height: 1.85;
+}
+.gloss-theme .r-about-mission p + p {
+  margin-top: 16px;
+}
+
+.gloss-theme .r-about-quotes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.gloss-theme .r-about-quotes figure {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin: 0;
+  background: linear-gradient(130deg, #f0f8fa, #fff);
+  border: 1px solid #d6e6eb;
+  border-radius: 20px;
+  padding: 30px 28px;
+}
+.gloss-theme .r-about-quotes blockquote {
+  margin: 0;
+}
+.gloss-theme .r-about-quotes blockquote p {
+  font-size: 16px;
+  line-height: 1.8;
+}
+.gloss-theme .r-about-quotes figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  font-size: 14px;
+}
+.gloss-theme .r-about-quotes figcaption span {
+  color: var(--r-muted);
+}
+.gloss-theme .r-about-quotes figcaption small {
+  color: #106c7c;
+  font-size: 13px;
+}
+
+/* ---- Legal -------------------------------------------------------------- */
+.gloss-theme .r-legacy-support .page-head .r-legal-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin-top: 14px;
+  color: #3b7181;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gloss-theme .r-legal-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 60px;
+  align-items: start;
+}
+.gloss-theme .r-legal-layout .policy-content {
+  min-width: 0;
+}
+.gloss-theme .r-legal-desktop-nav {
+  position: sticky;
+  top: 30px;
+}
+.gloss-theme .r-legal-mobile-nav {
+  display: none;
+}
+.gloss-theme .r-legal-back {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: #0a7184;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gloss-theme .r-legal-nav-title {
+  color: #123f5b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.gloss-theme .r-legal-nav ul {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0 8px 0 0;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.gloss-theme .r-legal-nav a {
+  display: block;
+  border-left: 2px solid transparent;
+  padding: 8px 0 8px 13px;
+  color: var(--r-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.gloss-theme .r-legal-nav a:hover {
+  border-left-color: #d7e6ec;
+  color: #123f5b;
+}
+.gloss-theme .r-legal-nav a[aria-current='page'] {
+  border-left-color: #1e7b8d;
+  color: #123f5b;
+  font-weight: 600;
+}
+
+.gloss-theme .r-legal-doc {
+  margin-top: 20px;
+}
+.gloss-theme .r-legal-doc h2 {
+  margin: 44px 0 16px;
+  font-size: 27px;
+  line-height: 1.25;
+}
+.gloss-theme .r-legal-doc > h2:first-child {
+  margin-top: 0;
+}
+.gloss-theme .r-legal-doc h3 {
+  margin: 30px 0 12px;
+  font-size: 21px;
+}
+.gloss-theme .r-legal-doc h4 {
+  margin: 24px 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.gloss-theme .r-legal-doc p {
+  margin-bottom: 16px;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.gloss-theme .r-legal-doc ul {
+  margin: 0 0 18px;
+  padding-left: 22px;
+  color: #4b6573;
+}
+.gloss-theme .r-legal-doc li {
+  margin-bottom: 8px;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.gloss-theme .r-legal-doc li::marker {
+  color: #1e7b8d;
+}
+.gloss-theme .r-legal-table {
+  margin: 20px 0 26px;
+  overflow-x: auto;
+  border: 1px solid #d7e6ec;
+  border-radius: 12px;
+}
+.gloss-theme .r-legal-table table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+.gloss-theme .r-legal-table th,
+.gloss-theme .r-legal-table td {
+  padding: 12px 16px;
+  vertical-align: top;
+  border-bottom: 1px solid #d7e6ec;
+}
+.gloss-theme .r-legal-table tr:last-child td {
+  border-bottom: 0;
+}
+.gloss-theme .r-legal-table th {
+  background: #edf6f8;
+  color: #123f5b;
+  font-weight: 600;
+}
+.gloss-theme .r-legal-table td {
+  color: #4b6573;
+}
+
+.gloss-theme .r-legal-index {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gloss-theme .r-legal-index a {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  background: linear-gradient(130deg, #f0f8fa, #fff);
+  border: 1px solid #d6e6eb;
+  border-radius: 20px;
+  padding: 24px 26px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.gloss-theme .r-legal-index a:hover {
+  background: #eef8fa;
+  border-color: #92bfcd;
+}
+.gloss-theme .r-legal-index h2 {
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.gloss-theme .r-legal-index p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.gloss-theme .r-legal-index span {
+  margin-top: auto;
+  padding-top: 4px;
+  color: #106c7c;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gloss-theme .r-legal-questions {
+  border-top: 1px solid #d7e6ec;
+}
+.gloss-theme .r-legal-questions h2 {
+  font-size: clamp(26px, 2.6vw, 34px);
+}
+.gloss-theme .r-legal-questions p {
+  margin-top: 12px;
+}
+.gloss-theme .r-legal-questions a {
+  display: inline-block;
+  margin-top: 16px;
+  color: #0a7184;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .gloss-theme .r-about-story {
+    gap: 40px;
+  }
+  .gloss-theme .r-about-quotes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gloss-theme .r-legal-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .gloss-theme .r-legal-desktop-nav {
+    display: none;
+  }
+  .gloss-theme .r-legal-mobile-nav {
+    display: block;
+    border: 1px solid #d7e6ec;
+    border-radius: 14px;
+    padding: 14px 18px;
+  }
+  .gloss-theme .r-legal-mobile-nav summary {
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .gloss-theme .r-legal-mobile-nav .r-legal-nav {
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .gloss-theme .r-ship-facts {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .gloss-theme .r-about-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 36px;
+  }
+  .gloss-theme .r-about-stats > div {
+    padding: 22px 18px;
+  }
+  .gloss-theme .r-about-story {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .gloss-theme .r-about-mission {
+    border-radius: 20px;
+    padding: 34px 26px;
+  }
+  .gloss-theme .r-about-quotes {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+  .gloss-theme .r-legal-index {
+    grid-template-columns: 1fr;
+  }
+  .gloss-theme .r-legal-doc h2 {
+    font-size: 23px;
+  }
+}

@@ -1,1 +1,181 @@
 /* Gloss Studio additions for the categories pages. Scope every rule under .gloss-theme. */
+
+/* Directory cards: the prototype markup is an <a> grid item; keep it a block
+   so the photo + copy stack, and let next/image's <img> fill the width. */
+.gloss-theme .r-category-directory > a,
+.gloss-theme .function-directory > a {
+  display: block;
+  color: inherit;
+}
+.gloss-theme .r-category-directory img,
+.gloss-theme .function-directory > a > img {
+  display: block;
+}
+.gloss-theme .function-directory p {
+  margin-top: 0;
+}
+
+/* Page intro: the count line under the lead sentence. */
+.gloss-theme .r-page-intro .g-cat-intro-meta {
+  margin-top: 12px;
+  color: #2a7384;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* library-hero used as a category head: the photo is next/image `fill`. */
+.gloss-theme .library-hero-image > img {
+  position: absolute;
+  inset: 0;
+}
+.gloss-theme .library-hero-meta > span {
+  color: #3f6573;
+}
+
+/* Breadcrumb's current page. */
+.gloss-theme .r-breadcrumb a:hover {
+  color: var(--r-teal);
+}
+.gloss-theme .r-breadcrumb [aria-current='page'] {
+  color: var(--r-ink);
+}
+
+/* Filter column: the catalog hand-off replaces the prototype's select form. */
+.gloss-theme .g-cat-filter-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gloss-theme .g-cat-filter-body p {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.gloss-theme .g-cat-filter-body .r-btn {
+  width: 100%;
+  font-size: 13px;
+}
+
+/* Subcategory chips: a count instead of the prototype's remove "×". */
+.gloss-theme .r-filter-chips small {
+  color: #5b8796;
+  font-size: 11px;
+}
+.gloss-theme .r-filter-chips a:hover {
+  background: #dff0f4;
+  border-color: #8cc4cc;
+}
+
+.gloss-theme .r-results-toolbar .r-text-link {
+  font-size: 13px;
+}
+.gloss-theme .g-cat-truncated {
+  margin-top: 28px;
+  font-size: 14px;
+}
+.gloss-theme .g-cat-truncated .r-text-link {
+  margin-left: 6px;
+}
+
+/* Functions with nothing published: copy on the left, plain tags on the right. */
+.gloss-theme .g-cat-unstocked {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 50px;
+  margin-top: 56px;
+  padding-top: 48px;
+  border-top: 1px solid var(--r-line);
+}
+.gloss-theme .g-cat-unstocked .r-eyebrow {
+  margin-bottom: 13px;
+}
+.gloss-theme .g-cat-unstocked p {
+  margin: 18px 0 24px;
+  font-size: 15px;
+  line-height: 1.85;
+}
+.gloss-theme .g-cat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gloss-theme .g-cat-tags li {
+  color: #4f6e79;
+  background: var(--r-soft);
+  border: 1px solid var(--r-line);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+
+/* Long-form buying copy, in the help pages' r-help-layout. */
+.gloss-theme .g-cat-longform {
+  border-top: 1px solid var(--r-line);
+}
+.gloss-theme .g-cat-prose .r-eyebrow {
+  margin-bottom: 13px;
+}
+.gloss-theme .g-cat-prose h2 {
+  margin-bottom: 22px;
+}
+.gloss-theme .g-cat-prose p {
+  max-width: 760px;
+  font-size: 15px;
+  line-height: 1.9;
+}
+.gloss-theme .g-cat-prose details > div {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 18px;
+}
+.gloss-theme .g-cat-prose h3 {
+  margin-top: 14px;
+  color: var(--r-ink);
+  font-size: 21px;
+}
+.gloss-theme .g-cat-prose summary {
+  display: inline-block;
+  margin-top: 18px;
+  padding-bottom: 5px;
+  color: #066779;
+  border-bottom: 1px solid #8ebbc5;
+  font-size: 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.gloss-theme .g-cat-prose summary::-webkit-details-marker {
+  display: none;
+}
+.gloss-theme .g-cat-prose .g-cat-less,
+.gloss-theme .g-cat-prose details[open] .g-cat-more {
+  display: none;
+}
+.gloss-theme .g-cat-prose details[open] .g-cat-less {
+  display: inline;
+}
+
+@media (max-width: 1150px) {
+  .gloss-theme .g-cat-unstocked {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 40px;
+    padding-top: 36px;
+  }
+}
+
+@media (max-width: 760px) {
+  .gloss-theme .r-results-toolbar {
+    flex-wrap: wrap;
+  }
+  .gloss-theme .g-cat-filter-body {
+    padding-bottom: 17px;
+  }
+  .gloss-theme .g-cat-prose p {
+    font-size: 14px;
+  }
+}

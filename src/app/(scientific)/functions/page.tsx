@@ -1,33 +1,27 @@
-import Link from 'next/link';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { serverFetch } from '@/lib/serverFetch';
 import { clampDescription, pageMetadata } from '@/lib/seo';
 import { Paginated, ProductFunction, SeoPage } from '@/lib/types';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
-import { SciProse } from '@/components/scientific/SciProse';
-import {
-  ArrowLink,
-  Container,
-  Eyebrow,
-  SciButton,
-  SectionHeading,
-} from '@/components/scientific/primitives';
-import { HeroMedia } from '@/components/scientific/HeroMedia';
-import { HERO_IMAGES } from '@/lib/heroImages';
+import { categoryImage } from '@/lib/gloss/images';
+import { FunctionDirectory } from '@/components/gloss/categories/CategoryDirectory';
+import { IndexBand } from '@/components/gloss/categories/IndexBand';
+import { LongForm } from '@/components/gloss/categories/LongForm';
+import { EmptyState } from '@/components/gloss/EmptyState';
 
 /**
- * Ingredients by formulation function, in the "Scientific edition" design.
+ * Ingredients by formulation function, in the Gloss Studio design.
  *
- * There is no Figma frame for this page, so it follows the ingredient catalog
- * (node 33:459) — the closest thing in the design to what it is: a directory
- * of ways into the catalogue, with a navy cross-link panel and the quote band.
+ * The prototype has no function index, so this follows its `/categories`
+ * page: the `r-page-intro` head, then the gloss sheet's `function-directory`
+ * tiles (smaller than the category cards, because there are dozens), the
+ * library band linking the other indexes, and the long-form copy.
  *
- * The one structural departure from the page it replaces: of 94 functions,
- * only about a third currently have any published material. The old page
- * linked all of them into a filtered catalogue, so roughly sixty of those
- * links led to an empty result set. They are still listed — they are real
- * formulation vocabulary and worth indexing — but as plain text under their
- * own heading, pointing at a quote request rather than at nothing.
+ * Of the ~94 functions only about a third currently have published material.
+ * Those are tiles linking to /functions/<slug>; the rest are still listed —
+ * they are real formulation vocabulary worth indexing — but as plain text
+ * pointing at a quote request rather than at an empty page.
  */
 
 const DEFAULT_METADATA: Metadata = {
@@ -70,32 +64,6 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-/** A function with material behind it — compact, because there are dozens. */
-function FunctionTile({ fn }: { fn: ProductFunction }) {
-  const count = fn.productCount ?? 0;
-  return (
-    <Link
-      href={`/functions/${fn.slug}`}
-      className="group flex items-center justify-between gap-4 rounded-xl border border-sci-border bg-white px-5 py-4 transition hover:border-sci-blue hover:shadow-sm"
-    >
-      <span className="min-w-0">
-        <span className="block font-sci-body text-[17px] font-medium leading-6 text-sci-navy">
-          {fn.name}
-        </span>
-        <span className="block font-sci-body text-sci-label text-sci-muted">
-          {count} {count === 1 ? 'product' : 'products'}
-        </span>
-      </span>
-      <span
-        aria-hidden
-        className="shrink-0 font-sci-body text-sci-label font-medium text-sci-blue transition-transform group-hover:translate-x-0.5"
-      >
-        →
-      </span>
-    </Link>
-  );
-}
-
 export default async function FunctionsPage() {
   const functionsRes = await serverFetch<Paginated<ProductFunction>>(
     '/wholesale/functions?page=1&limit=300',
@@ -129,101 +97,91 @@ export default async function FunctionsPage() {
         ]}
       />
 
-      {/* Introduction */}
-      <section className="relative isolate overflow-hidden bg-sci-pale py-16">
-        <HeroMedia
-          src={HERO_IMAGES.functions.src}
-          alt={HERO_IMAGES.functions.alt}
-          tone="light"
-          priority
-        />
-        <Container className="flex flex-col gap-6">
-          <Eyebrow>Targeted formulation</Eyebrow>
+      <div className="r-page-intro r-wrap">
+        <span className="r-eyebrow">Targeted formulation</span>
+        <h1>Find it by what it does.</h1>
+        <p>
+          Most formulation problems present as a behaviour rather than a material — a cream that
+          separates, a cleanser that strips, a serum that dries down tight. Browsing by function
+          surfaces every material we stock that addresses the same problem, which makes
+          substitution and cost engineering far easier than working from trade names.
+        </p>
+        <p className="g-cat-intro-meta">
+          {stocked.length} {stocked.length === 1 ? 'function' : 'functions'} with material in stock
+          · {functions.length} indexed · A–Z
+        </p>
+      </div>
 
-          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
-            Find it by what it does.
-          </h1>
+      <section className="r-wrap r-section">
+        {stocked.length === 0 ? (
+          <EmptyState
+            title="No functions found."
+            text="The function index could not be loaded. Browse ingredient categories instead."
+            href="/categories"
+            label="Browse categories"
+          />
+        ) : (
+          <FunctionDirectory
+            items={stocked.map((f) => {
+              const count = f.productCount ?? 0;
+              return {
+                key: f.id,
+                href: `/functions/${f.slug}`,
+                name: f.name,
+                image: categoryImage(f.slug || f.name),
+                imageAlt: '',
+                meta: `${count} ${count === 1 ? 'ingredient' : 'ingredients'}`,
+                text: 'View ingredients →',
+              };
+            })}
+          />
+        )}
 
-          <p className="font-sci-body text-sci-label font-medium text-sci-navy">
-            {stocked.length} {stocked.length === 1 ? 'function' : 'functions'} with material in
-            stock · {functions.length} indexed · A–Z
-          </p>
-
-          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-            Most formulation problems present as a behaviour rather than a material — a cream that
-            separates, a cleanser that strips, a serum that dries down tight. Browsing by function
-            surfaces every material we stock that addresses the same problem, which makes
-            substitution and cost engineering far easier than working from trade names.
-          </p>
-        </Container>
-      </section>
-
-      {/* The functions themselves */}
-      <section className="bg-white py-16">
-        <Container className="flex flex-col gap-6">
-          <SectionHeading>Browse by function</SectionHeading>
-
-          {stocked.length === 0 ? (
-            <p className="font-sci-body text-sci-body text-sci-muted">No functions found.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {stocked.map((f) => (
-                <FunctionTile key={f.id} fn={f} />
-              ))}
-            </div>
-          )}
-
-          {/* Vocabulary we index but have no published material against today.
-              Listed as text rather than links: each one would otherwise open a
-              filtered catalogue with nothing in it. */}
-          {unstocked.length > 0 && (
-            <div className="mt-6 flex flex-col gap-4 border-t border-sci-border pt-8">
-              <h3 className="font-sci-heading text-sci-subheading font-semibold text-sci-navy">
-                Also indexed, sourced to order
-              </h3>
-              <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
+        {/* Vocabulary we index but have no published material against today.
+            Listed as text rather than links: each one would otherwise open an
+            empty page. */}
+        {unstocked.length > 0 && (
+          <div className="g-cat-unstocked">
+            <div>
+              <span className="r-eyebrow">Sourced to order</span>
+              <h2>Also indexed.</h2>
+              <p>
                 {unstocked.length} further functions have no published material in the catalogue
                 right now. A significant share of what we ship is sourced to order against a
                 customer&rsquo;s specification — tell us the behaviour you need and we will confirm
                 what we can supply.
               </p>
-              <ul className="flex flex-wrap gap-2">
-                {unstocked.map((f) => (
-                  <li
-                    key={f.id}
-                    className="rounded-full border border-sci-border bg-sci-pale px-3 py-1 font-sci-body text-sci-label text-sci-muted"
-                  >
-                    {f.name}
-                  </li>
-                ))}
-              </ul>
-              <ArrowLink href="/quote-request">Ask about a function</ArrowLink>
+              <Link className="r-btn r-outline" href="/quote-request">
+                Ask about a function
+              </Link>
             </div>
-          )}
-
-          {/* The catalogue's other two indexes. */}
-          <div className="mt-6 flex flex-col gap-6 bg-sci-navy p-10 text-white">
-            <h2 className="font-sci-heading text-[32px] font-semibold leading-[40px] md:text-sci-heading">
-              Every material, indexed.
-            </h2>
-            <p className="max-w-[900px] font-sci-body text-sci-body">
-              Functions group materials by the job they do in a formulation. Browse by category to
-              find them by what they physically are, or search by name if you already
-              know the INCI name.
-            </p>
-            <div className="flex flex-wrap gap-x-8 gap-y-3">
-              <ArrowLink href="/categories" tone="white">
-                Browse by category
-              </ArrowLink>
-              <ArrowLink href="/products" tone="white">
-                Full product catalog
-              </ArrowLink>
-            </div>
+            <ul className="g-cat-tags">
+              {unstocked.map((f) => (
+                <li key={f.id}>{f.name}</li>
+              ))}
+            </ul>
           </div>
-        </Container>
+        )}
       </section>
 
-      <SciProse
+      <IndexBand
+        eyebrow="Every material, indexed"
+        title={
+          <>
+            Grouped by what it does.
+            <br />
+            Or by what it is.
+          </>
+        }
+        text="Functions group materials by the job they do in a formulation. Browse by category to find them by what they physically are, or search by name if you already know the INCI name."
+        cta={{ href: '/products', label: 'Open the full catalog' }}
+        tiles={[
+          { href: '/categories', kicker: 'Browse by', letter: 'C', caption: 'Ingredient categories' },
+          { href: '/ingredients-a-z', kicker: 'Start with', letter: 'A', caption: 'Ingredients A–Z' },
+        ]}
+      />
+
+      <LongForm
         eyebrow="Formulating by function"
         heading="Choosing a function"
         paragraphs={INTRO_PARAGRAPHS}
@@ -234,24 +192,16 @@ export default async function FunctionsPage() {
           { beforeIndex: 4, text: 'Understanding use levels and cost' },
           { beforeIndex: 5, text: 'Preservation systems and compatibility' },
         ]}
+        aside={{
+          title: 'Not sure which function you need?',
+          text: 'Send the behaviour you need, the pH range, packaging format and expected volume with a quote request, and our team will suggest compatible candidates.',
+          links: [
+            { href: '/quote-request', label: 'Request a quote' },
+            { href: '/categories', label: 'Browse ingredient categories' },
+            { href: '/contact', label: 'Ask an ingredient question' },
+          ],
+        }}
       />
-
-      {/* Contact / Request a quote */}
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Let’s move your next idea forward</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              The next great formula
-              <br />
-              starts with a conversation.
-            </p>
-          </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
-      </section>
     </>
   );
 }

@@ -13,14 +13,15 @@ import {
   clearWishlist,
 } from '@/lib/wishlistStore';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { EyeIcon, EyeOffIcon } from '@/components/icons';
+import { LoaderCircle } from 'lucide-react';
+import { AuthLayout } from '@/components/gloss/account/AuthLayout';
+import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 
 function LoginForm() {
   const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -75,73 +76,59 @@ function LoginForm() {
   }
 
   return (
-    <div className="mx-auto max-w-[460px] px-6 py-16">
-      <h1 className="font-sci-heading text-[32px] font-semibold leading-10 text-sci-navy">Sign in</h1>
-      <p className="mt-2 font-sci-body text-sci-body text-sci-muted">Sign in to your wholesale account.</p>
+    <AuthLayout title="Sign in." intro="Return to your orders, quote list and saved ingredients.">
+      <form onSubmit={handleSubmit} className="r-form-card">
+        <h2>Sign in to your wholesale account</h2>
+        <p>Use the email address your trade account was opened with.</p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div>
-          <label htmlFor="f-email" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
+        <div className="r-field">
+          <label htmlFor="f-email">Email address</label>
           <input
             id="f-email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
           />
         </div>
 
-        <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="f-password" className="block text-xs font-semibold uppercase tracking-wide text-sci-muted">Password</label>
-            <Link href="/account/forgot-password" className="text-xs font-medium text-sci-blue hover:underline">
-              Forgot password?
-            </Link>
+        <div className="r-field">
+          <div className="ga-field-row">
+            <label htmlFor="f-password">Password</label>
+            <Link href="/account/forgot-password">Forgot password?</Link>
           </div>
-          <div className="relative">
-            <input
+          <PasswordInput
             id="f-password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 pr-12 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              title={showPassword ? 'Hide password' : 'Show password'}
-              aria-pressed={showPassword}
-              tabIndex={-1}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-sci-muted hover:text-sci-navy"
-            >
-              {showPassword ? <EyeOffIcon className="h-[18px] w-[18px]" /> : <EyeIcon className="h-[18px] w-[18px]" />}
-            </button>
-          </div>
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={setPassword}
+          />
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>
+          <p className="r-error" role="alert">
+            {error}
+          </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-sci-accent px-6 py-4 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Signing in…' : 'Sign in'}
+        <button type="submit" disabled={loading} className="r-btn r-primary">
+          {loading ? (
+            <>
+              <LoaderCircle className="r-spin" size={17} aria-hidden />
+              Signing in…
+            </>
+          ) : (
+            'Sign in'
+          )}
         </button>
-      </form>
 
-      <p className="mt-6 text-center text-sm text-sci-muted">
-        New to CocoJojoChem?{' '}
-        <Link href="/account/register" className="font-medium text-sci-blue hover:underline">
-          Create an account
-        </Link>
-      </p>
-    </div>
+        <p className="ga-auth-switch">
+          New to CocoJojoChem? <Link href="/account/register">Create an account</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }
 

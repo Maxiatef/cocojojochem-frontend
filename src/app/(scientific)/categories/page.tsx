@@ -3,29 +3,21 @@ import { serverFetch } from '@/lib/serverFetch';
 import { clampDescription, pageMetadata } from '@/lib/seo';
 import { Category, Paginated, Product, SeoPage } from '@/lib/types';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
-import { CategoryCard } from '@/components/scientific/CategoryCard';
-import { SciProse } from '@/components/scientific/SciProse';
-import {
-  ArrowLink,
-  Container,
-  Eyebrow,
-  SciButton,
-  SectionHeading,
-} from '@/components/scientific/primitives';
-import { HeroMedia } from '@/components/scientific/HeroMedia';
-import { HERO_IMAGES } from '@/lib/heroImages';
+import { CategoryDirectory } from '@/components/gloss/categories/CategoryDirectory';
+import { categoryPhoto } from '@/components/gloss/categories/GlossPhoto';
+import { IndexBand } from '@/components/gloss/categories/IndexBand';
+import { LongForm } from '@/components/gloss/categories/LongForm';
+import { EmptyState } from '@/components/gloss/EmptyState';
 
 /**
- * Ingredient categories, rebuilt to the "Scientific edition" design
- * (Figma rj57PsDgSsbo86iG4RC1SA, node 33:459 — "03 — Ingredient catalog").
+ * Ingredient categories, in the Gloss Studio design (prototype `/categories`):
+ * the `r-page-intro` head and the `r-category-directory` photo cards.
  *
- * Section order and type scale follow the design. The copy does not, wherever
- * the design's placeholder text would have been false about this site: the
- * design's twelve invented categories are the live catalogue here, its record
- * counts are real product counts, and its "BASF · Brenntag · Univar…" supplier
- * list — which would claim distribution agreements we have not stated — is
- * replaced by the two other real ways into the catalogue, the A-Z index and
- * the function browser.
+ * Differences from the prototype, all on purpose: cards open our own indexable
+ * /categories/<slug> pages rather than a filtered catalog URL; counts are real
+ * product counts; each card uses the category's own photo when Admin has one,
+ * otherwise the prototype's matching ingredient photo. The long-form buying
+ * copy stays for search, laid out like the prototype's help pages.
  */
 
 const DEFAULT_METADATA: Metadata = {
@@ -56,6 +48,19 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     images: [seo?.ogImageUrl],
   });
+}
+
+/** The card's sentence: the category's own description when it has one. */
+function cardText(c: Category): string {
+  const own = (c.description || '').split(/\n\s*\n/)[0]?.replace(/\s+/g, ' ').trim();
+  if (own) return own.length > 170 ? own.slice(0, 167).replace(/\s+\S*$/, '') + '…' : own;
+  const children = (c.children || []).map((k) => k.name);
+  const lower = c.name.toLowerCase();
+  if (children.length > 0) {
+    const shown = children.slice(0, 3).join(', ');
+    return `Explore wholesale ${lower}, including ${shown}${children.length > 3 ? ' and more' : ''}.`;
+  }
+  return `Explore wholesale ${lower} for cosmetic formulation, with INCI names, pack sizes and trade pricing on every listing.`;
 }
 
 export default async function CategoriesPage() {
@@ -110,101 +115,73 @@ export default async function CategoriesPage() {
         ]}
       />
 
-      {/* Expanded catalog introduction — 33:479 */}
-      <section className="relative isolate overflow-hidden bg-sci-pale py-16">
-        <HeroMedia
-          src={HERO_IMAGES.categories.src}
-          alt={HERO_IMAGES.categories.alt}
-          tone="light"
-          priority
-        />
-        <Container className="flex flex-col gap-6">
-          <Eyebrow>The ingredient directory</Eyebrow>
-          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
-            Find your next ingredient.
-          </h1>
-          <p className="max-w-[820px] font-sci-body text-sci-body text-sci-muted">
-            {productTotal > 0
-              ? `${productTotal} ingredients and commercial blends across ${categories.length} categories, with INCI naming, pack sizes and live stock status on every listing.`
-              : `${categories.length} categories of wholesale cosmetic ingredients, with INCI naming, pack sizes and live stock status on every listing.`}
-          </p>
-          <p className="max-w-[820px] font-sci-body text-sci-body text-sci-muted">
-            Wholesale pricing throughout. Certificates of Analysis and Safety Data Sheets are
-            available on request — confirm the exact grade, availability and documentation during
-            quotation.
-          </p>
-        </Container>
+      <div className="r-page-intro r-wrap">
+        <span className="r-eyebrow">A place for every ingredient</span>
+        <h1>Explore every ingredient family.</h1>
+        <p>
+          Start with the material you need, then explore its specifications and applications.{' '}
+          {productTotal > 0
+            ? `${productTotal} wholesale ingredients across ${categories.length} categories, with INCI naming, pack sizes and live stock status on every listing.`
+            : `${categories.length} categories of wholesale cosmetic ingredients, with INCI naming, pack sizes and live stock status on every listing.`}
+        </p>
+      </div>
+
+      <section className="r-wrap r-section">
+        {categories.length === 0 ? (
+          <EmptyState
+            title="Categories are on their way."
+            text="The category directory could not be loaded. Search the full catalog instead."
+            href="/products"
+            label="Explore the shop"
+          />
+        ) : (
+          <CategoryDirectory
+            items={categories.map((c) => ({
+              key: c.id,
+              href: `/categories/${c.slug}`,
+              name: c.name,
+              image: categoryPhoto(c),
+              imageAlt: `${c.name} representative ingredients`,
+              meta: `${c.productCount ?? 0} ${(c.productCount ?? 0) === 1 ? 'ingredient' : 'ingredients'}`,
+              text: cardText(c),
+            }))}
+          />
+        )}
       </section>
 
-      {/* Browse every category — 33:484 */}
-      <section className="bg-white py-16">
-        <Container className="flex flex-col gap-6">
-          <SectionHeading>Explore the Categories</SectionHeading>
+      {/* The catalog's other two indexes, in the home page's library band. */}
+      <IndexBand
+        eyebrow="Every material, indexed"
+        title={
+          <>
+            Grouped by what it is.
+            <br />
+            Or by what it does.
+          </>
+        }
+        text="Categories group materials by what they physically are. Browse by function to find them by the job they do in a formulation, or search by name if you already know the INCI name. Wholesale pricing throughout; Certificates of Analysis and Safety Data Sheets on request."
+        cta={{ href: '/products', label: 'Open the full catalog' }}
+        tiles={[
+          { href: '/functions', kicker: 'Browse by', letter: 'F', caption: 'Ingredients by function' },
+          { href: '/ingredients-a-z', kicker: 'Start with', letter: 'A', caption: 'Ingredients A–Z' },
+        ]}
+      />
 
-          {categories.length === 0 ? (
-            <p className="font-sci-body text-sci-body text-sci-muted">No categories found.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {categories.map((c) => (
-                <CategoryCard
-                  key={c.id}
-                  href={`/categories/${c.slug}`}
-                  name={c.name}
-                  count={c.productCount}
-                  imageUrl={c.imageUrl}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* The design's navy "Research you can trace." panel. Its supplier
-              list is replaced by the catalogue's other two indexes, which is
-              what this block can honestly point at. */}
-          <div className="mt-2 flex flex-col gap-6 bg-sci-navy p-10 text-white">
-            <h2 className="font-sci-heading text-[32px] font-semibold leading-[40px] md:text-sci-heading">
-              Every material, indexed.
-            </h2>
-            <p className="max-w-[900px] font-sci-body text-sci-body">
-              Categories group materials by what they are. Browse by function to find them by the
-              job they do in a formulation, or search by name if you already know the
-              INCI name.
-            </p>
-            <div className="flex flex-wrap gap-x-8 gap-y-3">
-              <ArrowLink href="/functions" tone="white">
-                Browse by function
-              </ArrowLink>
-              <ArrowLink href="/products" tone="white">
-                Full product catalog
-              </ArrowLink>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <SciProse
+      <LongForm
         eyebrow="How the catalog is organized"
         heading="Choosing a category"
         paragraphs={introParagraphs}
         subheadings={introSubheadings}
+        aside={{
+          title: 'Need a grade we don’t list?',
+          text: 'Confirm the exact grade, availability and documentation during quotation. We source many materials to order against your specification.',
+          links: [
+            { href: '/quote-request', label: 'Request a quote' },
+            { href: '/functions', label: 'Browse ingredients by function' },
+            { href: '/contact', label: 'Ask an ingredient question' },
+          ],
+        }}
       />
-
-      {/* Contact / Request a quote — 33:542 */}
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Let’s move your next idea forward</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              The next great formula
-              <br />
-              starts with a conversation.
-            </p>
-          </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
-      </section>
     </>
   );
 }
-

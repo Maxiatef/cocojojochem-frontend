@@ -1,28 +1,25 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { FileText, FlaskConical, Package } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
 import { Paginated, Product, ProductFunction } from '@/lib/types';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
-import { IngredientRow } from '@/components/scientific/IngredientRow';
-import { ArrowLink, Container, Eyebrow, SciButton } from '@/components/scientific/primitives';
+import { categoryImage } from '@/lib/gloss/images';
+import { Breadcrumb, DirectoryHero } from '@/components/gloss/categories/DirectoryHero';
+import { ListingLayout } from '@/components/gloss/categories/ListingLayout';
 
 /**
  * Every material we stock that performs one formulation function, as a real,
- * indexable page.
+ * indexable page — in the Gloss Studio design, built from the same parts as
+ * a category page: `library-hero` head, the shop's filter column, and a
+ * `r-product-grid` of ProductCards.
  *
  * Functions used to have no page of their own: every link went to
- * /products?functionSlug=<slug>, which could never rank. robots.txt disallows
- * `/products?`, that page's canonical points at plain /products, and its
- * product grid is fetched client-side — so the server HTML had no products in
- * it. The sitemap listed those URLs anyway. Queries like "bulk emulsifiers"
- * or "wholesale humectants" had nowhere on the site to land.
- *
- * This page is the category directory's pattern applied to functions: the
- * whole list rendered server-side, A–Z, with the filtered catalogue linked for
- * anyone who wants to sort or narrow it. /products?functionSlug= still works
- * as that faceted view; it just isn't what search engines are pointed at.
+ * /products?functionSlug=<slug>, which could never rank (robots.txt disallows
+ * `/products?`, its canonical is plain /products, and its grid is fetched
+ * client-side). This page lists the whole function server-side, A–Z, with the
+ * filtered catalogue linked for anyone who wants to sort or narrow it.
  */
 
 // Same cap as the category directory: one page, but never an unbounded response.
@@ -96,7 +93,7 @@ export default async function FunctionDetailPage({ params }: { params: { slug: s
 
   const products = productsRes?.data || [];
   const total = productsRes?.pagination.total ?? products.length;
-  // Sorted locally as well, as on the category directory: the page promises A–Z.
+  // Sorted locally as well, as on the category page: the page promises A–Z.
   const records = [...products].sort((a, b) => a.name.localeCompare(b.name));
   const lower = fn.name.toLowerCase();
 
@@ -121,82 +118,47 @@ export default async function FunctionDetailPage({ params }: { params: { slug: s
         ]}
       />
 
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col gap-6">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/functions"
-              className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
-            >
-              ← All functions
-            </Link>
-          </nav>
+      <Breadcrumb
+        trail={[
+          { name: 'Home', href: '/' },
+          { name: 'Functions', href: '/functions' },
+          { name: fn.name },
+        ]}
+      />
 
-          <Eyebrow>Ingredients by function</Eyebrow>
+      {/* Short on purpose when there's no authored description. Every
+          function page shares this sentence, so it states what the list is
+          and stops — unique copy belongs in the admin's description field
+          (Admin → Functions), which replaces it. */}
+      <DirectoryHero
+        eyebrow="Ingredients by function"
+        title={`${fn.name} ingredients`}
+        intro={
+          fn.description ||
+          `Materials we stock that are used for their ${lower} function in cosmetic and personal care formulations. Each listing shows the INCI name, pack sizes, wholesale pricing and current stock.`
+        }
+        meta={[
+          { icon: <FlaskConical size={16} aria-hidden="true" />, text: `${total} ${total === 1 ? 'material' : 'materials'} · A–Z` },
+          { icon: <Package size={16} aria-hidden="true" />, text: 'Wholesale pack sizes' },
+          { icon: <FileText size={16} aria-hidden="true" />, text: 'COA & SDS on request' },
+        ]}
+        image={categoryImage(fn.slug || fn.name)}
+        imageAlt={`${fn.name} representative ingredient texture`}
+        figure={{ value: total, label: total === 1 ? 'MATERIAL' : 'MATERIALS' }}
+      />
 
-          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
-            {fn.name} ingredients
-          </h1>
-
-          <p className="font-sci-body text-sci-label font-medium text-sci-navy">
-            {total} {total === 1 ? 'material' : 'materials'} · Sorted A–Z
-          </p>
-
-          {/* Short on purpose when there's no authored description. Every
-              function page shares this sentence, so it states what the list is
-              and stops — unique copy belongs in the admin's description field
-              (Admin → Functions), which replaces it. */}
-          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-            {fn.description ||
-              `Materials we stock that are used for their ${lower} function in cosmetic and personal care formulations. Each listing shows the INCI name, pack sizes, wholesale pricing and current stock.`}
-          </p>
-
-          {records.length > 0 && (
-            <ArrowLink href={`/products?functionSlug=${fn.slug}`}>
-              Filter and sort these materials
-            </ArrowLink>
-          )}
-        </Container>
-      </section>
-
-      <section className="bg-white py-16">
-        <Container>
-          {records.length === 0 ? (
-            <p className="font-sci-body text-sci-body text-sci-muted">
-              No {lower} materials are published in the catalogue right now. We source many
-              materials to order,{' '}
-              <Link href="/quote-request" className="text-sci-blue hover:underline">
-                so send a quote request
-              </Link>{' '}
-              describing what you need and we will confirm what we can supply.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {records.map((p) => (
-                <li key={p.id}>
-                  <IngredientRow product={p} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Container>
-      </section>
-
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Need a different grade or volume?</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              Tell us the specification
-              <br />
-              and we&rsquo;ll confirm what we can supply.
-            </p>
-          </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
-      </section>
+      <ListingLayout
+        label={`${fn.name} ingredients`}
+        products={records}
+        total={total}
+        filterHref={`/products?functionSlug=${fn.slug}`}
+        filterText={`Narrow ${lower} materials by category, price and stock in the full catalog.`}
+        backLink={{ href: '/functions', label: 'All functions' }}
+        empty={{
+          title: 'Sourced to order.',
+          text: `No ${lower} materials are published in the catalogue right now. We source many materials to order — send a quote request describing what you need and we will confirm what we can supply.`,
+        }}
+      />
     </>
   );
 }

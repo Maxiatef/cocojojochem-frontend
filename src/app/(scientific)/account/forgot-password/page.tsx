@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { AuthLayout } from '@/components/gloss/account/AuthLayout';
+import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 
 type Step = 'email' | 'code' | 'password' | 'done';
 
@@ -70,65 +72,73 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-[460px] px-6 py-16">
-      <h1 className="font-sci-heading text-[32px] font-semibold leading-10 text-sci-navy">Reset your password</h1>
-      <p className="mt-2 font-sci-body text-sci-body text-sci-muted">
-        {step === 'email' && "We'll email you a 5-digit code to verify it's you."}
-        {step === 'code' &&
-          `If ${email} is a registered account, we've sent a 5-digit code to it. If it isn't, you won't receive anything.`}
-        {step === 'password' && 'Choose a new password for your account.'}
-        {step === 'done' && 'Your password has been reset.'}
-      </p>
+  const errorBox = error && (
+    <p className="r-error" role="alert">
+      {error}
+    </p>
+  );
 
+  return (
+    <AuthLayout
+      title="Reset your password."
+      intro={
+        <>
+          {step === 'email' && "We'll email you a 5-digit code to verify it's you."}
+          {step === 'code' &&
+            `If ${email} is a registered account, we've sent a 5-digit code to it. If it isn't, you won't receive anything.`}
+          {step === 'password' && 'Choose a new password for your account.'}
+          {step === 'done' && 'Your password has been reset.'}
+        </>
+      }
+    >
       {step === 'email' && (
-        <form onSubmit={handleSendCode} className="mt-8 space-y-4">
-          <div>
-            <label htmlFor="f-email" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">Email</label>
+        <form onSubmit={handleSendCode} className="r-form-card">
+          <div className="r-step-label">
+            <span>1</span> Your email <span>2</span> Code <span>3</span> New password
+          </div>
+          <div className="r-field">
+            <label htmlFor="f-email">Email address</label>
             <input
-            id="f-email"
+              id="f-email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
             />
           </div>
-          {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-sci-accent px-6 py-4 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          {errorBox}
+          <button type="submit" disabled={loading} className="r-btn r-primary">
             {loading ? 'Sending…' : 'Send code'}
           </button>
+          <p className="ga-auth-switch">
+            <Link href="/account/login">Back to sign in</Link>
+          </p>
         </form>
       )}
 
       {step === 'code' && (
-        <form onSubmit={handleVerifyCode} className="mt-8 space-y-4">
-          <div>
-            <label htmlFor="f-5-digit-code" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
-              5-digit code
-            </label>
+        <form onSubmit={handleVerifyCode} className="r-form-card">
+          <div className="r-step-label">
+            <span>1</span> Your email <span>2</span> Code <span>3</span> New password
+          </div>
+          <div className="r-field">
+            <label htmlFor="f-5-digit-code">5-digit code</label>
             <input
-            id="f-5-digit-code"
+              id="f-5-digit-code"
               type="text"
               required
               inputMode="numeric"
+              autoComplete="one-time-code"
               maxLength={5}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
-              className="w-full border border-sci-border px-3.5 py-2.5 text-center text-lg tracking-[0.4em] text-sci-navy outline-none focus:border-sci-blue"
+              className="ga-code-input ga-mono"
               placeholder="00000"
             />
           </div>
-          {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading || code.length !== 5}
-            className="w-full rounded-md bg-sci-accent px-6 py-4 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          {errorBox}
+          <button type="submit" disabled={loading || code.length !== 5} className="r-btn r-primary">
             {loading ? 'Verifying…' : 'Verify code'}
           </button>
           <button
@@ -138,77 +148,66 @@ export default function ForgotPasswordPage() {
               setCode('');
               setError(null);
             }}
-            className="w-full text-center text-xs font-medium text-sci-muted hover:text-sci-navy"
+            className="ga-link ga-secondary"
           >
             Use a different email
           </button>
+          <p className="ga-auth-switch">
+            <Link href="/account/login">Back to sign in</Link>
+          </p>
         </form>
       )}
 
       {step === 'password' && (
-        <form onSubmit={handleResetPassword} className="mt-8 space-y-4">
-          <div>
-            <label htmlFor="f-new-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
-              New password
-            </label>
-            <input
-            id="f-new-password"
-              type="password"
+        <form onSubmit={handleResetPassword} className="r-form-card">
+          <div className="r-step-label">
+            <span>1</span> Your email <span>2</span> Code <span>3</span> New password
+          </div>
+          <div className="r-field">
+            <label htmlFor="f-new-password">New password</label>
+            <PasswordInput
+              id="f-new-password"
               required
               minLength={8}
               autoComplete="new-password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
+              onChange={setNewPassword}
             />
+            <span className="ga-hint">At least 8 characters.</span>
           </div>
-          <div>
-            <label htmlFor="f-confirm-new-password" className="mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy">
-              Confirm new password
-            </label>
-            <input
-            id="f-confirm-new-password"
-              type="password"
+          <div className="r-field">
+            <label htmlFor="f-confirm-new-password">Confirm new password</label>
+            <PasswordInput
+              id="f-confirm-new-password"
               required
               minLength={8}
               autoComplete="new-password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue"
+              onChange={setConfirmPassword}
+              showLabel="Show confirmation"
+              hideLabel="Hide confirmation"
             />
           </div>
-          {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-sci-accent px-6 py-4 font-sci-body text-sci-label font-medium text-sci-navy transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          {errorBox}
+          <button type="submit" disabled={loading} className="r-btn r-primary">
             {loading ? 'Saving…' : 'Set new password'}
           </button>
+          <p className="ga-auth-switch">
+            <Link href="/account/login">Back to sign in</Link>
+          </p>
         </form>
       )}
 
       {step === 'done' && (
-        <div className="mt-8">
-          <p className="rounded-lg bg-sci-pale px-3.5 py-2.5 text-sm text-sci-navy">
+        <div className="r-form-card">
+          <p className="ga-success" role="status">
             Your password was reset successfully. You can now sign in with your new password.
           </p>
-          <button
-            onClick={() => router.push('/account/login')}
-            className="mt-6 w-full bg-sci-accent px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-95"
-          >
+          <button onClick={() => router.push('/account/login')} className="r-btn r-primary">
             Sign in
           </button>
         </div>
       )}
-
-      {step !== 'done' && (
-        <p className="mt-6 text-center text-sm text-sci-muted">
-          <Link href="/account/login" className="font-medium text-sci-blue hover:underline">
-            Back to sign in
-          </Link>
-        </p>
-      )}
-    </div>
+    </AuthLayout>
   );
 }

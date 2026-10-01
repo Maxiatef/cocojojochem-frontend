@@ -1,1 +1,7 @@
 /* Gloss Studio additions for the home pages. Scope every rule under .gloss-theme. */
+
+/* Category carousel: the prototype's Embla drag affordance, on our own
+   transform-based track (CategoryCarousel.tsx). */
+.gloss-theme .r-category-carousel-viewport{cursor:grab}
+.gloss-theme .r-category-carousel-track{will-change:transform}
+.gloss-theme .r-category-carousel-track.is-dragging{cursor:grabbing}

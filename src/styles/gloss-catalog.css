@@ -1,1 +1,245 @@
 /* Gloss Studio additions for the catalog pages. Scope every rule under .gloss-theme. */
+
+/* ---------------------------------------------------------- catalog filters */
+.gloss-theme .r-filters .g-cat-check {
+  color: #315866;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  cursor: pointer;
+}
+.gloss-theme .r-filters .g-cat-check input {
+  accent-color: #07697b;
+  width: 17px;
+  height: 17px;
+}
+.gloss-theme .r-filters .r-field input {
+  min-height: 42px;
+  padding-left: 10px;
+  font-size: 13px;
+}
+
+/* Applied-filter chips (r-filter-chips is styled for links; ours are buttons). */
+.gloss-theme .g-cat-chips button {
+  color: #175c70;
+  background: #eaf5f7;
+  border: 1px solid #c4dfe7;
+  border-radius: 6px;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 7px 12px;
+  font-size: 12px;
+  display: flex;
+  cursor: pointer;
+}
+.gloss-theme .g-cat-chips button small {
+  color: #4f7482;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+}
+.gloss-theme .g-cat-chips button:hover {
+  border-color: #77abb9;
+}
+.gloss-theme .g-cat-chips .g-cat-clear {
+  color: #07697b;
+  background: none;
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gloss-theme .g-cat-loading {
+  color: #2b7c8c;
+  justify-content: center;
+  align-items: center;
+  min-height: 320px;
+  display: flex;
+}
+
+/* --------------------------------------------- catalog page server sections */
+.gloss-theme .g-cat-browse,
+.gloss-theme .g-cat-references,
+.gloss-theme .g-cat-prose {
+  border-top: 1px solid var(--r-line);
+}
+.gloss-theme .g-cat-lead {
+  max-width: 820px;
+  margin-bottom: 24px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.gloss-theme .g-cat-links a span {
+  color: #5b7480;
+  font-size: 12px;
+}
+.gloss-theme .g-cat-references .r-doc-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.gloss-theme .g-cat-prose h2 {
+  margin-bottom: 22px;
+  font-size: clamp(28px, 2.8vw, 38px);
+}
+.gloss-theme .g-cat-prose .r-policy-copy p {
+  margin-bottom: 18px;
+  font-size: 15px;
+}
+.gloss-theme .g-cat-prose h3 {
+  margin: 26px 0 12px;
+  font-size: 20px;
+}
+.gloss-theme .g-cat-prose summary {
+  color: #07697b;
+  cursor: pointer;
+  width: fit-content;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  list-style: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.gloss-theme .g-cat-prose summary::-webkit-details-marker {
+  display: none;
+}
+.gloss-theme .g-cat-prose details[open] .g-cat-more,
+.gloss-theme .g-cat-prose details:not([open]) .g-cat-less {
+  display: none;
+}
+
+/* ------------------------------------------------------------ product page */
+.gloss-theme .r-product-traits span,
+.gloss-theme .r-product-traits a {
+  align-items: center;
+  gap: 6px;
+  display: inline-flex;
+}
+.gloss-theme .r-product-traits span {
+  color: #325e70;
+  background: #fff;
+  border: 1px solid #d5e5eb;
+  border-radius: 24px;
+  padding: 6px 11px;
+  font-size: 12px;
+}
+
+.gloss-theme .r-price .g-cat-was {
+  color: #6b8490;
+  margin-left: 12px;
+  font-size: 17px;
+  font-weight: 400;
+}
+.gloss-theme .r-purchase > .g-cat-notice {
+  background: #f5fafb;
+  border: 1px solid #d6e5eb;
+  border-radius: 7px;
+  margin: 0 0 14px;
+  padding: 9px 12px;
+}
+.gloss-theme .r-purchase > .g-cat-subtotal {
+  border-top: 1px solid #d7e6ec;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 15px;
+  margin-top: 14px;
+  padding-top: 12px;
+  display: flex;
+}
+.gloss-theme .r-purchase > .g-cat-subtotal strong {
+  color: #123e58;
+  font-size: 18px;
+  font-weight: 600;
+}
+.gloss-theme .r-purchase > .g-cat-quote {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* Image pane: thumbnails + arrows for products with several photos. */
+.gloss-theme .g-cat-media {
+  min-width: 0;
+}
+.gloss-theme .g-cat-arrow {
+  color: #123e58;
+  background: #ffffffe6;
+  border: 1px solid #d9e9ef;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.gloss-theme .g-cat-prev {
+  left: 14px;
+}
+.gloss-theme .g-cat-next {
+  right: 14px;
+}
+.gloss-theme .g-cat-thumbs {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 12px;
+  display: grid;
+}
+.gloss-theme .g-cat-thumbs button {
+  aspect-ratio: 1;
+  background: #eef6f8;
+  border: 1px solid #d9e9ef;
+  border-radius: 9px;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+.gloss-theme .g-cat-thumbs button[aria-current='true'] {
+  border-color: #148bab;
+  box-shadow: 0 0 0 2px #148bab33;
+}
+.gloss-theme .g-cat-thumbs img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.gloss-theme .r-detail-content .g-cat-pre {
+  white-space: pre-line;
+}
+
+/* Related products: the card plus the reason it was recommended. */
+.gloss-theme .g-cat-related > div {
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  display: flex;
+}
+.gloss-theme .g-cat-related > div > .r-product-card {
+  flex: 1;
+}
+.gloss-theme .g-cat-related .g-cat-reason {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 850px) {
+  .gloss-theme .r-filters .g-cat-check,
+  .gloss-theme .r-filters form > .r-btn,
+  .gloss-theme .r-filters form > .r-text-button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .gloss-theme .g-cat-references .r-doc-grid {
+    grid-template-columns: 1fr;
+  }
+  .gloss-theme .g-cat-thumbs {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}

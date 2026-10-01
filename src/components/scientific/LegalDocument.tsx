@@ -41,17 +41,13 @@ function Block({ block }: { block: LegalBlock }) {
     // The first row is the header in every table in this data set.
     const [head, ...body] = block.rows;
     return (
-      <div className="my-6 overflow-x-auto">
-        <table className="w-full min-w-[520px] border-collapse text-left font-sci-body text-sci-label">
+      <div className="r-legal-table">
+        <table>
           {head && (
             <thead>
-              <tr className="border-b border-sci-border">
+              <tr>
                 {head.map((cell, i) => (
-                  <th
-                    key={i}
-                    className="px-4 py-3 align-top font-semibold text-sci-navy"
-                    scope="col"
-                  >
+                  <th key={i} scope="col">
                     {cell}
                   </th>
                 ))}
@@ -60,11 +56,9 @@ function Block({ block }: { block: LegalBlock }) {
           )}
           <tbody>
             {body.map((row, r) => (
-              <tr key={r} className="border-b border-sci-border last:border-0">
+              <tr key={r}>
                 {row.map((cell, c) => (
-                  <td key={c} className="px-4 py-3 align-top text-sci-muted">
-                    {cell}
-                  </td>
+                  <td key={c}>{cell}</td>
                 ))}
               </tr>
             ))}
@@ -76,49 +70,27 @@ function Block({ block }: { block: LegalBlock }) {
 
   switch (block.type) {
     case 'heading2':
-      return (
-        <h2 className="mt-12 scroll-mt-24 font-sci-heading text-[26px] font-semibold leading-9 text-sci-navy first:mt-0">
-          {block.text}
-        </h2>
-      );
+      return <h2>{block.text}</h2>;
     case 'heading3':
-      return (
-        <h3 className="mt-8 font-sci-heading text-[20px] font-semibold leading-7 text-sci-navy">
-          {block.text}
-        </h3>
-      );
+      return <h3>{block.text}</h3>;
     case 'heading4':
-      return (
-        <h4 className="mt-6 font-sci-body text-[17px] font-semibold leading-6 text-sci-navy">
-          {block.text}
-        </h4>
-      );
+      return <h4>{block.text}</h4>;
     default:
-      return (
-        <p className="mt-4 font-sci-body text-sci-body text-sci-muted">{block.text}</p>
-      );
+      return <p>{block.text}</p>;
   }
 }
 
+/** Typeset by `.r-legal-doc` in src/styles/gloss-content.css. */
 export function LegalDocument({ policy }: { policy: LegalPolicy }) {
   const groups = groupBlocks(policy.blocks);
 
   return (
-    <article className="max-w-[820px]">
+    <article className="r-legal-doc">
       {groups.map((group, i) =>
         group.kind === 'list' ? (
-          <ul key={i} className="mt-4 flex flex-col gap-2">
+          <ul key={i}>
             {group.items.map((item, j) => (
-              <li
-                key={j}
-                className="flex gap-3 font-sci-body text-sci-body text-sci-muted"
-              >
-                <span
-                  aria-hidden
-                  className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-sci-accent"
-                />
-                <span>{item}</span>
-              </li>
+              <li key={j}>{item}</li>
             ))}
           </ul>
         ) : (

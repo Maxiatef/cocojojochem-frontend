@@ -1,32 +1,28 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
-import { isOptimisable } from '@/lib/images';
 import { notFound } from 'next/navigation';
+import { FileText, FlaskConical, Package } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
 import { Category, Paginated, Product } from '@/lib/types';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
-import { IngredientRow } from '@/components/scientific/IngredientRow';
-import { ArrowLink, Container, Eyebrow, SciButton } from '@/components/scientific/primitives';
-import { HeroMedia } from '@/components/scientific/HeroMedia';
-import { HERO_IMAGES } from '@/lib/heroImages';
-import { SciProse } from '@/components/scientific/SciProse';
+import { Breadcrumb, DirectoryHero } from '@/components/gloss/categories/DirectoryHero';
+import { categoryPhoto } from '@/components/gloss/categories/GlossPhoto';
+import { ListingLayout } from '@/components/gloss/categories/ListingLayout';
+import { LongForm } from '@/components/gloss/categories/LongForm';
 
 /**
- * A single ingredient category, rebuilt to the "Scientific edition" design
- * (Figma rj57PsDgSsbo86iG4RC1SA, node 21:366 —
- * "Oils, emollients & waxes / directory / desktop").
+ * A single ingredient category, in the Gloss Studio design.
  *
- * The design is a flat A-Z directory: every record in the category on one
- * page, no facets and no pagination. That replaces the filter sidebar this
- * page used to carry, so the intro links across to /products?category=<slug>,
- * where the same catalogue is available with search, price, function and
- * stock filters — the filter engine is not duplicated here.
+ * The prototype has no category page of its own — a category opens the shop
+ * filtered to it. This page keeps our indexable /categories/<slug> URL and
+ * builds it from the shop's parts instead: a `library-hero` head with the
+ * category's photo, subcategory chips (`r-filter-chips`), the shop's filter
+ * column with "Find the right fit.", and a `r-product-grid` of ProductCards.
+ * The faceted filter engine is not duplicated: the column links across to
+ * /products?category=<slug>, where the same catalogue can be sorted and narrowed.
  *
- * Listing the whole category server-side is also what the page wanted anyway:
- * the old version rendered its grid client-side and had to emit a second,
- * hidden list of links purely so crawlers could see the products at all.
+ * The whole category is still listed server-side, so crawlers see every
+ * product link without a second hidden list.
  */
 
 // The directory shows the whole category on one page. This cap exists only so
@@ -139,10 +135,22 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
   );
   const products = productsRes?.data || [];
   const total = productsRes?.pagination.total ?? products.length;
-  // The API is asked for name_asc, but the directory's promise is "A-Z" — so
-  // it sorts locally too rather than trusting the collation to match.
+  // The API is asked for name_asc, but the page's promise is "A-Z" — so it
+  // sorts locally too rather than trusting the collation to match.
   const records = [...products].sort((a, b) => a.name.localeCompare(b.name));
   const [intro, ...moreDescription] = descriptionParagraphs(category.description);
+  const lower = category.name.toLowerCase();
+
+  const children = category.children || [];
+  const chips = children.length
+    ? children.map((child) => ({
+        href: `/categories/${child.slug}`,
+        label: child.name,
+        count: child.productCount,
+      }))
+    : category.parent
+      ? [{ href: `/categories/${category.parent.slug}`, label: `All ${category.parent.name.toLowerCase()}` }]
+      : [];
 
   return (
     <>
@@ -165,163 +173,83 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
         ]}
       />
 
-      {/* Category introduction — 21:380 */}
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col gap-6">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/categories"
-              className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
-            >
-              ← All ingredient categories
-            </Link>
-            {category.parent && (
-              <>
-                <span aria-hidden className="text-sci-border">
-                  ›
-                </span>
-                <Link
-                  href={`/categories/${category.parent.slug}`}
-                  className="font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
-                >
-                  {category.parent.name}
-                </Link>
-              </>
-            )}
-          </nav>
+      <Breadcrumb
+        trail={[
+          { name: 'Home', href: '/' },
+          { name: 'Categories', href: '/categories' },
+          ...(category.parent
+            ? [{ name: category.parent.name, href: `/categories/${category.parent.slug}` }]
+            : []),
+          { name: category.name },
+        ]}
+      />
 
-          <Eyebrow>Ingredient directory</Eyebrow>
+      {/* The category's own photograph wins; the prototype's matching
+          ingredient photo only stands in when there is none. The alt says
+          what the picture is rather than repeating the heading. */}
+      <DirectoryHero
+        eyebrow={category.parent ? category.parent.name : 'Ingredient category'}
+        title={category.name}
+        intro={
+          intro ||
+          `Wholesale ${lower} for cosmetic and personal care formulation, listed A–Z with INCI names, pack sizes, trade pricing and current stock.`
+        }
+        meta={[
+          { icon: <FlaskConical size={16} aria-hidden="true" />, text: `${total} ${total === 1 ? 'ingredient' : 'ingredients'} · A–Z` },
+          { icon: <Package size={16} aria-hidden="true" />, text: 'Wholesale pack sizes' },
+          { icon: <FileText size={16} aria-hidden="true" />, text: 'COA & SDS on request' },
+        ]}
+        image={categoryPhoto(category)}
+        imageAlt={
+          category.imageUrl
+            ? `Photograph illustrating the ${category.name} ingredient category`
+            : `${category.name} representative ingredient texture`
+        }
+        figure={{ value: total, label: total === 1 ? 'INGREDIENT' : 'INGREDIENTS' }}
+      />
 
-          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[64px] md:leading-[72px]">
-            {category.name}
-          </h1>
-
-          <p className="font-sci-body text-sci-label font-medium text-sci-navy">
-            {total} {total === 1 ? 'ingredient record' : 'ingredient records'} · Sorted A–Z
-          </p>
-
-          {/* The fallback is deliberately one plain sentence. It used to be a
-              paragraph of chained transition words ("First… Importantly…
-              Furthermore… Therefore…") repeated verbatim on all 41 categories —
-              written for a readability score, not a reader, and duplicate
-              content as far as a search engine is concerned. */}
-          <p className="max-w-[900px] font-sci-body text-sci-body text-sci-muted">
-            {intro ||
-              `Wholesale ${category.name.toLowerCase()} for cosmetic and personal care formulation, listed A–Z with INCI names, pack sizes, trade pricing and current stock.`}
-          </p>
-
-          {/* Described, not hidden. This was aria-hidden on the argument that
-              the <h1> already names the category — true, but it left the page
-              with no images at all as far as any crawler is concerned, and a
-              category page with nothing to look at is the weaker outcome. The
-              alt says what the picture IS rather than repeating the heading.
-
-              The category's own photograph is used where there is one; the
-              shared placeholder only stands in when there is not, so a real
-              asset always wins over stock imagery. */}
-          <div className="relative isolate aspect-[21/9] w-full max-w-[900px] overflow-hidden rounded-xl bg-white">
-            {category.imageUrl ? (
-              // Through next/image: the source files are multi-megabyte PNGs
-              // (1.6 MB for Acids) with a 4-hour cache on their host. This
-              // serves a banner-sized AVIF/WebP cached for a year instead.
-              <Image
-                src={category.imageUrl}
-                alt={`Photograph illustrating the ${category.name} ingredient category`}
-                fill
-                sizes="(min-width: 900px) 900px, 100vw"
-                unoptimized={!isOptimisable(category.imageUrl)}
-                className="object-cover"
-              />
-            ) : (
-              <HeroMedia
-                src={HERO_IMAGES.categories.src}
-                alt={HERO_IMAGES.categories.alt}
-                tone="light"
-              />
-            )}
-          </div>
-
-          {(category.children?.length ?? 0) > 0 && (
-            <div className="flex flex-col gap-3">
-              <p className="font-sci-body text-sci-eyebrow font-semibold uppercase tracking-wide text-sci-muted">
-                Subcategories
-              </p>
-              <ul className="flex flex-wrap gap-2">
-                {category.children!.map((child) => (
-                  <li key={child.id}>
-                    <Link
-                      href={`/categories/${child.slug}`}
-                      className="inline-block rounded-full border border-sci-border bg-white px-4 py-2 font-sci-body text-sci-label text-sci-navy transition hover:border-sci-blue hover:text-sci-blue"
-                    >
-                      {child.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* The faceted view lives on /products; this page is the full index. */}
-          <ArrowLink href={`/products?category=${category.slug}`}>
-            Filter and sort this category
-          </ArrowLink>
-        </Container>
-      </section>
-
-      {/* Ingredient records — 21:387 */}
-      <section className="bg-white py-16">
-        <Container>
-          {records.length === 0 ? (
-            <p className="font-sci-body text-sci-body text-sci-muted">
-              Currently, no products are listed in this category yet. However,{' '}
-              <Link href="/quote-request" className="text-sci-blue hover:underline">
-                send a quote request
-              </Link>{' '}
-              and we will confirm what we can source for you.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {records.map((p) => (
-                <li key={p.id}>
-                  <IngredientRow product={p} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Container>
-      </section>
+      <ListingLayout
+        label={`${category.name} ingredients`}
+        products={records}
+        total={total}
+        chips={chips}
+        filterHref={`/products?category=${category.slug}`}
+        filterText={`Narrow ${lower} by function, price and stock in the full catalog.`}
+        backLink={{ href: '/categories', label: 'All ingredient categories' }}
+        empty={{
+          title: 'Nothing listed here yet.',
+          text: `No ${lower} are published right now. Send a quote request and we will confirm what we can source for you.`,
+        }}
+      />
 
       {moreDescription.length > 0 ? (
-        <SciProse
-          eyebrow={`About ${category.name.toLowerCase()}`}
+        <LongForm
+          eyebrow={`About ${lower}`}
           heading={`${category.name} in formulation`}
           paragraphs={moreDescription}
+          aside={categoryAside(category)}
         />
       ) : (
-        <SciProse
-          eyebrow={`Buying ${category.name.toLowerCase()}`}
-          heading={`How to order ${category.name.toLowerCase()} wholesale`}
+        <LongForm
+          eyebrow={`Buying ${lower}`}
+          heading={`How to order ${lower} wholesale`}
           paragraphs={buyingGuidance(category.name, total)}
           subheadings={guidanceSubheadings(category.name)}
+          aside={categoryAside(category)}
         />
       )}
-
-      {/* Contact / Request a quote — 21:1078 */}
-      <section className="bg-sci-pale py-16">
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Let’s move your next idea forward</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              The next great formula
-              <br />
-              starts with a conversation.
-            </p>
-          </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
-      </section>
     </>
   );
+}
+
+function categoryAside(category: Category) {
+  return {
+    title: 'Need a different grade or volume?',
+    text: 'Tell us the specification and we’ll confirm what we can supply — pack size, documentation and freight included.',
+    links: [
+      { href: '/quote-request', label: 'Request a quote' },
+      { href: `/products?category=${category.slug}`, label: `Filter ${category.name.toLowerCase()} in the catalog` },
+      { href: '/categories', label: 'All ingredient categories' },
+    ],
+  };
 }

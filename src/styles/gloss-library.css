@@ -1,1 +1,100 @@
 /* Gloss Studio additions for the library pages. Scope every rule under .gloss-theme. */
+
+/* ── Ingredients A–Z: letter groups ─────────────────────────────────────── */
+/* The prototype lists one flat r-az-list; ours groups it under a letter
+   heading, so entry names drop from h2 to h3 and need the h2's look. */
+.gloss-theme .library-az-group + .library-az-group {
+  margin-top: 26px;
+}
+.gloss-theme .library-az-letter {
+  color: var(--r-teal);
+  font-family: Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  padding: 0 0 12px;
+}
+.gloss-theme .r-az-list h3 {
+  margin-top: 5px;
+  font-size: 19px;
+  line-height: 1.4;
+}
+.gloss-theme .r-alphabet a.library-az-empty {
+  opacity: 0.45;
+}
+
+/* Reference rows: same layout as the prototype's linked rows, plus actions. */
+.gloss-theme .r-az-list > article {
+  border-top: 1px solid var(--r-line);
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px 0;
+  display: flex;
+}
+.gloss-theme .r-az-list > article > div {
+  min-width: 0;
+}
+.gloss-theme .library-ref-actions {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 12px;
+  display: flex;
+}
+.gloss-theme .library-ref-actions > a:not(.r-btn) {
+  color: #0b6b80;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-flex;
+}
+
+/* "Reference library" notice above the reference results. */
+.gloss-theme .library-ref-notice {
+  background: #f0f7f9;
+  border: 1px solid #d4e5eb;
+  border-radius: 9px;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  display: flex;
+}
+.gloss-theme .library-ref-notice > span {
+  color: #fff;
+  background: #075e75;
+  border-radius: 99px;
+  flex-shrink: 0;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.gloss-theme .library-ref-notice p {
+  color: var(--r-ink);
+  font-size: 13px;
+}
+
+/* Client-side pagination uses buttons; match the prototype's link pills. */
+.gloss-theme .r-pagination button {
+  color: inherit;
+  background: #fff;
+  border: 1px solid #c7dce4;
+  border-radius: 6px;
+  min-height: 44px;
+  padding: 9px 17px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .gloss-theme .library-ref-notice {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

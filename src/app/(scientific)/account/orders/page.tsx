@@ -8,11 +8,10 @@ import { customerApi } from '@/lib/customerApi';
 import { getCustomerToken } from '@/lib/customerAuth';
 import { ApiError } from '@/lib/api';
 import { Order } from '@/lib/types';
-import { formatUsd } from '@/lib/pricing';
-import { IconButton, useToast } from '@/components/ui';
-import { ShippingIcon, ImagePlaceholderIcon } from '@/components/icons';
+import { RotateCcw } from 'lucide-react';
+import { useToast } from '@/components/ui';
+import { OrderCard } from '@/components/gloss/account/OrderCard';
 import { OrderShippingModal } from '@/components/commerce/OrderShippingModal';
-import { displayId } from '@/lib/ids';
 
 type Tab = 'ongoing' | 'completed';
 
@@ -90,116 +89,88 @@ export default function CustomerOrdersPage() {
   const visibleOrders = tab === 'ongoing' ? ongoingOrders : completedOrders;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold text-sci-navy">My Orders</h1>
+    <>
+      <div className="r-page-intro r-wrap">
+        <span className="r-eyebrow">Your account</span>
+        <h1>Your orders.</h1>
+        <p>Follow every shipment, and reorder a past batch in one step.</p>
+      </div>
 
-      {isLoading && (
-        <div className="mt-10 flex justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
-        </div>
-      )}
-
-      {data && data.length === 0 && (
-        <p className="mt-10 rounded-xl border border-dashed border-sci-border py-16 text-center text-sm text-sci-muted">
-          You haven't placed any orders yet.{' '}
-          <Link href="/products" className="font-medium text-sci-blue hover:underline">
-            Browse products
-          </Link>
-        </p>
-      )}
-
-      {data && data.length > 0 && (
-        <>
-          <div className="mt-6 flex gap-1 border-b border-sci-border">
-            {(
-              [
-                ['ongoing', `Ongoing (${ongoingOrders.length})`],
-                ['completed', `Completed (${completedOrders.length})`],
-              ] as [Tab, string][]
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition ${
-                  tab === key
-                    ? 'border-sci-blue text-sci-blue'
-                    : 'border-transparent text-sci-muted hover:text-sci-navy'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {visibleOrders.length === 0 ? (
-            <p className="mt-8 rounded-xl border border-dashed border-sci-border py-12 text-center text-sm text-sci-muted">
-              {tab === 'ongoing' ? "You don't have any orders in progress right now." : 'No completed orders yet.'}
-            </p>
-          ) : (
-            <div className="mt-6 space-y-4">
-              {visibleOrders.map((order) => (
-                <div key={order.id} className="rounded-xl border border-sci-border bg-white p-5">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-sci-navy">Order {displayId(order.id)}</p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="rounded-full bg-sci-pale px-2.5 py-1 text-xs font-medium text-sci-muted">
-                        {order.status}
-                      </span>
-                      {order.status !== 'CANCELLED' && (
-                        <IconButton
-                          icon={ShippingIcon}
-                          label="Shipping"
-                          onClick={() => setShippingModalOrder(order)}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <p className="mt-1 text-xs text-sci-muted">
-                    {new Date(order.createdAt).toLocaleDateString()} · {order.items.length} item(s)
-                  </p>
-
-                  <div className="mt-3 space-y-2 border-t border-sci-border pt-3">
-                    {order.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 text-sm">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sci-pale">
-                          {item.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
-                          ) : (
-                            <ImagePlaceholderIcon className="h-4 w-4 text-sci-muted" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1 text-sci-navy">
-                          {item.productName}
-                          <span className="ml-2 text-xs text-sci-muted">
-                            {item.variantLabel} · SKU {item.sku} · ×{item.quantity}
-                          </span>
-                        </div>
-                        <div className="shrink-0 text-sci-muted">{formatUsd(Number(item.price) * item.quantity)}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between border-t border-sci-border pt-3">
-                    <button
-                      onClick={() => handleReorder(order)}
-                      disabled={reorderingId === order.id}
-                      className="rounded-lg border border-sci-border bg-sci-pale px-3 py-1.5 text-xs font-semibold text-sci-blue hover:bg-sci-pale disabled:opacity-60"
-                    >
-                      {reorderingId === order.id ? 'Adding to cart…' : 'Reorder'}
-                    </button>
-                    <p className="text-sm font-semibold text-sci-navy">{formatUsd(order.total)}</p>
-                  </div>
-                </div>
+      <section className="r-wrap r-section">
+        <div className="ga-orders-wrap">
+          {isLoading && (
+            <div className="ga-orders" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="ga-skeleton" style={{ height: 150 }} />
               ))}
             </div>
           )}
-        </>
-      )}
+
+          {data && data.length === 0 && (
+            <div className="r-muted-panel">
+              You haven&apos;t placed any orders yet.
+              <p>
+                <Link href="/products" className="ga-link">
+                  Browse products
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {data && data.length > 0 && (
+            <>
+              <div className="ga-tabs" role="group" aria-label="Filter orders">
+                {(
+                  [
+                    ['ongoing', `Ongoing (${ongoingOrders.length})`],
+                    ['completed', `Completed (${completedOrders.length})`],
+                  ] as [Tab, string][]
+                ).map(([key, label]) => (
+                  <button key={key} type="button" aria-pressed={tab === key} onClick={() => setTab(key)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {visibleOrders.length === 0 ? (
+                <p className="r-muted-panel">
+                  {tab === 'ongoing' ? "You don't have any orders in progress right now." : 'No completed orders yet.'}
+                </p>
+              ) : (
+                <ul className="ga-orders">
+                  {visibleOrders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      showSku
+                      onTrack={setShippingModalOrder}
+                      action={
+                        <button
+                          type="button"
+                          onClick={() => handleReorder(order)}
+                          disabled={reorderingId === order.id}
+                          className="r-btn r-outline"
+                        >
+                          <RotateCcw size={15} aria-hidden />
+                          {reorderingId === order.id ? 'Adding to cart…' : 'Reorder'}
+                        </button>
+                      }
+                    />
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+
+          <p className="r-fine ga-back">
+            <Link href="/account">Back to your account</Link>
+          </p>
+        </div>
+      </section>
 
       {shippingModalOrder && (
         <OrderShippingModal order={shippingModalOrder} onClose={() => setShippingModalOrder(null)} />
       )}
-    </div>
+    </>
   );
 }

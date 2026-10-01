@@ -12,10 +12,11 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { CheckoutResponse, CouponValidateResult, Product, ServerCart, ShippingEstimate } from '@/lib/types';
 import { COUNTRY_CODES } from '@/lib/countryCodes';
 import { US_STATES } from '@/lib/usStates';
-import { CheckoutStepper } from '@/components/commerce/CheckoutStepper';
-import { ImagePlaceholderIcon } from '@/components/icons';
-import { Container, Eyebrow } from '@/components/scientific/primitives';
+import { LoaderCircle, LockKeyhole, Package } from 'lucide-react';
 import { CheckoutSuggestions } from '@/components/scientific/CheckoutSuggestions';
+import { EmptyState } from '@/components/gloss/EmptyState';
+import { PasswordInput } from '@/components/gloss/account/PasswordInput';
+import { categoryImage, productImage } from '@/lib/gloss/images';
 
 const DEFAULT_MINIMUM_DISPLAY = '$250.00';
 
@@ -293,430 +294,455 @@ export default function CheckoutPage() {
     }
   }
 
+  const intro = (
+    <div className="r-page-intro r-wrap">
+      <span className="r-eyebrow">Checkout</span>
+      <h1>Complete your order.</h1>
+      <p>Confirm your details and delivery address, then pay securely with Stripe.</p>
+    </div>
+  );
+
   if (!ready || (isAuthed && isLoading)) {
     return (
-      <div className="flex justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sci-blue border-t-transparent" />
-      </div>
+      <>
+        {intro}
+        <section className="r-wrap r-section" aria-busy="true">
+          <p className="r-loading">Loading your checkout…</p>
+        </section>
+      </>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
-        <p className="text-sm text-sci-muted">Your cart is empty.</p>
-        <a href="/products" className="mt-3 inline-block font-medium text-sci-blue hover:underline">
-          Browse products →
-        </a>
-      </div>
+      <>
+        {intro}
+        <section className="r-wrap r-section">
+          <EmptyState
+            icon="cart"
+            title="Your cart is empty."
+            text="Add an ingredient before continuing to checkout."
+            href="/products"
+            label="Shop ingredients"
+          />
+        </section>
+      </>
     );
   }
 
-  const inputClass =
-    'w-full rounded-md border border-sci-border bg-white px-4 py-3 font-sci-body text-sci-label text-sci-navy outline-none transition placeholder:text-sci-muted focus:border-sci-blue';
-  const labelClass =
-    'mb-2 block font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-navy';
-
   return (
     <>
-      <section className="bg-sci-pale py-12">
-        <Container className="flex flex-col gap-4">
-          <Eyebrow>Checkout</Eyebrow>
-          <h1 className="font-sci-heading text-[40px] font-semibold leading-[48px] text-sci-navy md:text-[56px] md:leading-[64px]">
-            Complete your order
-          </h1>
-        </Container>
-      </section>
+      {intro}
 
-      <Container className="py-12">
-      <div className="mb-10">
-        <CheckoutStepper current={1} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="rounded-xl border border-sci-border bg-white p-6 md:p-8">
-            <h2 className="mb-5 font-sci-heading text-[20px] font-semibold text-sci-navy">Contact Information</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="f-email" className={labelClass}>Email</label>
-                <input
-            id="f-email"
-                  type="email"
-                  required
-                  disabled={isAuthed}
-                  value={isAuthed ? '' : email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={isAuthed ? 'Using your account email' : undefined}
-                  className={`${inputClass} disabled:bg-sci-pale disabled:text-sci-muted`}
-                />
+      <section className="r-wrap r-section">
+        <div className="r-checkout-layout">
+          <form onSubmit={handleSubmit} className="ga-checkout-form">
+            <div className="r-form-card">
+              <div className="r-step-label" aria-label="Checkout progress: step 1 of 2">
+                <span>1</span> Your details <span>2</span> Secure payment
               </div>
+              <h2>Contact information</h2>
+              <div className="r-form-grid">
+                <div className="r-field r-full">
+                  <label htmlFor="f-email">Email address</label>
+                  <input
+                    id="f-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    disabled={isAuthed}
+                    value={isAuthed ? '' : email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={isAuthed ? 'Using your account email' : undefined}
+                  />
+                </div>
+              </div>
+
+              {!isAuthed && (
+                <div className="ga-checks">
+                  <label className="ga-check">
+                    <input
+                      type="checkbox"
+                      checked={createAccount}
+                      onChange={(e) => setCreateAccount(e.target.checked)}
+                    />
+                    Create an account for faster checkout next time
+                  </label>
+                  {createAccount && (
+                    <div className="r-field">
+                      <label htmlFor="f-password">Password</label>
+                      <PasswordInput
+                        id="f-password"
+                        required={createAccount}
+                        minLength={8}
+                        autoComplete="new-password"
+                        value={password}
+                        onChange={setPassword}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {!isAuthed && (
-              <div className="mt-4 border-t border-sci-border pt-4">
-                <label className="flex items-center gap-2 text-sm text-sci-navy">
+            <div className="r-form-card">
+              <h2>Shipping address</h2>
+              <div className="r-form-grid">
+                <div className="r-field">
+                  <label htmlFor="f-first-name">First name</label>
+                  <input
+                    id="f-first-name"
+                    required
+                    autoComplete="given-name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="r-field">
+                  <label htmlFor="f-last-name">Last name</label>
+                  <input
+                    id="f-last-name"
+                    required
+                    autoComplete="family-name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+                <div className="r-field r-full">
+                  <label htmlFor="f-company-name-optional">
+                    Company <small>optional</small>
+                  </label>
+                  <input
+                    id="f-company-name-optional"
+                    autoComplete="organization"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                  />
+                </div>
+                {/* International shipping disabled for now — US only. Country is
+                    fixed to 'US' (see countryIso2 initial state above) instead of
+                    offering a picker here. Re-enable by uncommenting this block
+                    and the InternationalShippingNotice usage below. */}
+                {/* <div className="r-field r-full">
+                  <label htmlFor="f-country">Country</label>
+                  <select
+                    id="f-country"
+                    required
+                    value={countryIso2}
+                    onChange={(e) => {
+                      setCountryIso2(e.target.value);
+                      setStateCode('');
+                    }}
+                  >
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c.iso2} value={c.iso2.toUpperCase()}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div> */}
+                <div className="r-field r-full">
+                  <label htmlFor="f-state">State</label>
+                  <select
+                    id="f-state"
+                    required
+                    autoComplete="address-level1"
+                    value={stateCode}
+                    onChange={(e) => setStateCode(e.target.value)}
+                  >
+                    <option value="">Select…</option>
+                    {US_STATES.map((s) => (
+                      <option key={s.code} value={s.code}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="r-field r-full">
+                  <label htmlFor="f-street-address">Street address</label>
+                  <input
+                    id="f-street-address"
+                    required
+                    autoComplete="street-address"
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                  />
+                </div>
+                <div className="r-field">
+                  <label htmlFor="f-city">City</label>
+                  <input
+                    id="f-city"
+                    required
+                    autoComplete="address-level2"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </div>
+                <div className="r-field">
+                  <label htmlFor="f-zip-postal-code">ZIP / Postal code</label>
+                  <input
+                    id="f-zip-postal-code"
+                    required
+                    autoComplete="postal-code"
+                    value={zip}
+                    onChange={(e) => setZip(e.target.value)}
+                  />
+                </div>
+                <div className="r-field r-full">
+                  <label htmlFor="f-phone">Phone</label>
+                  <input
+                    id="f-phone"
+                    required
+                    type="tel"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                <div className="r-field r-full">
+                  <label htmlFor="f-order-notes-optional">
+                    Order notes <small>optional</small>
+                  </label>
+                  <textarea
+                    id="f-order-notes-optional"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    placeholder="Delivery hours, dock access or anything we should know."
+                  />
+                </div>
+              </div>
+
+              <div className="ga-checks">
+                <label className="ga-check">
                   <input
                     type="checkbox"
-                    checked={createAccount}
-                    onChange={(e) => setCreateAccount(e.target.checked)}
-                    className="h-4 w-4 rounded border-sci-border text-sci-blue focus:ring-sci-blue"
+                    checked={residentialDelivery}
+                    onChange={(e) => setResidentialDelivery(e.target.checked)}
                   />
-                  Create an account for faster checkout next time
+                  Residential delivery
                 </label>
-                {createAccount && (
-                  <div className="mt-3">
-                    <label htmlFor="f-password" className={labelClass}>Password</label>
-                    <input
-            id="f-password"
-                      type="password"
-                      required={createAccount}
-                      minLength={8}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className={inputClass}
-                    />
-                  </div>
-                )}
+                <label className="ga-check">
+                  <input
+                    type="checkbox"
+                    checked={liftgateService}
+                    onChange={(e) => setLiftgateService(e.target.checked)}
+                  />
+                  Liftgate service
+                </label>
+                <p className="r-fine">
+                  These add-ons don&apos;t affect your total yet — a member of our team will follow up if either is
+                  needed for your shipment.
+                </p>
+              </div>
+
+              {/* International shipping disabled for now — US only, see the
+                  commented-out Country field above. */}
+              {/* {countryIso2 !== 'US' && (
+                <div className="ga-checks">
+                  <InternationalShippingNotice />
+                </div>
+              )} */}
+            </div>
+
+            <div className="r-form-card">
+              <h2>Payment</h2>
+              <div className="ga-pay-note">
+                <LockKeyhole size={22} aria-hidden />
+                <p>You&apos;ll be securely redirected to Stripe to enter your payment details.</p>
+              </div>
+            </div>
+
+            {cancelledNoticeVisible && (
+              <div className="ga-notice ga-dismissable" role="status">
+                <span>Payment was cancelled — your order is saved and you can complete payment later.</span>
+                <button type="button" onClick={() => setCancelledNoticeVisible(false)}>
+                  Dismiss
+                </button>
               </div>
             )}
-          </div>
 
-          <div className="rounded-xl border border-sci-border bg-white p-6 md:p-8">
-            <h2 className="mb-5 font-sci-heading text-[20px] font-semibold text-sci-navy">Shipping Address</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="f-first-name" className={labelClass}>First name</label>
-                <input
-            id="f-first-name" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="f-last-name" className={labelClass}>Last name</label>
-                <input
-            id="f-last-name" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="f-company-name-optional" className={labelClass}>Company name (optional)</label>
-                <input
-            id="f-company-name-optional" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
-              </div>
-              {/* International shipping disabled for now — US only. Country is
-                  fixed to 'US' (see countryIso2 initial state above) instead of
-                  offering a picker here. Re-enable by uncommenting this block
-                  and the InternationalShippingNotice usage below. */}
-              {/* <div className="sm:col-span-2">
-                <label htmlFor="f-country" className={labelClass}>Country</label>
-                <select
-            id="f-country"
-                  required
-                  value={countryIso2}
-                  onChange={(e) => {
-                    setCountryIso2(e.target.value);
-                    setStateCode('');
-                  }}
-                  className={inputClass}
-                >
-                  {COUNTRY_CODES.map((c) => (
-                    <option key={c.iso2} value={c.iso2.toUpperCase()}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-              <div className="sm:col-span-2">
-                <label htmlFor="f-state" className={labelClass}>State</label>
-                <select
-            id="f-state"
-                  required
-                  value={stateCode}
-                  onChange={(e) => setStateCode(e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="">Select…</option>
-                  {US_STATES.map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="f-street-address" className={labelClass}>Street address</label>
-                <input
-            id="f-street-address" required value={street} onChange={(e) => setStreet(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="f-city" className={labelClass}>City</label>
-                <input
-            id="f-city" required value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="f-zip-postal-code" className={labelClass}>ZIP / Postal code</label>
-                <input
-            id="f-zip-postal-code" required value={zip} onChange={(e) => setZip(e.target.value)} className={inputClass} />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="f-phone" className={labelClass}>Phone</label>
-                <input
-            id="f-phone" required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="f-order-notes-optional" className={labelClass}>Order notes (optional)</label>
-                <textarea
-            id="f-order-notes-optional"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  className={inputClass}
-                />
-              </div>
-            </div>
+            {/* Last section of the form, directly above the terms and the
+                Continue button: the final thing read before committing, in the
+                customer's own column and reading order, and it cannot push the
+                Continue button around because it sits above it. */}
+            <CheckoutSuggestions cartVariantIds={cartVariantIds} enabled={ready} onAdd={handleQuickAdd} />
 
-            <div className="mt-4 space-y-2 border-t border-sci-border pt-4">
-              <label className="flex items-center gap-2 text-sm text-sci-navy">
-                <input
-                  type="checkbox"
-                  checked={residentialDelivery}
-                  onChange={(e) => setResidentialDelivery(e.target.checked)}
-                  className="h-4 w-4 rounded border-sci-border text-sci-blue focus:ring-sci-blue"
-                />
-                Residential delivery
-              </label>
-              <label className="flex items-center gap-2 text-sm text-sci-navy">
-                <input
-                  type="checkbox"
-                  checked={liftgateService}
-                  onChange={(e) => setLiftgateService(e.target.checked)}
-                  className="h-4 w-4 rounded border-sci-border text-sci-blue focus:ring-sci-blue"
-                />
-                Liftgate service
-              </label>
-              <p className="text-xs text-sci-muted">
-                These add-ons don&apos;t affect your total yet — a member of our team will follow up if either is needed for your shipment.
-              </p>
-            </div>
-
-            {/* International shipping disabled for now — US only, see the
-                commented-out Country field above. */}
-            {/* {countryIso2 !== 'US' && (
-              <div className="mt-4 border-t border-sci-border pt-4">
-                <InternationalShippingNotice />
-              </div>
-            )} */}
-          </div>
-
-          <div className="rounded-xl border border-sci-border bg-white p-6 md:p-8">
-            <h2 className="mb-2 font-sci-heading text-[20px] font-semibold text-sci-navy">Payment</h2>
-            <p className="text-sm text-sci-muted">
-              You&apos;ll be securely redirected to Stripe to enter your payment details.
-            </p>
-          </div>
-
-          {cancelledNoticeVisible && (
-            <div className="flex items-start justify-between gap-3 rounded-lg bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
-              <span>
-                Payment was cancelled — your order is saved and you can complete payment later.
-              </span>
-              <button
-                type="button"
-                onClick={() => setCancelledNoticeVisible(false)}
-                className="shrink-0 font-medium underline"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
-
-          {/* Last section of the form, directly above the terms and the
-              Continue button. The old strip sat beside the totals at
-              48px-thumbnail size, which is the size you use for something you
-              do not really want clicked. Here it is the final thing read
-              before committing — still in the customer's own column and their
-              own reading order, and it cannot push the Continue button around
-              because it sits above it rather than between its fields. */}
-          <CheckoutSuggestions
-            cartVariantIds={cartVariantIds}
-            enabled={ready}
-            onAdd={handleQuickAdd}
-          />
-
-          <label className="flex items-start gap-2 text-sm text-sci-muted">
-            <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-sci-border text-sci-blue focus:ring-sci-blue"
-            />
-            <span>
+            <label className="r-consent">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+              />
               I agree to the{' '}
-              <Link href="/legal/terms-of-service" target="_blank" className="font-medium text-sci-blue hover:underline">
+              <Link href="/legal/terms-of-service" target="_blank">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/legal/privacy-policy" target="_blank" className="font-medium text-sci-blue hover:underline">
+              <Link href="/legal/privacy-policy" target="_blank">
                 Privacy Policy
               </Link>
               .
-            </span>
-          </label>
+            </label>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>
-          )}
+            {error && (
+              <p className="r-error" role="alert">
+                {error}
+              </p>
+            )}
 
-          {/* The minimum is enforced on the server too — this only stops the
-              customer being sent to Stripe for an order that will be refused.
-              Gated on a loaded estimate: before one arrives meetsMinimum is
-              simply unknown, and blocking on unknown would strand a valid
-              cart.
+            {/* The minimum is enforced on the server too — this only stops the
+                customer being sent to Stripe for an order that will be refused.
+                Gated on a loaded estimate: before one arrives meetsMinimum is
+                simply unknown, and blocking on unknown would strand a valid
+                cart.
 
-              Disabled styling is a solid pair of colours, not disabled:opacity
-              — fading the accent washed it out until the white label was
-              unreadable against it. */}
-          <button
-            type="submit"
-            disabled={submitting || !agreedToTerms || belowMinimum}
-            className="w-full bg-sci-accent px-4 py-3 text-sm font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:hover:brightness-100"
-          >
-            {submitting
-              ? 'Redirecting to payment…'
-              : belowMinimum
-                ? `Add ${formatUsd(shippingEstimate!.minimumRemaining)} to reach the minimum`
-                : `Continue to Payment — ${formatUsd(total)}`}
-          </button>
-        </form>
+                Disabled styling is a solid pair of colours (gloss-account.css),
+                not an opacity fade, so the label stays readable. */}
+            <button type="submit" disabled={submitting || !agreedToTerms || belowMinimum} className="r-btn r-primary">
+              {submitting ? (
+                <>
+                  <LoaderCircle className="r-spin" size={17} aria-hidden />
+                  Redirecting to payment…
+                </>
+              ) : belowMinimum ? (
+                `Add ${formatUsd(shippingEstimate!.minimumRemaining)} to reach the minimum`
+              ) : (
+                `Continue to payment — ${formatUsd(total)}`
+              )}
+            </button>
+          </form>
 
-        <div className="space-y-6">
-          <div className="h-fit bg-white p-6">
-            <h2 className="mb-5 font-sci-heading text-[20px] font-semibold text-sci-navy">Order Summary</h2>
-            <div className="space-y-3">
+          <aside className="r-summary">
+            <h2>Order summary</h2>
+            <ul className="ga-summary-lines">
               {isAuthed
                 ? (items as any[]).map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 text-sm">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-sci-pale">
-                        {item.variant?.imageUrl || item.variant?.product?.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={item.variant.imageUrl || item.variant.product?.imageUrl}
-                            alt={item.variant.product?.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <ImagePlaceholderIcon className="h-5 w-5 text-sci-border" />
-                        )}
+                    <li key={item.id}>
+                      <div className="ga-thumb">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            item.variant?.imageUrl ||
+                            productImage({
+                              imageUrl: item.variant?.product?.imageUrl,
+                              category: item.variant?.product?.category,
+                            })
+                          }
+                          alt={item.variant?.product?.name || ''}
+                        />
                       </div>
-                      <span className="flex-1 text-sci-muted">
-                        {item.variant.product?.name} × {item.quantity}
-                        <span className="block text-xs text-sci-muted">{item.variant.label}</span>
-                      </span>
-                      <span className="font-medium text-sci-navy">
-                        {formatUsd(Number(item.price) * item.quantity)}
-                      </span>
-                    </div>
+                      <div className="ga-line-text">
+                        <p>
+                          {item.variant?.product?.name} × {item.quantity}
+                        </p>
+                        <small>{item.variant?.label}</small>
+                      </div>
+                      <span className="ga-line-price">{formatUsd(Number(item.price) * item.quantity)}</span>
+                    </li>
                   ))
                 : (items as any[]).map((item) => (
-                    <div key={item.variantId} className="flex items-center gap-3 text-sm">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-sci-pale">
-                        {item.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
-                        ) : (
-                          <ImagePlaceholderIcon className="h-5 w-5 text-sci-border" />
-                        )}
+                    <li key={item.variantId}>
+                      <div className="ga-thumb">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.imageUrl || categoryImage(item.productName)} alt={item.productName} />
                       </div>
-                      <span className="flex-1 text-sci-muted">
-                        {item.productName} × {item.quantity}
-                        <span className="block text-xs text-sci-muted">{item.variantLabel}</span>
-                      </span>
-                      <span className="font-medium text-sci-navy">
-                        {formatUsd(item.price * item.quantity)}
-                      </span>
-                    </div>
+                      <div className="ga-line-text">
+                        <p>
+                          {item.productName} × {item.quantity}
+                        </p>
+                        <small>{item.variantLabel}</small>
+                      </div>
+                      <span className="ga-line-price">{formatUsd(item.price * item.quantity)}</span>
+                    </li>
                   ))}
+            </ul>
+
+            <div className="ga-summary-block">
+              <ShippingSummaryPanel countryIso2={countryIso2} estimate={shippingEstimate} loading={shippingLoading} />
             </div>
 
-            <div className="mt-4 border-t border-sci-border pt-4">
-              <ShippingSummaryPanel
-                countryIso2={countryIso2}
-                estimate={shippingEstimate}
-                loading={shippingLoading}
-              />
-            </div>
-
-            <div className="mt-4 border-t border-sci-border pt-4">
+            <div className="ga-summary-block">
               {!showCoupon && !appliedCoupon && (
-                <button
-                  type="button"
-                  onClick={() => setShowCoupon(true)}
-                  className="text-sm font-medium text-sci-blue hover:underline"
-                >
+                <button type="button" onClick={() => setShowCoupon(true)} className="ga-link">
                   Have a coupon code?
                 </button>
               )}
 
               {showCoupon && !appliedCoupon && (
                 <div>
-                  <label htmlFor="f-coupon-code" className={labelClass}>Coupon code</label>
-                  <div className="flex gap-2">
+                  <label htmlFor="f-coupon-code" className="ga-label">
+                    Coupon code
+                  </label>
+                  <div className="ga-coupon">
                     <input
-            id="f-coupon-code"
+                      id="f-coupon-code"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
                       placeholder="Enter code"
-                      className="flex-1 border border-sci-border px-3.5 py-2.5 text-sm text-sci-navy outline-none focus:border-sci-blue"
                     />
                     <button
                       type="button"
                       disabled={couponChecking || !couponInput.trim()}
                       onClick={handleApplyCoupon}
-                      className="border border-sci-blue px-4 py-2.5 text-sm font-medium text-sci-blue transition hover:bg-sci-pale disabled:opacity-50"
+                      className="r-btn r-outline"
                     >
                       {couponChecking ? 'Checking…' : 'Apply'}
                     </button>
                   </div>
-                  {couponError && <p className="mt-2 text-sm text-red-600">{couponError}</p>}
+                  {couponError && (
+                    <p className="r-error" role="alert">
+                      {couponError}
+                    </p>
+                  )}
                 </div>
               )}
 
               {appliedCoupon?.isValid && appliedCoupon.coupon && (
-                <div className="flex items-center justify-between rounded bg-green-50 px-3 py-2 text-sm text-green-800">
+                <div className="ga-coupon-applied">
                   <span>
                     Coupon <strong>{appliedCoupon.coupon.code}</strong> applied
                   </span>
-                  <button type="button" onClick={handleRemoveCoupon} className="text-xs font-medium underline">
+                  <button type="button" onClick={handleRemoveCoupon}>
                     Remove
                   </button>
                 </div>
               )}
             </div>
 
-            <div className="mt-4 flex justify-between border-t border-sci-border pt-4 text-sm text-sci-navy">
-              <span>Subtotal</span>
-              <span>{formatUsd(subtotal)}</span>
-            </div>
-            {discount > 0 && (
-              <div className="mt-2 flex justify-between text-sm text-green-700">
-                <span>Discount</span>
-                <span>-{formatUsd(discount)}</span>
+            <div className="r-totals">
+              <div>
+                <span>Subtotal</span>
+                <strong>{formatUsd(subtotal)}</strong>
               </div>
-            )}
-            <div className="mt-2 flex justify-between text-sm text-sci-muted">
-              <span>Shipping</span>
-              <span>{formatUsd(shippingCost)}</span>
+              {discount > 0 && (
+                <div className="ga-discount">
+                  <span>Discount</span>
+                  <span>-{formatUsd(discount)}</span>
+                </div>
+              )}
+              <div>
+                <span>Shipping</span>
+                <span>{formatUsd(shippingCost)}</span>
+              </div>
+              <div>
+                <span>{taxLabel}</span>
+                <span>{formatUsd(taxAmount)}</span>
+              </div>
+              <div className="ga-grand">
+                <span>Total</span>
+                <strong>{formatUsd(total)}</strong>
+              </div>
             </div>
-            <div className="mt-2 flex justify-between text-sm text-sci-muted">
-              <span>{taxLabel}</span>
-              <span>{formatUsd(taxAmount)}</span>
-            </div>
-            <div className="mt-2 flex justify-between border-t border-sci-border pt-3 text-sm font-semibold text-sci-navy">
-              <span>Total</span>
-              <span>{formatUsd(total)}</span>
-            </div>
-          </div>
 
+            <div className="r-summary-help">
+              <Package size={22} aria-hidden />
+              <p>Payment is taken securely by Stripe. Shipping and tax are worked out from your delivery address.</p>
+            </div>
+            <Link href="/shipping-returns">Shipping &amp; return information</Link>
+          </aside>
         </div>
-      </div>
-      </Container>
+      </section>
     </>
   );
 }
@@ -734,13 +760,13 @@ function ShippingSummaryPanel({
   const minimumDisplay = estimate ? formatUsd(estimate.wholesaleMinimum) : DEFAULT_MINIMUM_DISPLAY;
 
   return (
-    <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sci-muted">Shipping Notice</p>
+    <div aria-live="polite">
+      <span className="ga-label">Shipping notice</span>
 
-      {loading && <p className="text-sm text-sci-muted">Calculating…</p>}
+      {loading && <p>Calculating…</p>}
 
       {!loading && !estimate && (
-        <p className="text-sm text-sci-muted">
+        <p>
           {isUs
             ? 'Enter your address to calculate shipping.'
             : 'International shipping will be calculated after your address is confirmed.'}
@@ -748,30 +774,32 @@ function ShippingSummaryPanel({
       )}
 
       {!loading && estimate && !estimate.meetsMinimum && (
-        <div className="rounded bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+        <div className="ga-notice">
           <p>
             Wholesale minimum purchase is {minimumDisplay}. Current wholesale subtotal is {formatUsd(estimate.subtotal)}.
           </p>
-          <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-amber-700">Wholesale Minimum</p>
-          <p className="mt-0.5">
-            Add {formatUsd(estimate.minimumRemaining)} more to reach the {minimumDisplay} wholesale minimum before shipping and tax.
+          <strong>Wholesale minimum</strong>
+          <p>
+            Add {formatUsd(estimate.minimumRemaining)} more to reach the {minimumDisplay} wholesale minimum before
+            shipping and tax.
           </p>
         </div>
       )}
 
       {!loading && estimate && estimate.meetsMinimum && !estimate.canShip && (
-        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {estimate.errorMessage || 'We are unable to ship to this destination automatically — please contact us for a manual quote.'}
+        <p className="ga-notice">
+          {estimate.errorMessage ||
+            'We are unable to ship to this destination automatically — please contact us for a manual quote.'}
         </p>
       )}
 
       {!loading && estimate && estimate.meetsMinimum && estimate.canShip && (
         <>
-          <div className="flex justify-between text-sm text-sci-navy">
+          <div className="ga-row">
             <span>{estimate.regionLabel || estimate.zoneName || estimate.shippingMethod || 'Shipping'}</span>
             <span>
               {estimate.carrierNotice ? (
-                <Link href="/contact" className="font-medium text-sci-blue underline hover:text-sci-navy">
+                <Link href="/contact" className="ga-link">
                   Contact us
                 </Link>
               ) : (
@@ -779,35 +807,30 @@ function ShippingSummaryPanel({
               )}
             </span>
           </div>
-          {estimate.isFreeShipping && (
-            <p className="mt-1 text-xs text-green-700">You&apos;ve unlocked free shipping.</p>
-          )}
+          {estimate.isFreeShipping && <small className="is-ok">You&apos;ve unlocked free shipping.</small>}
           {!estimate.isFreeShipping &&
             estimate.freeShippingThreshold != null &&
             estimate.amountAwayFromFreeShipping != null &&
             estimate.amountAwayFromFreeShipping > 0 && (
-              <p className="mt-1 text-xs text-sci-muted">
-                Add {formatUsd(estimate.amountAwayFromFreeShipping)} more for free shipping.
-              </p>
+              <small>Add {formatUsd(estimate.amountAwayFromFreeShipping)} more for free shipping.</small>
             )}
-          {estimate.weightLb != null && (
-            <p className="mt-1 text-xs text-sci-muted">Combined shipment weight: {estimate.weightLb} lb</p>
-          )}
+          {estimate.weightLb != null && <small>Combined shipment weight: {estimate.weightLb} lb</small>}
           {estimate.carrierNotice && (
-            <div className="mt-2 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <div className="ga-notice">
               <p>{estimate.carrierNotice}</p>
-              <Link href="/contact" className="mt-1 inline-block font-semibold underline hover:text-amber-900">
-                Contact Us →
-              </Link>
+              <Link href="/contact">Contact us →</Link>
             </div>
           )}
           {!isUs && (
-            <div className="mt-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-sci-muted">International Shipping Estimate</p>
-              <p className="mt-0.5 text-xs text-sci-muted">
-                Estimated UPS international shipping. Duties, taxes, fuel, dimensional-weight, remote-area, residential, and peak surcharges are not included.
-              </p>
-            </div>
+            <>
+              <span className="ga-label ga-label-gap">
+                International shipping estimate
+              </span>
+              <small>
+                Estimated UPS international shipping. Duties, taxes, fuel, dimensional-weight, remote-area,
+                residential, and peak surcharges are not included.
+              </small>
+            </>
           )}
         </>
       )}
@@ -822,21 +845,19 @@ function ShippingSummaryPanel({
 // has resolved yet, since it's a standing risk disclosure, not a quote.
 function InternationalShippingNotice() {
   return (
-    <div className="border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-amber-800">
-        International Shipping Notice
-      </p>
-      <p className="text-xs leading-relaxed">
+    <div className="ga-notice">
+      <strong>International shipping notice</strong>
+      <p>
         Some international destinations have strict customs rules and address requirements, which can lead to delays,
         refusals, or packages being sent back to us by local authorities. If that happens because of an incomplete or
         incorrect address, or because of the destination country&apos;s import restrictions, you&apos;ll be responsible for
         the return shipping cost, a 35% restocking fee, and the original (non-refundable) shipping charge.
       </p>
-      <p className="mt-2 text-xs leading-relaxed">
+      <p>
         Any import duties, taxes, or customs fees charged by the destination country are your responsibility. If those
         fees are refused, customs may return or destroy the package, and we won&apos;t be able to issue a refund in
         that case. By placing an order, you&apos;re accepting these risks — see our{' '}
-        <Link href="/legal/terms-of-service" target="_blank" className="font-medium underline">
+        <Link href="/legal/terms-of-service" target="_blank">
           Terms of Service
         </Link>{' '}
         for the full policy.

@@ -1,1 +1,111 @@
 /* Gloss Studio additions for the workspace pages. Scope every rule under .gloss-theme. */
+
+/* Links inside notes (saved page sign-in prompt, etc.) */
+.gloss-theme .r-muted-panel a,
+.gloss-theme .r-fine a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------------------ cart page */
+.gloss-theme .r-summary > .r-btn + .r-btn {
+  margin-top: 10px;
+}
+.gloss-theme .r-cart-suggestions {
+  margin-top: 72px;
+}
+@media (max-width: 760px) {
+  .gloss-theme .r-cart-suggestions {
+    margin-top: 48px;
+  }
+}
+
+/* -------------------------------------------------------- compare page */
+.gloss-theme .r-compare-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #496978;
+}
+.gloss-theme .r-compare-toolbar a {
+  color: #0a6e80;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gloss-theme .r-comparison td .r-card-actions {
+  flex-wrap: wrap;
+}
+.gloss-theme .r-compare-save {
+  margin-top: 36px;
+}
+.gloss-theme .r-compare-save .r-field select {
+  min-width: 220px;
+}
+
+/* ------------------------------------------------------- projects page */
+.gloss-theme .r-project ul {
+  list-style: disc;
+}
+.gloss-theme .r-project li {
+  display: list-item;
+}
+.gloss-theme .r-project li > a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gloss-theme .r-project li > .r-icon-button {
+  min-width: 32px;
+  min-height: 32px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.gloss-theme .r-project-actions {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 4px 22px;
+}
+.gloss-theme .r-project-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.gloss-theme .r-project-rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+.gloss-theme .r-project-rename .r-field {
+  flex: 1 1 200px;
+}
+
+/* ---------------------------------------------------------- calculator */
+.gloss-theme .r-services-grid > a > svg {
+  color: #1e7b8d;
+}
+
+/* ------------------------------------------------------- quote request */
+.gloss-theme .r-quote-guide {
+  border-top: 1px solid #d6e5eb;
+}
+.gloss-theme .r-quote-guide h2 {
+  margin-bottom: 10px;
+  font-size: clamp(28px, 3vw, 38px);
+}
+.gloss-theme .r-reading-aside ol {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: 14px;
+  line-height: 2;
+  color: #296c81;
+}
+.gloss-theme .r-summary > .r-fine {
+  margin: -12px 0 18px;
+}
+.gloss-theme .r-confirmation > a.r-btn {
+  display: inline-flex;
+}

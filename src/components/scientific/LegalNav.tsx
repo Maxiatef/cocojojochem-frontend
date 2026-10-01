@@ -15,33 +15,22 @@ import { legalPolicies } from '@/lib/legalPolicies';
  */
 export function LegalNav({ currentSlug }: { currentSlug: string }) {
   return (
-    <nav aria-label="Legal notices" className="lg:sticky lg:top-8">
-      <p className="font-sci-body text-sci-eyebrow font-semibold uppercase tracking-wide text-sci-navy">
-        Legal notices
-      </p>
-
-      <ul className="scrollbar-slim-light mt-4 flex max-h-[70vh] flex-col gap-0.5 overflow-y-auto pr-2">
-        {legalPolicies.map((policy) => {
-          const active = policy.slug === currentSlug;
-          return (
-            <li key={policy.slug}>
-              <Link
-                href={`/legal/${policy.slug}`}
-                // `aria-current` rather than colour alone: the active item is
-                // the reader's position in a 25-item list, and that shouldn't
-                // depend on seeing a weight change.
-                aria-current={active ? 'page' : undefined}
-                className={`block border-l-2 py-2 pl-3 font-sci-body text-sci-label transition ${
-                  active
-                    ? 'border-sci-accent font-semibold text-sci-navy'
-                    : 'border-transparent text-sci-muted hover:border-sci-border hover:text-sci-navy'
-                }`}
-              >
-                {policy.footerLabel || policy.title}
-              </Link>
-            </li>
-          );
-        })}
+    <nav aria-label="Legal notices" className="r-legal-nav">
+      <p className="r-legal-nav-title">Legal notices</p>
+      <ul>
+        {legalPolicies.map((policy) => (
+          <li key={policy.slug}>
+            <Link
+              href={`/legal/${policy.slug}`}
+              // `aria-current` rather than colour alone: the active item is
+              // the reader's position in a 25-item list, and that shouldn't
+              // depend on seeing a weight change.
+              aria-current={policy.slug === currentSlug ? 'page' : undefined}
+            >
+              {policy.footerLabel || policy.title}
+            </Link>
+          </li>
+        ))}
       </ul>
     </nav>
   );

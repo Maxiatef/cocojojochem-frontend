@@ -6,9 +6,7 @@ import { clampDescription, pageMetadata } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
 import { LegalDocument } from '@/components/scientific/LegalDocument';
 import { LegalNav } from '@/components/scientific/LegalNav';
-import { Container, Eyebrow } from '@/components/scientific/primitives';
-import { HeroMedia } from '@/components/scientific/HeroMedia';
-import { HERO_IMAGES } from '@/lib/heroImages';
+import { BookOpen } from 'lucide-react';
 
 /**
  * One legal policy. The text is copied verbatim from the COCOJOJO retail site
@@ -58,66 +56,60 @@ export default function LegalPolicyPage({ params }: { params: { slug: string } }
         ])}
       />
 
-      <section className="relative isolate overflow-hidden border-b border-sci-border bg-sci-pale py-10">
-        <HeroMedia
-          src={HERO_IMAGES.legal.src}
-          alt={HERO_IMAGES.legal.alt}
-          tone="light"
-          priority
-        />
-        <Container className="flex flex-col gap-5">
-          <Eyebrow>COCOJOJO legal</Eyebrow>
-
-          <h1 className="max-w-[900px] font-sci-heading text-[32px] font-semibold leading-10 text-sci-navy md:text-[48px] md:leading-[56px]">
-            {policy.title}
-          </h1>
-
-          {(policy.effectiveDate || policy.lastUpdated) && (
-            <p className="flex flex-wrap gap-x-6 gap-y-1 font-sci-body text-sci-eyebrow font-semibold uppercase text-sci-muted">
-              {policy.effectiveDate && <span>Effective {policy.effectiveDate}</span>}
-              {policy.lastUpdated && <span>Updated {policy.lastUpdated}</span>}
-            </p>
-          )}
-        </Container>
-      </section>
-
-      <section className="bg-white py-10 md:py-14">
-        <Container className="grid grid-cols-1 gap-10 lg:grid-cols-[280px_1fr] lg:gap-14">
-          {/* On a phone the 25-item index would push the document itself two
-              screens down, so it collapses to a disclosure there and only
-              becomes a permanent sidebar once there is a column to spare. */}
-          <details className="group rounded-xl border border-sci-border p-4 lg:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between font-sci-body text-sci-label font-medium text-sci-navy marker:content-none">
-              All legal notices
-              <span aria-hidden className="text-sci-muted transition group-open:rotate-180">
-                ↓
-              </span>
-            </summary>
-            <div className="mt-4">
-              <LegalNav currentSlug={policy.slug} />
-            </div>
-          </details>
-
-          <aside className="hidden lg:block">
-            <Link
-              href="/legal"
-              className="mb-6 inline-block font-sci-body text-sci-label font-medium text-sci-blue hover:underline"
-            >
-              ← All legal notices
-            </Link>
-            <LegalNav currentSlug={policy.slug} />
-          </aside>
-
-          <div className="min-w-0">
-            {policy.summary && (
-              <p className="mb-8 border-l-2 border-sci-accent pl-5 font-sci-body text-sci-body text-sci-navy">
-                {policy.summary}
+      {/* The prototype's legal page: `r-legacy-support` > `page-head` and
+          `policy-content`. Ours carries the full policy text (the prototype
+          summarised and linked out), so the 25-item index sits beside it. */}
+      <div className="r-legacy-support">
+        <section className="page-head">
+          <div className="wrap">
+            <div className="eyebrow">COCOJOJO policies</div>
+            <h1>{policy.title}</h1>
+            {policy.summary && <p>{policy.summary}</p>}
+            {(policy.effectiveDate || policy.lastUpdated) && (
+              <p className="r-legal-dates">
+                {policy.effectiveDate && <span>Effective {policy.effectiveDate}</span>}
+                {policy.lastUpdated && <span>Updated {policy.lastUpdated}</span>}
               </p>
             )}
-            <LegalDocument policy={policy} />
           </div>
-        </Container>
-      </section>
+        </section>
+
+        <section className="wrap section r-legal-layout">
+          <div className="r-legal-side">
+            {/* On a phone the 25-item index would push the document itself two
+                screens down, so it collapses to a disclosure there and only
+                becomes a sidebar once there is a column to spare. */}
+            <details className="r-legal-mobile-nav">
+              <summary>All legal notices</summary>
+              <LegalNav currentSlug={policy.slug} />
+            </details>
+            <div className="r-legal-desktop-nav">
+              <Link className="r-legal-back" href="/legal">
+                ← All legal notices
+              </Link>
+              <LegalNav currentSlug={policy.slug} />
+            </div>
+          </div>
+
+          <div className="policy-content">
+            <BookOpen size={30} aria-hidden="true" />
+            <LegalDocument policy={policy} />
+
+            <div className="policy-more">
+              <h3>Questions or requests</h3>
+              <p>
+                Contact <a href="mailto:support@cocojojo.com">support@cocojojo.com</a> for
+                assistance with this policy or your request.
+              </p>
+              <Link
+                href={`/contact?subject=${encodeURIComponent(`Question about the ${policy.title}`)}`}
+              >
+                Contact us about this policy
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
     </>
   );
 }

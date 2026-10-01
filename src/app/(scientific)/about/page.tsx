@@ -1,24 +1,18 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { FileText, FlaskConical, Package } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
 import { clampDescription, pageMetadata } from '@/lib/seo';
 import { SeoPage, Testimonial } from '@/lib/types';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
-import { TestimonialCarousel } from '@/components/scientific/TestimonialCarousel';
-import {
-  Container,
-  Eyebrow,
-  SciButton,
-  SectionHeading,
-} from '@/components/scientific/primitives';
-import { HeroMedia } from '@/components/scientific/HeroMedia';
-import { HERO_IMAGES } from '@/lib/heroImages';
+import { GLOSS_IMAGES } from '@/lib/gloss/images';
 
 /**
- * About, rebuilt to the "Scientific edition" design.
- *
- * There is no Figma frame for this page, so it is assembled from the parts the
- * design already defines: the navy full-width page header used by the quote
- * request page, the pale statistics band, and the standard closing quote band.
+ * About, in the Gloss Studio layout (prototype /about): page intro, the
+ * photo + story editorial block and the three value cards — with our own
+ * facts merged in (founded 1998, California manufacturing, 11,000+
+ * formulations, the statistics band, the full company story, published
+ * testimonials).
  *
  * The copy is the company's own and replaces the previous placeholder text
  * wholesale. It is rendered in full rather than folded into a `SciProse`
@@ -98,6 +92,25 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+
+const VALUES = [
+  {
+    icon: FileText,
+    title: 'Details you can trace.',
+    body: 'Review published product information and request documentation for the exact material you buy.',
+  },
+  {
+    icon: FlaskConical,
+    title: 'Room to create.',
+    body: 'Explore ingredients, compare their properties and keep your development ideas organized.',
+  },
+  {
+    icon: Package,
+    title: 'A conversation about scale.',
+    body: 'Discuss preferred packs, bulk supply, formulation and manufacturing needs with the team.',
+  },
+];
+
 export default async function AboutPage() {
   // Published testimonials, managed under admin Settings → Testimonials.
   // serverFetch returns null on any failure, so the section simply doesn't
@@ -105,6 +118,9 @@ export default async function AboutPage() {
   // supporting band.
   const testimonials =
     (await serverFetch<Testimonial[]>('/wholesale/testimonials', { revalidate: 300 })) ?? [];
+
+  // The first paragraph opens the editorial block; the rest is the full story.
+  const [opening, ...story] = STORY;
 
   return (
     <>
@@ -115,139 +131,118 @@ export default async function AboutPage() {
         ])}
       />
 
-      {/* Page header, full width on navy — the same treatment the quote
-          request page uses, so the two "company" pages open the same way. */}
-      <section className="relative isolate overflow-hidden bg-sci-navy py-16 text-white">
-        <HeroMedia
-          src={HERO_IMAGES.about.src}
-          alt={HERO_IMAGES.about.alt}
-          tone="dark"
-          priority
-        />
-        <Container className="flex flex-col gap-6">
-          <Eyebrow tone="accent">About COCOJOJO</Eyebrow>
+      <div className="r-page-intro r-wrap">
+        <span className="r-eyebrow">About COCOJOJO</span>
+        <h1>Curiosity, meet chemistry.</h1>
+        <p>Connecting ingredients, formulation ideas and the people who turn them into products.</p>
+      </div>
 
-          <h1 className="max-w-[1150px] font-sci-heading text-[40px] font-semibold leading-[48px] md:text-[64px] md:leading-[72px]">
-            Beauty and wellness backed by nature, science, and in-house expertise.
-          </h1>
-
-          <p className="max-w-[940px] font-sci-body text-sci-body text-[#adc6d8]">
-            Since 1998, COCOJOJO has bridged the laboratory, the manufacturer, the professional,
-            and the everyday consumer. As a result, our formulas are made for performance,
-            consistency, and access.
-          </p>
-        </Container>
-      </section>
-
-      {/* Statistics band. A 1px gap grid on the border colour gives the hairline
-          rules between cells without four separate border declarations. */}
-      <section className="bg-white pt-16">
-        <Container>
-          <div className="grid grid-cols-2 gap-px bg-sci-border md:grid-cols-4">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="flex flex-col gap-2 bg-white px-2 py-8 md:px-6">
-                <p className="font-sci-heading text-[36px] font-semibold leading-[44px] text-sci-navy md:text-[44px] md:leading-[52px]">
-                  {stat.value}
-                </p>
-                <p className="font-sci-body text-sci-label text-sci-muted">{stat.label}</p>
-              </div>
-            ))}
+      <section className="r-wrap r-section">
+        <div className="r-editorial">
+          <div className="r-editorial-photo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={GLOSS_IMAGES.oils}
+              alt="Representative botanical oils and laboratory glassware"
+              width={700}
+              height={650}
+            />
           </div>
-        </Container>
-      </section>
-
-      {/* Our story — capabilities on the left, the narrative on the right. */}
-      <section className="bg-white py-16">
-        <Container className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.35fr] lg:gap-16">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Our story</Eyebrow>
-
-            <SectionHeading>Direct access to the quality trusted behind the scenes.</SectionHeading>
-
-            <ul className="flex flex-col gap-3">
-              {CAPABILITIES.map((point) => (
-                <li
-                  key={point}
-                  className="flex items-start gap-3 font-sci-body text-sci-body text-sci-muted"
-                >
-                  <span
-                    aria-hidden
-                    className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-sci-accent"
-                  />
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="flex max-w-[760px] flex-col gap-5 font-sci-body text-sci-body text-sci-muted">
-            {STORY.map((paragraph, index) => (
-              <div key={paragraph.slice(0, 48)} className="flex flex-col gap-3">
-                {STORY_SUBHEADINGS[index] && (
-                  <h2 className="font-sci-heading text-[24px] font-semibold leading-8 text-sci-navy">
-                    {STORY_SUBHEADINGS[index]}
-                  </h2>
-                )}
-                <p>{paragraph}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Position and mission. */}
-      <section className="bg-white pb-16">
-        <Container>
-          <div className="flex flex-col gap-6 bg-sci-navy p-10 text-white md:p-14">
-            <Eyebrow tone="accent">Science and nature</Eyebrow>
-            <h2 className="max-w-[900px] font-sci-heading text-[32px] font-semibold leading-[40px] md:text-sci-heading">
-              Better products are always possible.
+          <div className="r-editorial-copy">
+            <span className="r-eyebrow">Our story</span>
+            <h2>
+              From ingredient expertise
+              <br />
+              to everyday possibility.
             </h2>
-            {CLOSING.map((paragraph) => (
-              <p key={paragraph.slice(0, 48)} className="max-w-[900px] font-sci-body text-sci-body">
-                {paragraph}
-              </p>
-            ))}
+            <p>{opening}</p>
+            <p>
+              This store brings ingredient shopping and technical information together, with
+              published product details and a direct path to ask about your project.
+            </p>
+            <Link className="r-btn r-outline" href="/services">
+              Explore our services
+            </Link>
           </div>
-        </Container>
+        </div>
+
+        <dl className="r-about-stats">
+          {STATS.map((stat) => (
+            <div key={stat.label}>
+              <dt>{stat.label}</dt>
+              <dd>{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="r-services-grid r-about-values">
+          {VALUES.map(({ icon: Icon, title, body }) => (
+            <div key={title}>
+              <Icon size={26} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{body}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* What our customers say. Rendered only when there is something to
-          show — an empty band with a heading and no quotes reads as broken
-          rather than as "no testimonials yet". */}
-      {testimonials.length > 0 && (
-        <section className="bg-sci-pale py-16">
-          <Container className="flex flex-col gap-10">
-            <div className="flex flex-col gap-6">
-              <Eyebrow>In their words</Eyebrow>
-              <SectionHeading>
-                Trusted by the brands, salons, and formulators we supply.
-              </SectionHeading>
+      <section className="r-wrap r-section r-about-story">
+        <div>
+          <span className="r-eyebrow">What we do</span>
+          <h2>Direct access to the quality trusted behind the scenes.</h2>
+          <ul>
+            {CAPABILITIES.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="r-policy-copy">
+          {story.map((paragraph, i) => (
+            <div key={paragraph.slice(0, 48)}>
+              {/* STORY_SUBHEADINGS is keyed by the paragraph's index in STORY. */}
+              {STORY_SUBHEADINGS[i + 1] && <h3>{STORY_SUBHEADINGS[i + 1]}</h3>}
+              <p>{paragraph}</p>
             </div>
+          ))}
+        </div>
+      </section>
 
-            <TestimonialCarousel testimonials={testimonials} />
-          </Container>
+      <section className="r-wrap r-section">
+        <div className="r-about-mission">
+          <span className="r-eyebrow">Science and nature</span>
+          <h2>Better products are always possible.</h2>
+          {CLOSING.map((paragraph) => (
+            <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+          ))}
+        </div>
+      </section>
+
+      {/* Rendered only when there is something to show — an empty band with a
+          heading and no quotes reads as broken rather than as "none yet". */}
+      {testimonials.length > 0 && (
+        <section className="r-wrap r-section">
+          <div className="r-section-heading">
+            <div>
+              <span className="r-eyebrow">In their words</span>
+              <h2>Trusted by the brands, salons and formulators we supply.</h2>
+            </div>
+          </div>
+          <div className="r-about-quotes">
+            {testimonials.map((t) => (
+              <figure key={t.id}>
+                <blockquote>
+                  <p>“{t.quote}”</p>
+                </blockquote>
+                <figcaption>
+                  <strong>{t.authorName}</strong>
+                  {t.company && <span>{t.company}</span>}
+                  {t.result && <small>{t.result}</small>}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </section>
       )}
-
-      {/* Contact / Request a quote — the closing band every migrated page carries. */}
-      <section className={`py-16 ${testimonials.length > 0 ? 'bg-white' : 'bg-sci-pale'}`}>
-        <Container className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Let’s move your next idea forward</Eyebrow>
-            <p className="font-sci-heading text-[32px] font-semibold leading-[40px] text-sci-navy md:text-sci-heading">
-              Therefore, the next great formula
-              <br />
-              starts with a conversation.
-            </p>
-          </div>
-          <SciButton href="/quote-request" className="shrink-0">
-            Request a quote →
-          </SciButton>
-        </Container>
-      </section>
     </>
   );
 }
-
-

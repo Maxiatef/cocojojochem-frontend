@@ -1,28 +1,26 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
+import { BookOpen, FlaskConical, GitCompareArrows } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
-import { Category, Paginated, SeoPage } from '@/lib/types';
+import { Category, Paginated, Product, SeoPage } from '@/lib/types';
 import { JsonLd, organizationSchema, webSiteSchema } from '@/components/seo/JsonLd';
-import { ValueMarquee } from '@/components/scientific/ValueMarquee';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
-import { Hero } from '@/components/scientific/Hero';
-import {
-  ArrowLink,
-  Container,
-  Eyebrow,
-  IndexCard,
-  Lead,
-  SciButton,
-  SectionHeading,
-} from '@/components/scientific/primitives';
+import { formatUsd, getDefaultVariant } from '@/lib/pricing';
+import { GLOSS_IMAGES } from '@/lib/gloss/images';
+import { ProductCard } from '@/components/gloss/ProductCard';
+import { HomeHero, HeroSpotlight } from '@/components/gloss/home/HomeHero';
+import { CategoryCarousel } from '@/components/gloss/home/CategoryCarousel';
+import { GlossReveal } from '@/components/gloss/home/GlossReveal';
+import { carouselCategories, heroCollections } from '@/components/gloss/home/homeCategories';
 
 /**
- * COCOJOJO home page, rebuilt to the "Scientific edition" design
- * (Figma rj57PsDgSsbo86iG4RC1SA, node 33:216).
+ * COCOJOJO home page, ported to the Gloss Studio prototype: hero with the
+ * three-slide ingredient edit, category carousel, featured products, the
+ * formulation-workspace editorial and the A–Z library band.
  *
- * Section order follows the design exactly. Copy is the design's, except the
- * product portfolio, which reads real categories from the API — the design's
- * six cards are placeholders for exactly that list, and a home page that
- * ignores the catalogue would be a regression on what it replaces.
+ * The prototype's collections and products are placeholders; here they are
+ * our categories (matched to the prototype's collections by keyword) and our
+ * featured products, so every card links to something real.
  */
 
 const HOME_TITLE = 'Wholesale Cosmetic Ingredients in Bulk';
@@ -72,270 +70,165 @@ export async function generateMetadata(): Promise<Metadata> {
   return { ...meta, title: { absolute: homeTitle } };
 }
 
-/** Used when the catalogue has no categories yet — the design's own copy. */
-const FALLBACK_CATEGORIES = [
-  { name: 'Natural oils', description: 'Plant-derived possibilities', slug: '' },
-  { name: 'Solvents & humectants', description: 'The foundation of your formula', slug: '' },
-  { name: 'Surfactants & emulsifiers', description: 'Texture, stability & performance', slug: '' },
-  { name: 'Cosmetic actives', description: 'Purposeful formulation ingredients', slug: '' },
-  { name: 'Acids & functional ingredients', description: 'Solutions for your application', slug: '' },
-  { name: 'Butters & waxes', description: 'Naturally rich textures', slug: '' },
-];
+const GRID_SIZE = 4;
 
-const VALUE_STRIP = [
-  'Natural & specialty ingredients',
-  'Bulk supply for your business',
-  'Formulation to manufacturing',
-  'People who know your products',
-];
+/** Featured products first, topped up with other published products. */
+async function homeProducts(): Promise<Product[]> {
+  const featured = await serverFetch<Product[] | Paginated<Product>>(
+    `/wholesale/products/featured?limit=${GRID_SIZE}`,
+  );
+  const list = (Array.isArray(featured) ? featured : featured?.data || []).slice(0, GRID_SIZE);
+  if (list.length >= GRID_SIZE) return list;
+  const more = await serverFetch<Paginated<Product>>(`/wholesale/products?page=1&limit=${GRID_SIZE * 2}`);
+  const seen = new Set(list.map((p) => p.id));
+  for (const p of more?.data || []) {
+    if (list.length >= GRID_SIZE) break;
+    if (!seen.has(p.id)) list.push(p);
+  }
+  return list;
+}
 
-const INDUSTRIES = [
-  {
-    eyebrow: '01 / Beauty & wellness',
-    imageAlt: 'Illustration of beauty and personal care manufacturing',
-    title: ['Beauty &', 'personal care'],
-    body: 'In brief, bring your next formulation to life with ingredients selected for your application. Moreover, our team ensures quality and consistency throughout.',
-    image: '/scientific/industry-beauty.svg',
-    href: '/products',
-  },
-  {
-    eyebrow: '02 / Food ingredients',
-    imageAlt: 'Illustration of food and beverage ingredient production',
-    title: ['Food &', 'beverage'],
-    body: 'For example, source ingredients with purpose. In addition, discuss the right grade for your product.',
-    image: '/scientific/industry-food.svg',
-    href: '/products',
-  },
-  {
-    eyebrow: '03 / Product development',
-    imageAlt: 'Illustration of formulation and manufacturing equipment',
-    title: ['Formulation &', 'manufacturing'],
-    body: 'Consequently, take your ideas further, from raw materials to finished products. Furthermore, we provide ongoing support.',
-    image: '/scientific/industry-formulation.svg',
-    href: '/products',
-  },
-];
-
-const SERVICES = [
-  {
-    title: '01  Bulk ingredient sourcing',
-    body: 'First, tell us the material, quantity, and packaging you need. Then, we’ll help you explore your supply options. Additionally, we provide sample guidance.',
-  },
-  {
-    title: '02  Formulation support',
-    body: 'Next, move from an idea to a considered ingredient selection with support for your product development. Subsequently, we review usage rates and compatibility.',
-  },
-  {
-    title: '03  Private label & manufacturing',
-    body: 'Finally, connect raw materials with finished products through COCOJOJO’s manufacturing capabilities. Therefore, we ensure scalable production from bench to market.',
-  },
-];
-
-const DOCUMENTS = [
-  { index: 'SDS', title: 'Safety data sheets', description: 'Handling and safety information. In particular, review SDS before use. '},
-  { index: 'TDS', title: 'Technical data sheets', description: 'Properties and specifications. Therefore, review TDS before formulation. '},
-  { index: 'COA', title: 'Certificates of analysis', description: 'Material and batch information. As a result, verify COA before production. '},
-];
+/** The hero's glass note: the first product we can quote a pack and price for. */
+function spotlightFor(products: Product[]): HeroSpotlight | null {
+  const priced = products.find((p) => {
+    const v = getDefaultVariant(p.variants || []);
+    return !!v && Number(v.effectivePrice ?? v.price) > 0;
+  });
+  const product = priced || products[0];
+  if (!product) return null;
+  const variant = priced ? getDefaultVariant(product.variants || []) : null;
+  return {
+    href: `/products/${product.slug}`,
+    name: product.name,
+    pack: variant?.label || null,
+    price: variant ? formatUsd(variant.effectivePrice ?? variant.price) : 'Price on request',
+  };
+}
 
 export default async function ScientificHomePage() {
-  const categoriesRes = await serverFetch<Paginated<Category>>(
-    '/wholesale/categories?page=1&limit=6&rootsOnly=true',
-  );
+  const [categoriesRes, products] = await Promise.all([
+    serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100&rootsOnly=true'),
+    homeProducts(),
+  ]);
 
-  const categories = categoriesRes?.data?.length
-    ? categoriesRes.data.map((c) => ({
-        name: c.name,
-        // First paragraph only: the rest belongs on the category page, and
-        // repeating six full descriptions here would duplicate that copy.
-        description: c.description?.split(/\n\s*\n/)[0].trim() || 'Explore this category',
-        slug: c.slug,
-      }))
-    : FALLBACK_CATEGORIES;
+  const categories = categoriesRes?.data || [];
+  const categoryTotal = categoriesRes?.pagination.total ?? categories.length;
+  const carousel = carouselCategories(categories);
 
   return (
     <>
       <JsonLd data={[organizationSchema(), webSiteSchema()]} />
+      <GlossReveal />
 
-      <Hero />
+      <HomeHero collections={heroCollections(categories)} spotlight={spotlightFor(products)} />
 
-      {/* Value strip — scrolling ticker. Container keeps the page gutters and
-          the band its border; the marquee handles its own overflow inside. */}
-      <div className="border-y border-sci-border bg-white">
-        <Container className="py-6">
-          <ValueMarquee items={VALUE_STRIP} />
-        </Container>
-      </div>
+      {carousel.length ? <CategoryCarousel categories={carousel} total={categoryTotal} /> : null}
 
-      {/* Product portfolio */}
-      <section className="bg-white">
-        <Container className="flex flex-col gap-6 py-16">
-          <Eyebrow>Our product portfolio</Eyebrow>
-          <SectionHeading>Great products start with the right ingredients.</SectionHeading>
-<Lead className="max-w-[920px]">
-              In addition, discover the building blocks for your next innovation, from everyday essentials to specialty materials.
-            </Lead>
-
-          <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category, i) => (
-              <IndexCard
-                key={category.name}
-                href={category.slug ? `/categories/${category.slug}` : '/products'}
-                index={String(i + 1).padStart(2, '0')}
-                title={category.name}
-                description={category.description}
-              />
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Industries we serve */}
-      <section className="bg-sci-pale">
-        <Container className="flex flex-col gap-6 py-16">
-          <Eyebrow>The industries we serve</Eyebrow>
-          <SectionHeading>Your industry. Our expertise.</SectionHeading>
-<Lead className="max-w-[1000px]">
-              Therefore, find the materials and support that fit the way you work.
-            </Lead>
-
-          <div className="mt-2 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {INDUSTRIES.map((industry) => (
-              <a
-                key={industry.eyebrow}
-                href={industry.href}
-                className="flex flex-col gap-5 rounded-[14px] border border-sci-border bg-white p-7 transition hover:border-sci-blue hover:shadow-sm"
-              >
-                {/* Exported from Figma — the illustration IS the design, so it
-                    is rendered from its own asset rather than reconstructed.
-
-                    Described rather than hidden. These were aria-hidden to
-                    stop the crawler flagging them for missing alt text, but
-                    that fixed the warning by removing the page's only images
-                    instead of by describing them — so the homepage read as
-                    having no imagery at all. The alt describes the drawing;
-                    the heading beside it already names the industry, so it
-                    does not repeat it. */}
-                <img
-                  src={industry.image}
-                  alt={industry.imageAlt}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-[134px] w-full object-contain"
-                />
-                <Eyebrow>{industry.eyebrow}</Eyebrow>
-                <h3 className="font-sci-heading text-[34px] font-semibold leading-10 text-sci-navy">
-                  {industry.title[0]}
-                  <br />
-                  {industry.title[1]}
-                </h3>
-                <Lead>{industry.body}</Lead>
-                <span className="font-sci-body text-sci-label font-medium text-sci-blue">
-                  Explore ingredients →
-                </span>
-              </a>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Solutions and services */}
-      <section className="bg-sci-navy text-white">
-        <Container className="grid grid-cols-1 gap-16 py-16 lg:grid-cols-[580px_1fr]">
-          <div className="flex flex-col gap-6">
-            <Eyebrow tone="white">More than an ingredient supplier</Eyebrow>
-            <h2 className="font-sci-heading text-[38px] font-semibold leading-[46px] text-white md:text-sci-display">
-              Good chemistry.
-              <br />
-              Even better
-              <br />
-              partnerships.
-            </h2>
-<p className="max-w-[530px] font-sci-body text-sci-body text-white">
-              Specifically, connect ingredient sourcing, formulation, and manufacturing with a team that understands your next product. In practice, we streamline the process from concept to launch.
-            </p>
-            <SciButton href="/contact" variant="accent" className="self-start">
-              Let&rsquo;s build something together →
-            </SciButton>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            {SERVICES.map((service) => (
-              <div key={service.title} className="flex flex-col gap-4">
-                <h3 className="font-sci-heading text-sci-subheading font-semibold text-white">
-                  {service.title}
-                </h3>
-                <p className="max-w-[620px] font-sci-body text-sci-body text-white">
-                  {service.body}
-                </p>
+      {products.length ? (
+        <section className="r-soft-section">
+          <div className="r-wrap r-section">
+            <div className="r-section-heading">
+              <div>
+                <span className="r-eyebrow">The formulation shelf</span>
+                <h2>Meet your next essentials.</h2>
               </div>
-            ))}
+              <Link className="r-text-link" href="/products">
+                Shop COCOJOJO
+              </Link>
+            </div>
+            <div className="r-product-grid">
+              {products.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
           </div>
-        </Container>
-      </section>
+        </section>
+      ) : null}
 
-      {/* Technical resources */}
-      <section className="bg-white">
-        <Container className="flex flex-col gap-6 py-16">
-          <Eyebrow>Make informed decisions</Eyebrow>
-          <SectionHeading>The details make the difference.</SectionHeading>
-<Lead className="max-w-[1040px]">
-              Therefore, ask about documentation for the exact material and grade you’re considering.
-            </Lead>
-
-          <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {DOCUMENTS.map((doc) => (
-              <IndexCard
-                key={doc.index}
-                href="/contact"
-                index={doc.index}
-                title={doc.title}
-                description={doc.description}
-              />
-            ))}
+      <section className="r-wrap r-section">
+        <div className="r-editorial">
+          <div className="r-editorial-photo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={GLOSS_IMAGES.texture}
+              alt="Clear gel and ingredient flakes, representative texture photograph"
+              width={700}
+              height={650}
+              loading="lazy"
+            />
+            <span>Texture. Structure. Possibility.</span>
           </div>
-        </Container>
-      </section>
-
-      {/* About COCOJOJO */}
-      <section className="bg-sci-pale">
-        <Container className="grid grid-cols-1 gap-16 py-16 lg:grid-cols-2">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Meet COCOJOJO</Eyebrow>
-            <SectionHeading>
-              Materials for your business.
+          <div className="r-editorial-copy">
+            <span className="r-eyebrow">Your own formulation workspace</span>
+            <h2>
+              Bring a little more
               <br />
-              People on your side.
-            </SectionHeading>
+              <em>clarity to creating.</em>
+            </h2>
+            <p>
+              Compare technical properties, build an ingredient shortlist and calculate weights for your next trial
+              batch. Keep the details in one place.
+            </p>
+            <div className="r-tool-links">
+              <Link href="/compare">
+                <GitCompareArrows size={22} />
+                <span>
+                  <strong>Compare ingredients</strong>
+                  <small>See the details side by side</small>
+                </span>
+              </Link>
+              <Link href="/formulation-tools">
+                <FlaskConical size={22} />
+                <span>
+                  <strong>Calculate your batch</strong>
+                  <small>Turn percentages into weights</small>
+                </span>
+              </Link>
+              <Link href="/projects">
+                <BookOpen size={22} />
+                <span>
+                  <strong>Create a project</strong>
+                  <small>Save ingredients and development notes</small>
+                </span>
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col gap-4">
-            <Lead>
-              Overall, COCOJOJO supplies cosmetic and food-grade raw materials. Moreover, we support brands with contract manufacturing and private label solutions.
-            </Lead>
-            <Lead>
-              Based in California, we bring together natural oils, functional ingredients, and manufacturing experience. As a result, we help turn your next idea into a product.
-            </Lead>
-            <ArrowLink href="/contact" tone="navy">
-              Connect with our team
-            </ArrowLink>
-          </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Contact / Request a quote */}
-      <section className="bg-sci-pale">
-        <Container className="flex flex-col items-start gap-10 py-16 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-6">
-            <Eyebrow>Let&rsquo;s move your next idea forward</Eyebrow>
-            <SectionHeading>
-              Now, the next great formula
+      <section className="r-library-band">
+        <div className="r-wrap">
+          <div>
+            <span className="r-eyebrow">For the curious formulator</span>
+            {/* The prototype counts products plus supplier references ("1,103
+                starting points"). That library's size isn't available here,
+                so the heading makes no numeric claim. */}
+            <h2>
+              One library.
               <br />
-              starts with a conversation.
-            </SectionHeading>
+              Every starting point.
+            </h2>
+            <p>
+              Explore MakingCosmetics supplier references, available use ranges and published technical documents.
+              COCOJOJO supply is confirmed separately.
+            </p>
+            <Link className="r-btn r-white" href="/ingredients-a-z">
+              Open the ingredient library
+            </Link>
           </div>
-          <SciButton href="/quote-request" variant="accent">
-            Request a quote →
-          </SciButton>
-        </Container>
+          <div className="g-library-tiles" aria-label="Explore the ingredient library">
+            <Link href="/ingredients-a-z?letter=A">
+              <span>Start with</span>
+              <strong>A</strong>
+              <small>Explore A ingredients</small>
+            </Link>
+            <Link href="/ingredients-a-z?letter=Z">
+              <span>Discover through</span>
+              <strong>Z</strong>
+              <small>Explore Z ingredients</small>
+            </Link>
+          </div>
+        </div>
       </section>
     </>
   );
