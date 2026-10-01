@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Browser-side stores for the Gloss Studio workspace features that have no
- * backend yet: ingredient comparison and formulation projects.
+ * Browser-side stores for the Gloss Studio workspace features: ingredient
+ * comparison and formulation projects.
  *
  * Same pattern as cartStore / wishlistStore: localStorage plus a window event,
  * so every component on the page (header badge, card button, compare page)
- * updates together. They are per-browser, which matches the prototype these
- * features come from — nothing here is ever sent to the server.
+ * updates together. localStorage stays the live copy for everyone; for a
+ * signed-in customer each change is also saved to their account (see
+ * workspaceSync.ts), so the lists follow them to other devices.
  */
 
 function read<T>(key: string, fallback: T): T {
@@ -22,13 +23,21 @@ function read<T>(key: string, fallback: T): T {
   }
 }
 
-function write(key: string, event: string, value: unknown) {
+/** Set by workspaceSync.ts; called after a user-made change to a synced key. */
+let onLocalChange: ((key: string) => void) | null = null;
+export function setWorkspaceChangeListener(fn: ((key: string) => void) | null) {
+  onLocalChange = fn;
+}
+
+/** `silent` skips the server push — used when applying the server's own copy. */
+export function write(key: string, event: string, value: unknown, silent = false) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
     /* storage full or blocked — the in-memory event still updates the page */
   }
   window.dispatchEvent(new Event(event));
+  if (!silent) onLocalChange?.(key);
 }
 
 function useStore<T>(key: string, event: string, fallback: T): T {
@@ -99,8 +108,8 @@ export interface CompareItem {
   name: string;
 }
 
-const COMPARE_KEY = 'cocojojochem_compare';
-const COMPARE_EVENT = 'cocojojochem-compare-changed';
+export const COMPARE_KEY = 'cocojojochem_compare';
+export const COMPARE_EVENT = 'cocojojochem-compare-changed';
 export const COMPARE_LIMIT = 4;
 
 export function getCompare(): CompareItem[] {
@@ -152,8 +161,8 @@ export interface Project {
   updatedAt: string;
 }
 
-const PROJECTS_KEY = 'cocojojochem_projects';
-const PROJECTS_EVENT = 'cocojojochem-projects-changed';
+export const PROJECTS_KEY = 'cocojojochem_projects';
+export const PROJECTS_EVENT = 'cocojojochem-projects-changed';
 
 export function getProjects(): Project[] {
   return read<Project[]>(PROJECTS_KEY, []);

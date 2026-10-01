@@ -228,7 +228,7 @@ function SaveToProject({ items }: { items: { slug: string; name: string }[] }) {
         </button>
       </form>
       <p className="r-fine">
-        Projects are kept in this browser. <Link href="/projects">Open your projects</Link>
+        Signed in, projects are saved to your account. <Link href="/projects">Open your projects</Link>
       </p>
     </>
   );

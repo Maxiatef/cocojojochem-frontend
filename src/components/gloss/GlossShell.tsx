@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { CircleCheck, FlaskConical, GitCompareArrows, Heart, Menu, ShoppingBag, UserRound, X } from 'lucide-react';
 import { GLOSS_LOGO } from '@/lib/gloss/images';
 import { useCartDrawerOpener, useCompare, useToastMessage } from '@/lib/gloss/stores';
+import { useWorkspaceSync } from '@/lib/gloss/workspaceSync';
 import { useUnifiedCart } from '@/lib/gloss/useUnifiedCart';
 import { useStorefrontSession } from '@/lib/useStorefrontSession';
 import { CookieSettingsLink } from '@/components/scientific/CookieSettingsLink';
@@ -49,6 +50,7 @@ export function GlossShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/';
   const { customerEmail, quoteListCount } = useStorefrontSession();
   const cart = useUnifiedCart();
+  useWorkspaceSync();
   const compare = useCompare();
   const toast = useToastMessage();
   const [drawer, setDrawer] = useState(false);

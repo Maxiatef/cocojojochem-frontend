@@ -56,8 +56,8 @@ export function ProjectsWorkspace() {
         </button>
       </form>
       <p className="r-fine">
-        New projects include the ingredients currently in your <Link href="/saved">wishlist</Link>. Projects are kept
-        in this browser.
+        New projects include the ingredients currently in your <Link href="/saved">wishlist</Link>. Signed in, projects
+        are saved to your account and follow you to any device.
       </p>
 
       {mounted && (
