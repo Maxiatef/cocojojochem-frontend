@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { Product } from '@/lib/types';
+import { Product, ProductVariant } from '@/lib/types';
 import { formatUsd } from '@/lib/pricing';
 import { customerApi } from '@/lib/customerApi';
 import { ImagePlaceholderIcon, CheckCircleIcon } from '@/components/icons';
@@ -11,36 +10,36 @@ import { ImagePlaceholderIcon, CheckCircleIcon } from '@/components/icons';
 /**
  * The checkout cross-sell.
  *
- * Four decisions are worth stating, because each of them had an obvious
- * alternative:
+ * It is a form section, not a banner: same shell and heading as the sections
+ * above it, sitting just before the terms checkbox. Names and images open the
+ * product in a new tab so the half-filled form is never lost.
  *
- * **It is a form section, not a banner.** Same `rounded-xl border bg-white`
- * shell and same 20px heading as Contact Information and Shipping Address
- * above it, so it reads as the last step of the form rather than an advert
- * dropped into it. It sits directly above the terms checkbox and the
- * Continue to Payment button — the last thing seen before committing, which
- * is the only place in a checkout an upsell is still useful.
+ * **It never runs dry.** Three cards are shown. When one is added it shows
+ * "Added" for a moment and is then replaced by a fresh suggestion from a
+ * queue, which is refilled from the server (skipping everything already
+ * shown) before it empties. When the catalogue is exhausted the shown-list is
+ * reset, so the panel starts over rather than disappearing.
  *
- * **Three cards, not four or six.** Three reads as a recommendation; six
- * reads as a second catalogue, and the honest description of a catalogue at
- * checkout is an exit. Three also divides cleanly into one column on a phone
- * and three in the form's column on a desktop, with no orphan row between.
+ * **Different sizes count.** A product already in the cart can come back with
+ * a size that is not, so each card offers the first in-stock variant that is
+ * not in the cart yet.
  *
- * **Two actions, and neither one loses the form.** The image and the name
- * link through to the product, because three thumbnails are not enough to
- * decide on a raw material — an INCI name, a pack size and a spec sheet are.
- * That link opens in a new tab: a customer who has already typed an address
- * into the form above and navigates away has to come back and find their
- * place, and some of them will not. The Add button beside it is for the case
- * where they already know the material, and adds it without leaving at all.
- *
- * **The order is random, and fixed for the visit.** The server shuffles, so
- * two orders do not get the same three rows — a panel that never changes
- * stops being looked at. But it shuffles once, on mount: not on window focus,
- * and not when the cart changes (see `seedVariantIds` below). Cards that
- * rearrange themselves while someone is tabbing out to their email for a VAT
- * number, or the moment they click Add, are the more annoying failure.
+ * Only the slot that was clicked changes — the other cards hold still, so
+ * nothing moves under the cursor.
  */
+const SLOTS = 3;
+const BATCH = 9;
+
+export function pickVariant(product: Product, inCart: string[]): ProductVariant | undefined {
+  const fresh = product.variants.filter((v) => !inCart.includes(v.id));
+  return (
+    fresh.find((v) => v.stockStatus !== 'OUT_OF_STOCK') ||
+    fresh[0] ||
+    product.variants.find((v) => v.stockStatus !== 'OUT_OF_STOCK') ||
+    product.variants[0]
+  );
+}
+
 export function CheckoutSuggestions({
   cartVariantIds,
   enabled,
@@ -48,57 +47,94 @@ export function CheckoutSuggestions({
 }: {
   cartVariantIds: string[];
   enabled: boolean;
-  onAdd: (product: Product) => Promise<void> | void;
+  onAdd: (product: Product, variant: ProductVariant) => Promise<void> | void;
 }) {
-  // Which cards have been added, so the button can confirm rather than look
-  // like it did nothing. Keyed by product id — the card stays on screen, so
-  // the state has to survive alongside it.
+  const [slots, setSlots] = useState<Product[]>([]);
   const [addedIds, setAddedIds] = useState<string[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const queue = useRef<Product[]>([]);
+  const shown = useRef<string[]>([]);
+  const fetching = useRef<Promise<void> | null>(null);
+  const cartRef = useRef(cartVariantIds);
+  cartRef.current = cartVariantIds;
 
-  // The cart as it was when this panel first saw it, and not after.
-  //
-  // Keying the query on the live cart looks right and is not: adding a
-  // suggestion changes the cart, which changes the key, which re-fetches —
-  // so the three cards reshuffle the instant one of them is clicked, the
-  // card that was just added disappears under the cursor, and the "Added"
-  // confirmation is unmounted before anyone can read it. Pinning the seed
-  // means the panel a customer is interacting with holds still.
-  //
-  // The cart arrives a tick after mount (localStorage for a guest, a fetch
-  // for a signed-in customer), which is why this is an effect guarded on
-  // "still empty" rather than a useState initialiser.
-  const [seedVariantIds, setSeedVariantIds] = useState<string[]>([]);
+  const refill = useCallback(() => {
+    if (fetching.current) return fetching.current;
+    const run = async () => {
+      const ask = (exclude: string[]) =>
+        customerApi.get<Product[]>(
+          `/wholesale/products/cart-suggestions?limit=${BATCH}` +
+            `&variantIds=${cartRef.current.join(',')}&exclude=${exclude.slice(-200).join(',')}`,
+        );
+      let fresh = await ask(shown.current).catch(() => [] as Product[]);
+      if (!fresh.length && shown.current.length) {
+        // Everything has been shown once: start over, keeping only what is on screen.
+        shown.current = [];
+        fresh = await ask(queue.current.map((p) => p.id)).catch(() => [] as Product[]);
+      }
+      const known = new Set([...shown.current, ...queue.current.map((p) => p.id)]);
+      const add = fresh.filter((p) => !known.has(p.id));
+      queue.current.push(...add);
+    };
+    fetching.current = run().finally(() => {
+      fetching.current = null;
+    });
+    return fetching.current;
+  }, []);
+
+  const take = useCallback((exclude: string[]) => {
+    const i = queue.current.findIndex((p) => !exclude.includes(p.id));
+    if (i < 0) return undefined;
+    const [next] = queue.current.splice(i, 1);
+    shown.current.push(next.id);
+    return next;
+  }, []);
+
+  // First fill, once the cart has arrived (a tick after mount).
+  const hasCart = cartVariantIds.length > 0;
   useEffect(() => {
-    if (seedVariantIds.length === 0 && cartVariantIds.length > 0) {
-      setSeedVariantIds(cartVariantIds);
-    }
-  }, [cartVariantIds, seedVariantIds]);
+    if (!enabled || !hasCart || slots.length) return;
+    let cancelled = false;
+    refill().then(() => {
+      if (cancelled) return;
+      const first: Product[] = [];
+      for (let n = 0; n < SLOTS; n++) {
+        const p = take(first.map((x) => x.id));
+        if (p) first.push(p);
+      }
+      setSlots(first);
+      refill();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, hasCart, slots.length, refill, take]);
 
-  const { data: suggestions } = useQuery({
-    queryKey: ['checkout-suggestions', [...seedVariantIds].sort().join(',')],
-    queryFn: () =>
-      customerApi.get<Product[]>(
-        `/wholesale/products/cart-suggestions?limit=3&variantIds=${seedVariantIds.join(',')}`,
-      ),
-    enabled: enabled && seedVariantIds.length > 0,
-    // See the note above about re-shuffling under the customer.
-    refetchOnWindowFocus: false,
-    staleTime: Infinity,
-  });
-
-  const products = suggestions || [];
-  if (products.length === 0) return null;
+  if (slots.length === 0) return null;
 
   async function handleAdd(product: Product) {
+    const variant = pickVariant(product, cartRef.current);
+    if (!variant) return;
     setBusyId(product.id);
     try {
-      await onAdd(product);
-      setAddedIds((ids) => (ids.includes(product.id) ? ids : [...ids, product.id]));
+      await onAdd(product, variant);
+      setAddedIds((ids) => [...ids, product.id]);
     } finally {
       setBusyId(null);
     }
+    // Let the confirmation register, then swap in a fresh card for this slot.
+    window.setTimeout(async () => {
+      if (queue.current.length < SLOTS) await refill();
+      setSlots((current) => {
+        const next = take(current.map((p) => p.id));
+        return next ? current.map((p) => (p.id === product.id ? next : p)) : current;
+      });
+      setAddedIds((ids) => ids.filter((id) => id !== product.id));
+      if (queue.current.length < SLOTS) refill();
+    }, 900);
   }
+
+  const products = slots;
 
   return (
     <div className="rounded-xl border border-sci-border bg-white p-6 md:p-8">
@@ -106,13 +142,12 @@ export function CheckoutSuggestions({
         Often ordered together
       </h2>
       <p className="mb-5 mt-1 text-sm text-sci-muted">
-        From the same categories and functions as your cart. Adding one keeps you on this page.
+        From the same categories and functions as your cart, including other sizes. Add one and another takes its place.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {products.map((product) => {
-          const variant =
-            product.variants.find((v) => v.stockStatus !== 'OUT_OF_STOCK') || product.variants[0];
+          const variant = pickVariant(product, cartVariantIds);
           const price = variant ? Number(variant.effectivePrice ?? variant.price) : null;
           const image = variant?.imageUrl || product.imageUrl;
           const added = addedIds.includes(product.id);

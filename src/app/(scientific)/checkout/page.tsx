@@ -9,7 +9,7 @@ import { getCustomerToken, setCustomerToken } from '@/lib/customerAuth';
 import { addToCart, useCart, clearCart } from '@/lib/cartStore';
 import { formatUsd } from '@/lib/pricing';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { CheckoutResponse, CouponValidateResult, Product, ServerCart, ShippingEstimate } from '@/lib/types';
+import { CheckoutResponse, CouponValidateResult, Product, ProductVariant, ServerCart, ShippingEstimate } from '@/lib/types';
 import { COUNTRY_CODES } from '@/lib/countryCodes';
 import { US_STATES } from '@/lib/usStates';
 import { LoaderCircle, LockKeyhole, Package } from 'lucide-react';
@@ -154,9 +154,7 @@ export default function CheckoutPage() {
     [items],
   );
 
-  async function handleQuickAdd(product: Product) {
-    const variant = product.variants.find((v) => v.stockStatus !== 'OUT_OF_STOCK') || product.variants[0];
-    if (!variant) return;
+  async function handleQuickAdd(product: Product, variant: ProductVariant) {
     const token = getCustomerToken();
     if (token) {
       try {

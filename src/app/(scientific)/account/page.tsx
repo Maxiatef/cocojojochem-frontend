@@ -15,6 +15,7 @@ import { shortId } from '@/lib/ids';
 import { useStorefrontSession } from '@/lib/useStorefrontSession';
 import { useCompare, useProjects } from '@/lib/gloss/stores';
 import { OrderCard } from '@/components/gloss/account/OrderCard';
+import { ReorderButton } from '@/components/gloss/account/ReorderButton';
 import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 
 /**
@@ -238,7 +239,12 @@ export default function AccountPage() {
             {orders && orders.length > 0 && (
               <ul className="ga-orders">
                 {orders.map((order) => (
-                  <OrderCard key={order.id} order={order} onTrack={setShippingModalOrder} />
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onTrack={setShippingModalOrder}
+                    action={<ReorderButton order={order} />}
+                  />
                 ))}
               </ul>
             )}
