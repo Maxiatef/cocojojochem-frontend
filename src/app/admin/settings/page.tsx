@@ -58,6 +58,7 @@ const KEYS = {
   senderName: 'senderName',
   senderEmail: 'senderEmail',
   timezone: 'SITE_TIMEZONE',
+  homeSpotlight: 'HOME_SPOTLIGHT_PRODUCT_ID',
 };
 
 const TABS: [Tab, string][] = [
@@ -205,7 +206,12 @@ export default function SettingsAdminPage() {
         )}
         {tab === 'tax' && <TaxTab />}
         {tab === 'notifications' && <NotificationsTab />}
-        {tab === 'general' && canViewSettings && <GeneralTab />}
+        {tab === 'general' && canViewSettings && (
+          <div className="space-y-6">
+            <GeneralTab />
+            <HomeSpotlightCard />
+          </div>
+        )}
         {tab === 'staff' && canViewStaff && <StaffTab />}
         {tab === 'roles' && canViewRoles && <RolesTab />}
         {tab === 'teams' && canViewTeams && <TeamsTab />}
@@ -337,6 +343,92 @@ function GeneralTab() {
             .
           </p>
         )}
+
+        {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
+        {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}
+
+        <div className="flex justify-end pt-2">
+          <Button type="submit" loading={mutation.isPending} disabled={!canEditSettings}>
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+/**
+ * Which product the storefront home page hero features in its "Ingredient
+ * spotlight" note. Empty = automatic (the first priced featured product).
+ */
+function HomeSpotlightCard() {
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError } = useSiteSettings();
+  const canEditSettings = useCan('canEditSiteSettings');
+  const [productId, setProductId] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: products } = useQuery({
+    queryKey: ['spotlight-product-options'],
+    queryFn: () => api.get<{ data: { id: string; name: string }[] }>('/wholesale/products?page=1&limit=500'),
+  });
+
+  useEffect(() => {
+    if (data) setProductId(data.settings[KEYS.homeSpotlight] || '');
+  }, [data]);
+
+  const mutation = useMutation({
+    mutationFn: (body: Record<string, string>) => api.patch<SiteSettingsResponse>('/site-settings', body),
+    onSuccess: (res) => {
+      queryClient.setQueryData(['site-settings'], res);
+      setSaved(true);
+      setError(null);
+      setTimeout(() => setSaved(false), 2000);
+    },
+    onError: (err) => setError(getFriendlyErrorMessage(err)),
+  });
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    mutation.mutate({ [KEYS.homeSpotlight]: productId });
+  }
+
+  if (isLoading) return <LoadingState />;
+  if (isError) return null;
+
+  const options = [...(products?.data || [])].sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Home page spotlight</h2>
+          <p className="text-xs text-slate-500">
+            The product in the &ldquo;Ingredient spotlight&rdquo; note on the home page hero. Leave it on
+            Automatic to show the first featured product with a price. Changes appear within about five
+            minutes.
+          </p>
+        </div>
+
+        <SelectField
+          label="Spotlight product"
+          value={productId}
+          onChange={(e) => setProductId(e.target.value)}
+          disabled={!canEditSettings}
+        >
+          <option value="">Automatic</option>
+          {/* A saved pick that is no longer published still shows, so a save
+              doesn't silently change it. */}
+          {productId && !options.some((o) => o.id === productId) && (
+            <option value={productId}>Unpublished or removed product</option>
+          )}
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </SelectField>
 
         {error && <div className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</div>}
         {saved && <div className="rounded-lg bg-green-50 px-3.5 py-2.5 text-sm text-green-700">Saved.</div>}

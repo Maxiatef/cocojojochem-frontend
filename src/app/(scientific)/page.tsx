@@ -88,8 +88,31 @@ async function homeProducts(): Promise<Product[]> {
   return list;
 }
 
-/** The hero's glass note: the first product we can quote a pack and price for. */
-function spotlightFor(products: Product[]): HeroSpotlight | null {
+/**
+ * The product chosen in Admin → Settings → General, if any and still public.
+ * by-ids applies the public visibility rules, so an unpublished pick falls
+ * back to the automatic choice instead of showing.
+ */
+async function chosenSpotlight(): Promise<Product | null> {
+  const settings = await serverFetch<{ homeSpotlightProductId?: string | null }>('/site-settings/public');
+  const id = settings?.homeSpotlightProductId;
+  if (!id) return null;
+  const found = await serverFetch<Product[]>(`/wholesale/products/by-ids?ids=${encodeURIComponent(id)}`);
+  return found?.[0] ?? null;
+}
+
+/** The hero's glass note: the admin's pick, else the first product we can quote a pack and price for. */
+function spotlightFor(products: Product[], chosen: Product | null): HeroSpotlight | null {
+  if (chosen) {
+    const v = getDefaultVariant(chosen.variants || []);
+    const priced = !!v && Number(v.effectivePrice ?? v.price) > 0;
+    return {
+      href: `/products/${chosen.slug}`,
+      name: chosen.name,
+      pack: priced ? v!.label || null : null,
+      price: priced ? formatUsd(v!.effectivePrice ?? v!.price) : 'Price on request',
+    };
+  }
   const priced = products.find((p) => {
     const v = getDefaultVariant(p.variants || []);
     return !!v && Number(v.effectivePrice ?? v.price) > 0;
@@ -106,9 +129,10 @@ function spotlightFor(products: Product[]): HeroSpotlight | null {
 }
 
 export default async function ScientificHomePage() {
-  const [categoriesRes, products] = await Promise.all([
+  const [categoriesRes, products, chosen] = await Promise.all([
     serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100&rootsOnly=true'),
     homeProducts(),
+    chosenSpotlight(),
   ]);
 
   const categories = categoriesRes?.data || [];
@@ -120,7 +144,7 @@ export default async function ScientificHomePage() {
       <JsonLd data={[organizationSchema(), webSiteSchema()]} />
       <GlossReveal />
 
-      <HomeHero collections={heroCollections(categories)} spotlight={spotlightFor(products)} />
+      <HomeHero collections={heroCollections(categories)} spotlight={spotlightFor(products, chosen)} />
 
       {carousel.length ? <CategoryCarousel categories={carousel} total={categoryTotal} /> : null}
 

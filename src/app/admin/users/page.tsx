@@ -1,5 +1,6 @@
 'use client';
 
+import { CustomerWorkspace } from '@/components/admin/CustomerWorkspace';
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -587,6 +588,14 @@ function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => v
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* Customers only: what they're comparing and formulating on the
+              storefront. Staff accounts don't have these. */}
+          {!user.role && (
+            <div className="border-t border-slate-100 pt-5">
+              <CustomerWorkspace userId={user.id} />
             </div>
           )}
 
