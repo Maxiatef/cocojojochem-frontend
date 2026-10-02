@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/gloss/EmptyState';
 import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 import { categoryImage, productImage } from '@/lib/gloss/images';
 import { requestItemsPayload, useRequestList } from '@/lib/gloss/useUnifiedCart';
+import { useAcceptedQuotes } from '@/lib/gloss/acceptedQuotes';
 import { OrderRequestForm, RequestSummaryList } from '@/components/gloss/workspace/OrderRequestForm';
 import { requestReference } from '@/lib/types';
 
@@ -35,6 +36,9 @@ export default function CheckoutPage() {
   // sends it as an order request and then takes payment for the rest; on
   // its own it becomes a request-only checkout (OrderRequestForm).
   const requests = useRequestList();
+  // Accepted quotes: priced lines charged at the quoted price (the server
+  // reads the prices from the quote; we only send the tokens).
+  const quoted = useAcceptedQuotes();
   const [accountEmail, setAccountEmail] = useState('');
   // The request already sent in this visit, so a failed payment start that is
   // retried doesn't send a second copy.
@@ -101,6 +105,9 @@ export default function CheckoutPage() {
   const subtotal = isAuthed
     ? items.reduce((sum, i: any) => sum + Number(i.price) * i.quantity, 0)
     : localCart.subtotal;
+  // Everything being paid now: catalog items plus accepted quotes.
+  const payableCount = items.length + quoted.lines.length;
+  const fullSubtotal = subtotal + quoted.subtotal;
 
   function buildCartItems() {
     if (isAuthed) {
@@ -204,7 +211,7 @@ export default function CheckoutPage() {
     try {
       const result = await customerApi.post<CouponValidateResult>('/coupons/validate', {
         code: couponInput.trim(),
-        orderAmount: subtotal,
+        orderAmount: fullSubtotal,
         email: isAuthed ? undefined : email || undefined,
         cartItems: buildCartItems(),
       });
@@ -238,14 +245,20 @@ export default function CheckoutPage() {
   const taxLabel = shippingEstimate?.taxName || 'Tax';
   // Only true once an estimate has actually come back saying so — a null
   // estimate means "not calculated yet", not "under the minimum".
-  const belowMinimum = shippingEstimate != null && !shippingEstimate.meetsMinimum;
-  const total = Math.max(0, subtotal - discount + shippingCost + taxAmount);
+  // Quoted lines count toward the minimum but aren't in the estimate.
+  const minimumRemaining = shippingEstimate
+    ? Math.max(0, shippingEstimate.wholesaleMinimum - (shippingEstimate.subtotal + quoted.subtotal))
+    : 0;
+  const belowMinimum = shippingEstimate != null && minimumRemaining > 0;
+  // Quoted shipping is added by the server; shown here so the totals match.
+  const displayShipping = shippingCost + quoted.shipping;
+  const total = Math.max(0, fullSubtotal - discount + displayShipping + taxAmount);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (items.length === 0) {
+    if (payableCount === 0) {
       setError('Your cart is empty.');
       return;
     }
@@ -273,6 +286,7 @@ export default function CheckoutPage() {
         notes,
         shippingCost,
       };
+      if (quoted.tokens.length) payload.quoteTokens = quoted.tokens;
       if (appliedCoupon?.isValid && appliedCoupon.coupon) {
         payload.couponCode = appliedCoupon.coupon.code;
       }
@@ -352,7 +366,7 @@ export default function CheckoutPage() {
     </div>
   );
 
-  if (!ready || (isAuthed && isLoading) || !requests.loaded) {
+  if (!ready || (isAuthed && isLoading) || !requests.loaded || !quoted.loaded) {
     return (
       <>
         {intro}
@@ -364,7 +378,7 @@ export default function CheckoutPage() {
   }
 
   // Only "Price to confirm" items: an order request, no payment.
-  if (items.length === 0 && (requestCount > 0 || requestOnlySent)) {
+  if (payableCount === 0 && (requestCount > 0 || requestOnlySent)) {
     return (
       <>
         <div className="r-page-intro r-wrap">
@@ -390,7 +404,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (payableCount === 0) {
     return (
       <>
         {intro}
@@ -718,7 +732,7 @@ export default function CheckoutPage() {
                   Redirecting to payment…
                 </>
               ) : belowMinimum ? (
-                `Add ${formatUsd(shippingEstimate!.minimumRemaining)} to reach the minimum`
+                `Add ${formatUsd(minimumRemaining)} to reach the minimum`
               ) : requestCount > 0 ? (
                 `Pay ${formatUsd(total)} and request pricing for ${requestCount} item${requestCount === 1 ? '' : 's'}`
               ) : (
@@ -771,6 +785,28 @@ export default function CheckoutPage() {
                     </li>
                   ))}
             </ul>
+
+            {quoted.lines.length > 0 && (
+              <ul className="ga-summary-lines">
+                {quoted.lines.map((line) => (
+                  <li key={line.key}>
+                    <div className="ga-thumb">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={line.image} alt={line.name} />
+                    </div>
+                    <div className="ga-line-text">
+                      <p>
+                        {line.name} × {line.quantity}
+                      </p>
+                      <small>
+                        {line.label} · quote {line.reference}
+                      </small>
+                    </div>
+                    <span className="ga-line-price">{formatUsd(line.unitPrice * line.quantity)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {requestCount > 0 && (
               <div className="ga-summary-block">
@@ -834,7 +870,7 @@ export default function CheckoutPage() {
             <div className="r-totals">
               <div>
                 <span>Subtotal</span>
-                <strong>{formatUsd(subtotal)}</strong>
+                <strong>{formatUsd(fullSubtotal)}</strong>
               </div>
               {discount > 0 && (
                 <div className="ga-discount">
@@ -844,7 +880,7 @@ export default function CheckoutPage() {
               )}
               <div>
                 <span>Shipping</span>
-                <span>{formatUsd(shippingCost)}</span>
+                <span>{formatUsd(displayShipping)}</span>
               </div>
               <div>
                 <span>{taxLabel}</span>

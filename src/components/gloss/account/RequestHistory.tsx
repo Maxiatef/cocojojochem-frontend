@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { customerApi } from '@/lib/customerApi';
 import { QuoteRequest, requestReference } from '@/lib/types';
+import { formatUsd } from '@/lib/pricing';
 
 /**
  * The signed-in customer's order requests (the "Price to confirm" part of the
@@ -13,8 +14,8 @@ import { QuoteRequest, requestReference } from '@/lib/types';
 const CUSTOMER_STATUS: Record<string, { label: string; key: string }> = {
   NEW: { label: 'Received', key: 'pending' },
   IN_PROGRESS: { label: 'Being reviewed', key: 'processing' },
-  QUOTED: { label: 'Prices sent', key: 'shipped' },
-  WON: { label: 'Completed', key: 'delivered' },
+  QUOTED: { label: 'Quote ready', key: 'shipped' },
+  WON: { label: 'Paid', key: 'delivered' },
   LOST: { label: 'Closed', key: 'cancelled' },
 };
 
@@ -58,7 +59,9 @@ export function RequestHistory() {
           <li className="ga-order" key={qr.id}>
             <div className="ga-order-head">
               <div>
-                <strong className="ga-mono">Request {requestReference(qr.id)}</strong>
+                <strong className="ga-mono">
+                  {qr.kind === 'ORDER' ? 'Order request' : 'Quote request'} {requestReference(qr.id)}
+                </strong>
                 <small className="ga-mono">
                   {shortDate(qr.createdAt)} · {qr.items.length} item{qr.items.length === 1 ? '' : 's'}
                   {references ? ` · ${references} sourced on request` : ''}
@@ -71,19 +74,52 @@ export function RequestHistory() {
               </div>
             </div>
             <ul className="ga-order-lines">
-              {qr.items.map((item) => (
-                <li key={item.id}>
-                  <div className="ga-line-text">
-                    <p>{item.productName}</p>
-                    <small className="ga-mono">
-                      {item.unit || 'Size to confirm'} × {item.quantity ?? 1}
-                      {item.source === 'SUPPLIER_REFERENCE' ? ' · Supplier reference' : ''}
-                    </small>
-                  </div>
-                  <span className="ga-line-price">Price to confirm</span>
-                </li>
-              ))}
+              {qr.items.map((item) => {
+                const quoted = !!qr.quotedAt && item.isAvailable !== false && item.quotedPrice != null;
+                const qty = item.quotedQuantity ?? item.quantity ?? 1;
+                return (
+                  <li key={item.id}>
+                    <div className="ga-line-text">
+                      <p>{item.productName}</p>
+                      <small className="ga-mono">
+                        {(qr.quotedAt && item.quotedPackSize) || item.unit || 'Size to confirm'} × {qty}
+                        {item.source === 'SUPPLIER_REFERENCE' ? ' · Supplier reference' : ''}
+                        {qr.quotedAt && item.availability ? ` · ${item.availability}` : ''}
+                      </small>
+                    </div>
+                    <span className="ga-line-price">
+                      {quoted
+                        ? formatUsd(Number(item.quotedPrice) * qty)
+                        : qr.quotedAt && item.isAvailable === false
+                          ? 'Not available'
+                          : 'Price to confirm'}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
+            {qr.status === 'QUOTED' && qr.quoteToken && (
+              <div className="ga-order-foot">
+                <Link href={`/quotes/${qr.quoteToken}`} className="r-btn r-primary">
+                  {qr.acceptedAt ? 'In your cart · view quote' : 'View quote & add to cart'}
+                </Link>
+              </div>
+            )}
+            {qr.status === 'LOST' && qr.closeReason && (
+              <div className="ga-order-foot">
+                <span>Closed: {qr.closeReason}</span>
+              </div>
+            )}
+            {qr.quoteOrderId && (
+              <div className="ga-order-foot">
+                <span>
+                  Quote paid ·{' '}
+                  <Link href="/account/orders" className="ga-link">
+                    view orders
+                  </Link>
+                </span>
+              </div>
+            )}
             {(qr.orderId || qr.paymentRequested) && (
               <div className="ga-order-foot">
                 <span>

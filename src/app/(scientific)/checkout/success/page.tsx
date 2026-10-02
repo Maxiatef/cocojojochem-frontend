@@ -20,6 +20,9 @@ function SuccessContent() {
     try {
       setRequestRef(sessionStorage.getItem('cocojojochem_pending_request_ref'));
       sessionStorage.removeItem('cocojojochem_pending_request_ref');
+      // Accepted quotes were paid in this checkout; the cart reads them from
+      // here, and the webhook has (or will shortly have) marked them paid.
+      localStorage.removeItem('cocojojochem_accepted_quotes');
     } catch {
       /* storage blocked — the request is still in their account */
     }

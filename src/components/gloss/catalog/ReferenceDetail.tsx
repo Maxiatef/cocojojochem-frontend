@@ -98,7 +98,7 @@ export function ReferenceDetail({ entry, related }: { entry: ReferenceItem; rela
                 }}
               >
                 <ShoppingBag size={18} aria-hidden />
-                {busy ? 'Adding…' : 'Add to cart'}
+                {busy ? 'Adding…' : 'Request'}
               </button>
             </div>
             <p className="r-fine">

@@ -4,13 +4,15 @@ import Link from 'next/link';
 import { Trash2 } from 'lucide-react';
 import { formatUsd } from '@/lib/pricing';
 import { RequestLine, useRequestList, useUnifiedCart } from '@/lib/gloss/useUnifiedCart';
+import { useAcceptedQuotes } from '@/lib/gloss/acceptedQuotes';
 import { EmptyState } from './EmptyState';
 import { Quantity } from './Quantity';
 
 /**
  * The prototype's `r-cart-lines` — used by the drawer and the cart page.
  *
- * One cart, two groups: "Ready to pay" (priced variants, paid by card at
+ * One cart, two groups: "Ready to pay" (priced variants, plus the lines of
+ * any quote the customer accepted, at the quoted price — paid by card at
  * checkout) and "Price to confirm" (the request list: supplier-reference
  * materials and sizes we price on request). A group's heading only shows when
  * both groups have lines; with one kind of line the cart reads as one list.
@@ -18,10 +20,13 @@ import { Quantity } from './Quantity';
 export function CartLines() {
   const cart = useUnifiedCart();
   const requests = useRequestList();
+  const quoted = useAcceptedQuotes();
 
   if (!cart.loaded || !requests.loaded) return <p className="r-loading">Loading your cart…</p>;
 
-  if (!cart.lines.length && !requests.lines.length) {
+  const payable = cart.lines.length + quoted.lines.length;
+
+  if (!payable && !requests.lines.length) {
     return (
       <EmptyState
         icon="cart"
@@ -33,15 +38,15 @@ export function CartLines() {
     );
   }
 
-  const grouped = cart.lines.length > 0 && requests.lines.length > 0;
+  const grouped = payable > 0 && requests.lines.length > 0;
 
   return (
     <div className="r-cart-groups">
-      {cart.lines.length > 0 && (
+      {payable > 0 && (
         <section aria-label="Ready to pay">
           {grouped && (
             <h3 className="r-cart-group-title">
-              Ready to pay <span>{cart.count}</span>
+              Ready to pay <span>{cart.count + quoted.count}</span>
             </h3>
           )}
           <div className="r-cart-lines">
@@ -68,7 +73,38 @@ export function CartLines() {
                 </button>
               </article>
             ))}
+            {quoted.lines.map((line) => (
+              <article className="r-cart-line is-quoted" key={line.key}>
+                <Link href={`/quotes/${line.token}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={line.image} alt={line.name} width={100} height={100} />
+                </Link>
+                <div>
+                  <Link href={`/quotes/${line.token}`}>
+                    <h3>{line.name}</h3>
+                  </Link>
+                  <p>
+                    {line.label} × {line.quantity}
+                  </p>
+                  <small>Quoted price · {line.reference}</small>
+                  <strong>{formatUsd(line.unitPrice * line.quantity)}</strong>
+                </div>
+                <button
+                  className="r-icon-button"
+                  aria-label={`Remove quote ${line.reference} from cart`}
+                  onClick={() => quoted.remove(line.token)}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </article>
+            ))}
           </div>
+          {quoted.lines.length > 0 && (
+            <p className="r-cart-group-note">
+              Quoted quantities are fixed. Removing a quoted item removes its whole quote, which stays open in your
+              email link.
+            </p>
+          )}
         </section>
       )}
 
@@ -132,15 +168,17 @@ function RequestCartLine({
 export function CartTotals() {
   const { subtotal, lines } = useUnifiedCart();
   const requests = useRequestList();
+  const quoted = useAcceptedQuotes();
+  const payable = lines.length + quoted.lines.length;
   return (
     <div className="r-totals">
-      {lines.length > 0 && (
+      {payable > 0 && (
         <div>
           <span>Subtotal</span>
-          <strong>{formatUsd(subtotal)}</strong>
+          <strong>{formatUsd(subtotal + quoted.subtotal)}</strong>
         </div>
       )}
-      {lines.length > 0 && (
+      {payable > 0 && (
         <div>
           <span>Shipping &amp; tax</span>
           <span>Calculated at checkout</span>
@@ -167,9 +205,10 @@ export function CartTotals() {
 export function useCartTotalCount() {
   const cart = useUnifiedCart();
   const requests = useRequestList();
+  const quoted = useAcceptedQuotes();
   return {
-    count: cart.count + requests.count,
-    hasLines: cart.lines.length + requests.lines.length > 0,
+    count: cart.count + requests.count + quoted.count,
+    hasLines: cart.lines.length + requests.lines.length + quoted.lines.length > 0,
     saving: cart.saving || requests.saving,
   };
 }

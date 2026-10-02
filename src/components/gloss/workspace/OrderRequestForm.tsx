@@ -9,8 +9,11 @@ import { requestReference } from '@/lib/types';
 import { RequestLine, requestItemsPayload } from '@/lib/gloss/useUnifiedCart';
 
 /**
- * Checkout when every cart line is "Price to confirm": no payment, just the
- * prototype's order request. Submitting sends it to us (it lands in Admin →
+ * Checkout when every cart line is "Price to confirm": no payment, just a
+ * request. The customer chooses what it is:
+ *  - order request — ready to buy, gives a delivery address;
+ *  - quote request — pricing only, no address needed.
+ * Either way we reply with a quote they can accept into their cart. Submitting sends it to us (it lands in Admin →
  * Quote Requests) and empties the request list; the reference shown on
  * success is how the customer and our team refer to it.
  */
@@ -25,6 +28,7 @@ export function OrderRequestForm({
   defaultEmail: string;
   onSubmitted: () => Promise<void> | void;
 }) {
+  const [kind, setKind] = useState<'ORDER' | 'QUOTE'>('ORDER');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState(defaultEmail);
   const [companyName, setCompanyName] = useState('');
@@ -35,6 +39,7 @@ export function OrderRequestForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
+  const isOrder = kind === 'ORDER';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -46,7 +51,8 @@ export function OrderRequestForm({
         email: email || defaultEmail,
         companyName: companyName || undefined,
         phone: phone || undefined,
-        destination,
+        kind,
+        destination: kind === 'ORDER' ? destination : destination || undefined,
         message: message || undefined,
         type: 'QUOTE',
         items: requestItemsPayload(lines),
@@ -66,11 +72,14 @@ export function OrderRequestForm({
       <div className="r-confirmation">
         <CircleCheck size={54} aria-hidden />
         <span className="r-eyebrow">Successfully received</span>
-        <h2>Your order request is sent.</h2>
+        <h2>Your {isOrder ? 'order' : 'quote'} request is sent.</h2>
         <p>
           Reference <strong>{reference}</strong>
         </p>
-        <p>Your order is not confirmed yet. We’ll reply by email with prices, availability and shipping.</p>
+        <p>
+          {isOrder ? 'Your order is not confirmed yet. ' : ''}We’ve emailed you a confirmation. Next, we’ll email your
+          quote — accept it and the items go into your cart at the quoted prices.
+        </p>
         <p>
           {signedIn
             ? 'You can follow its status in your account.'
@@ -95,8 +104,29 @@ export function OrderRequestForm({
         <div className="r-step-label">
           <span>1</span> Your details <span>2</span> Review &amp; submit
         </div>
-        <h2>Complete your order request</h2>
-        <p>Send these items for pricing, availability and delivery confirmation. No payment is taken.</p>
+        <h2>{isOrder ? 'Complete your order request' : 'Request a quote'}</h2>
+        <p>
+          {isOrder
+            ? 'Send these items for pricing, availability and delivery confirmation. No payment is taken.'
+            : 'Get prices and availability for these items. No payment is taken and you don’t need to give an address.'}
+        </p>
+        <fieldset className="ga-kind">
+          <legend>What would you like?</legend>
+          <label className="ga-check">
+            <input type="radio" name="kind" checked={isOrder} onChange={() => setKind('ORDER')} />
+            <span>
+              <strong>Order these items</strong>
+              <small>I’m ready to buy — confirm prices and delivery to my address.</small>
+            </span>
+          </label>
+          <label className="ga-check">
+            <input type="radio" name="kind" checked={!isOrder} onChange={() => setKind('QUOTE')} />
+            <span>
+              <strong>Just a price quote</strong>
+              <small>I’m comparing options — send me prices only.</small>
+            </span>
+          </label>
+        </fieldset>
         <div className="r-form-grid">
           <div className="r-field">
             <label htmlFor="or-name">Full name</label>
@@ -147,10 +177,12 @@ export function OrderRequestForm({
             />
           </div>
           <div className="r-field r-full">
-            <label htmlFor="or-destination">Shipping city, state &amp; country</label>
+            <label htmlFor="or-destination">
+              Shipping city, state &amp; country {!isOrder && <small>optional</small>}
+            </label>
             <input
               id="or-destination"
-              required
+              required={isOrder}
               autoComplete="address-level2"
               maxLength={600}
               value={destination}
@@ -186,8 +218,8 @@ export function OrderRequestForm({
 
         <label className="r-consent">
           <input type="checkbox" required />
-          I understand this sends an order request. Prices and availability are confirmed before anything is
-          charged. <Link href="/legal/privacy-policy">Privacy information</Link>
+          I understand this sends {isOrder ? 'an order' : 'a quote'} request. Prices and availability are confirmed
+          before anything is charged. <Link href="/legal/privacy-policy">Privacy information</Link>
         </label>
 
         {error && (
@@ -203,7 +235,7 @@ export function OrderRequestForm({
               Submitting…
             </>
           ) : (
-            'Submit order request'
+            isOrder ? 'Submit order request' : 'Request a quote'
           )}
         </button>
         <p className="r-fine">Your reference number appears as soon as the request is sent.</p>

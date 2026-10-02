@@ -87,7 +87,7 @@ export function ReferenceCard({ item }: { item: ReferenceItem }) {
             }}
           >
             <ShoppingBag size={16} />
-            Add to cart
+            Request
           </button>
         </div>
       </div>

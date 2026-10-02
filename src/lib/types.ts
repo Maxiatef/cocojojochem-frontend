@@ -246,6 +246,13 @@ export interface QuoteRequestItem {
   source?: 'COCOJOJO' | 'SUPPLIER_REFERENCE';
   referenceCode?: string | null;
   sourceUrl?: string | null;
+  // Staff's quote for this line.
+  quotedPrice?: string | null;
+  quotedPackSize?: string | null;
+  quotedQuantity?: number | null;
+  availability?: string | null;
+  quoteNote?: string | null;
+  isAvailable?: boolean;
 }
 
 export interface QuoteRequest {
@@ -268,6 +275,50 @@ export interface QuoteRequest {
   paymentRequested?: boolean;
   /** The paid order, once Stripe confirmed it. */
   orderId?: string | null;
+  /** ORDER = gave a delivery address, ready to buy; QUOTE = pricing only. */
+  kind?: 'ORDER' | 'QUOTE';
+  quoteToken?: string | null;
+  quoteMessage?: string | null;
+  quotedShippingCost?: string | null;
+  quotedAt?: string | null;
+  acceptedAt?: string | null;
+  declinedAt?: string | null;
+  closeReason?: string | null;
+  /** The order the quoted items were paid in. */
+  quoteOrderId?: string | null;
+}
+
+/** A quote as the customer's private link shows it (GET /wholesale/quotes/:token). */
+export interface PublicQuote {
+  token: string;
+  reference: string;
+  kind: 'ORDER' | 'QUOTE';
+  status: RequestStatus;
+  fullName: string;
+  destination: string | null;
+  quoteMessage: string | null;
+  quotedAt: string | null;
+  acceptedAt: string | null;
+  declinedAt: string | null;
+  closeReason: string | null;
+  paid: boolean;
+  shippingCost: number | null;
+  subtotal: number;
+  items: {
+    id: string;
+    productId: string | null;
+    productName: string;
+    source: 'COCOJOJO' | 'SUPPLIER_REFERENCE';
+    referenceCode: string | null;
+    requestedQuantity: number | null;
+    requestedSize: string | null;
+    quantity: number;
+    packSize: string | null;
+    unitPrice: number | null;
+    availability: string | null;
+    note: string | null;
+    isAvailable: boolean;
+  }[];
 }
 
 /** The customer-facing reference for a request, e.g. CJ-1A2B3C4D. */

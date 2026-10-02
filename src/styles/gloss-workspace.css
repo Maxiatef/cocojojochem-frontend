@@ -121,3 +121,22 @@
 .gloss-theme .r-summary-requests li span:last-child{color:#8a5a00;white-space:nowrap}
 .gloss-theme .r-ref-badge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:10px;background:#fff4e0;color:#8a5a00;font-size:11px}
 .gloss-theme .r-honeypot{position:absolute!important;left:-10000px!important;width:1px;height:1px;overflow:hidden}
+
+/* ---- Customer quote page (/quotes/<token>) ---- */
+.gloss-theme .ga-quote-message{white-space:pre-line;background:#f5f7f6;border-radius:8px;padding:14px 16px;margin:0 0 18px}
+.gloss-theme .ga-quote-table{display:flex;flex-direction:column;margin:0 0 18px}
+.gloss-theme .ga-quote-row{display:grid;grid-template-columns:1fr 50px 100px 100px;gap:12px;padding:12px 0;border-bottom:1px solid var(--r-line,#e3e8ea);font-size:14px;align-items:start}
+.gloss-theme .ga-quote-row>span:nth-child(n+2){text-align:right}
+.gloss-theme .ga-quote-row small{display:block;margin-top:3px;color:#627a84;font-size:12px}
+.gloss-theme .ga-quote-head{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#627a84;padding-top:0}
+.gloss-theme .ga-quote-row.is-muted{color:#8a969a}
+.gloss-theme .ga-quote-steps{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.6}
+.gloss-theme .r-cart-line.is-quoted small{color:#1f5d4c}
+@media (max-width:560px){
+  .gloss-theme .ga-quote-row{grid-template-columns:1fr 36px 76px 80px;gap:8px;font-size:13px}
+}
+.gloss-theme .ga-kind{border:0;margin:6px 0 18px;padding:0;display:grid;gap:10px}
+.gloss-theme .ga-kind legend{font-size:13px;font-weight:600;margin-bottom:8px}
+.gloss-theme .ga-kind label{align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--r-line,#e3e8ea);border-radius:8px;cursor:pointer}
+.gloss-theme .ga-kind label:has(input:checked){border-color:#1f5d4c;background:#f2f7f5}
+.gloss-theme .ga-kind small{display:block;color:#627a84;font-size:12px;margin-top:2px}
