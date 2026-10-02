@@ -7,7 +7,7 @@ import { CircleCheck, FlaskConical, GitCompareArrows, Heart, Menu, ShoppingBag, 
 import { GLOSS_LOGO } from '@/lib/gloss/images';
 import { useCartDrawerOpener, useCompare, useToastMessage } from '@/lib/gloss/stores';
 import { useWorkspaceSync } from '@/lib/gloss/workspaceSync';
-import { useUnifiedCart } from '@/lib/gloss/useUnifiedCart';
+import { useCartTotalCount } from './CartLines';
 import { useStorefrontSession } from '@/lib/useStorefrontSession';
 import { CookieSettingsLink } from '@/components/scientific/CookieSettingsLink';
 import { CartDrawer } from './CartDrawer';
@@ -49,7 +49,7 @@ function isActive(pathname: string, href: string) {
 export function GlossShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/';
   const { customerEmail, quoteListCount } = useStorefrontSession();
-  const cart = useUnifiedCart();
+  const cart = useCartTotalCount();
   useWorkspaceSync();
   const compare = useCompare();
   const toast = useToastMessage();

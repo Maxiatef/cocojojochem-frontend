@@ -5,8 +5,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { customerApi } from '@/lib/customerApi';
 import { getCustomerToken } from '@/lib/customerAuth';
 import { addToCart, removeFromCart, updateCartQuantity, useCart } from '@/lib/cartStore';
-import { addToQuoteList } from '@/lib/quoteListStore';
-import { ServerCart } from '@/lib/types';
+import {
+  addToQuoteList,
+  clearQuoteList,
+  quoteLineKey,
+  removeFromQuoteList,
+  updateQuoteListQuantity,
+  useQuoteList,
+} from '@/lib/quoteListStore';
+import { ServerCart, ServerQuoteListItem } from '@/lib/types';
 import { categoryImage } from './images';
 import { notify, openCartDrawer } from './stores';
 
@@ -178,34 +185,213 @@ export function useAddVariantToCart() {
   );
 }
 
+/* -------------------------------------------------- request list ("Price to confirm") */
+
 /**
- * "Request" — the prototype's action for anything without a price. Here that
- * is our quote list: server-side when signed in, localStorage otherwise.
+ * One line of the cart's "Price to confirm" group: something we price on
+ * request — a catalog product in a size we don't list, or a material from the
+ * supplier reference library. Never counted in the cart total.
  */
-export async function addProductToQuoteList(
+export interface RequestLine {
+  /** cart-item id for customers, quoteLineKey() for guests — what update/remove take. */
+  key: string;
+  source: 'COCOJOJO' | 'SUPPLIER_REFERENCE';
+  productId: string | null;
+  referenceCode: string | null;
+  sourceUrl: string | null;
+  slug: string;
+  name: string;
+  /** The size asked for, if any. */
+  label: string | null;
+  image: string;
+  quantity: number;
+}
+
+function requestListChanged(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ['customer-quote-list'] });
+  queryClient.invalidateQueries({ queryKey: ['customer-quote-list-summary'] });
+  window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
+}
+
+/** The request list, whichever side of sign-in the visitor is on. */
+export function useRequestList() {
+  const signedIn = useSignedIn();
+  const guest = useQuoteList();
+  const queryClient = useQueryClient();
+
+  const { data: server, isLoading } = useQuery({
+    queryKey: ['customer-quote-list'],
+    queryFn: () => customerApi.get<ServerQuoteListItem[]>('/quote-list'),
+    enabled: signedIn,
+  });
+
+  const lines: RequestLine[] = useMemo(() => {
+    const rows = signedIn
+      ? (server || []).map((i) => ({ ...i, key: i.id }))
+      : guest.items.map((i) => ({ ...i, key: quoteLineKey(i) }));
+    return rows.map((i) => ({
+      key: i.key,
+      source: i.source === 'SUPPLIER_REFERENCE' ? 'SUPPLIER_REFERENCE' : 'COCOJOJO',
+      productId: i.productId ?? null,
+      referenceCode: i.referenceCode ?? null,
+      sourceUrl: i.sourceUrl ?? null,
+      slug: i.productSlug,
+      name: i.productName,
+      label: i.variantLabel,
+      image: i.imageUrl || categoryImage(i.productName),
+      quantity: i.quantity,
+    }));
+  }, [signedIn, server, guest.items]);
+
+  const updateServer = useMutation({
+    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
+      customerApi.patch(`/quote-list/items/${id}`, { quantity }),
+    onSuccess: () => requestListChanged(queryClient),
+  });
+  const removeServer = useMutation({
+    mutationFn: (id: string) => customerApi.delete(`/quote-list/items/${id}`),
+    onSuccess: () => requestListChanged(queryClient),
+  });
+
+  const update = useCallback(
+    (key: string, quantity: number) => {
+      if (signedIn) updateServer.mutate({ id: key, quantity });
+      else updateQuoteListQuantity(key, quantity);
+    },
+    [signedIn, updateServer],
+  );
+
+  const remove = useCallback(
+    (key: string) => {
+      if (signedIn) removeServer.mutate(key);
+      else removeFromQuoteList(key);
+      notify('Removed from cart');
+    },
+    [signedIn, removeServer],
+  );
+
+  /** After a request is submitted: the items are with us now. */
+  const clear = useCallback(async () => {
+    if (signedIn) {
+      await customerApi.delete('/quote-list').catch(() => {});
+      requestListChanged(queryClient);
+    } else {
+      clearQuoteList();
+    }
+  }, [signedIn, queryClient]);
+
+  return {
+    signedIn,
+    lines,
+    count: lines.reduce((n, l) => n + l.quantity, 0),
+    loaded: !signedIn || !isLoading,
+    saving: updateServer.isPending || removeServer.isPending,
+    update,
+    remove,
+    clear,
+  };
+}
+
+/** The "Price to confirm" lines as the order-request items the API takes. */
+export function requestItemsPayload(lines: RequestLine[]) {
+  return lines.map((l) =>
+    l.source === 'SUPPLIER_REFERENCE'
+      ? {
+          source: 'SUPPLIER_REFERENCE' as const,
+          referenceCode: l.referenceCode || undefined,
+          sourceUrl: l.sourceUrl || undefined,
+          productName: l.name,
+          quantity: l.quantity,
+          unit: l.label || undefined,
+        }
+      : {
+          productId: l.productId || undefined,
+          productName: l.name,
+          quantity: l.quantity,
+          unit: l.label || undefined,
+        },
+  );
+}
+
+type RequestPayload = {
+  source?: 'SUPPLIER_REFERENCE';
+  productId?: string;
+  referenceCode?: string;
+  sourceUrl?: string;
+  productSlug: string;
+  productName: string;
+  variantLabel: string | null;
+  imageUrl: string | null;
+  quantity: number;
+};
+
+async function addToRequestList(payload: RequestPayload, opened = true) {
+  try {
+    if (getCustomerToken()) {
+      await customerApi.post('/quote-list/items', payload);
+      window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
+    } else {
+      addToQuoteList({
+        source: payload.source ?? 'COCOJOJO',
+        productId: payload.productId ?? null,
+        referenceCode: payload.referenceCode ?? null,
+        sourceUrl: payload.sourceUrl ?? null,
+        productSlug: payload.productSlug,
+        productName: payload.productName,
+        variantLabel: payload.variantLabel,
+        imageUrl: payload.imageUrl,
+        quantity: payload.quantity,
+      });
+    }
+    notify('Added to cart — price to confirm');
+    if (opened) openCartDrawer();
+    return true;
+  } catch (e) {
+    notify(e instanceof Error ? e.message : 'Could not add to your cart. Try again.');
+    return false;
+  }
+}
+
+/**
+ * "Request" on one of our products without a listed price or size: goes into
+ * the cart's "Price to confirm" group.
+ */
+export function addProductToQuoteList(
   product: AddableProduct & { id: string },
   variantLabel: string | null = null,
   quantity = 1,
 ) {
-  const payload = {
+  return addToRequestList({
     productId: product.id,
     productSlug: product.slug,
     productName: product.name,
     variantLabel,
     imageUrl: product.imageUrl || null,
     quantity,
-  };
-  try {
-    if (getCustomerToken()) {
-      await customerApi.post('/quote-list/items', payload);
-      window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
-    } else {
-      addToQuoteList(payload);
-    }
-    notify('Added to your quote list');
-    return true;
-  } catch (e) {
-    notify(e instanceof Error ? e.message : 'Could not add to your quote list. Try again.');
-    return false;
-  }
+  });
+}
+
+/** A supplier reference library entry, as the cart needs it. */
+export interface ReferenceAddable {
+  slug: string;
+  name: string;
+  category: string;
+  sourceUrl: string;
+}
+
+/**
+ * "Add to cart" on a supplier-reference material: it has no price, so it
+ * joins the cart's "Price to confirm" group and we source and price it.
+ */
+export function addReferenceToCart(entry: ReferenceAddable, size: string | null = null, quantity = 1) {
+  return addToRequestList({
+    source: 'SUPPLIER_REFERENCE',
+    referenceCode: entry.slug,
+    sourceUrl: entry.sourceUrl,
+    productSlug: entry.slug,
+    productName: entry.name,
+    variantLabel: size?.trim() || null,
+    imageUrl: categoryImage(entry.category),
+    quantity,
+  });
 }

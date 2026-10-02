@@ -5,7 +5,8 @@ import { clampDescription, pageMetadata } from '@/lib/seo';
 import { Category, Paginated, SeoPage } from '@/lib/types';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
 import { BookOpen } from 'lucide-react';
-import { CatalogBrowser, CatalogSearch } from '@/components/gloss/catalog/CatalogBrowser';
+import { CatalogSearch } from '@/components/gloss/catalog/CatalogBrowser';
+import { CatalogBySource, SourceBar } from '@/components/gloss/catalog/ReferenceCatalog';
 import { CatalogProse } from '@/components/gloss/catalog/CatalogProse';
 
 /**
@@ -145,16 +146,12 @@ export default async function ProductsPage() {
         <CatalogSearch action="/products" />
       </div>
 
-      <div className="r-wrap r-source-bar">
-        <Link href="/products" aria-current="page">
-          All ingredients
-        </Link>
-        <Link href="/categories">By category</Link>
-        <Link href="/functions">By function</Link>
-        <Link href="/ingredients-a-z">A–Z view</Link>
-      </div>
+      {/* All / COCOJOJO collection / Supplier reference library, as in the
+          prototype. The reference library is supplier data, not our stock —
+          see ReferenceCatalog. */}
+      <SourceBar />
 
-      <CatalogBrowser basePath="/products" />
+      <CatalogBySource basePath="/products" />
 
       {/* Server-rendered category links. The grid above is client-side, so
           without this the page ships no catalog links in its HTML at all. */}

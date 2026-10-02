@@ -2,16 +2,24 @@
 
 import { useEffect, useState } from 'react';
 
-// Lets a customer add multiple products to a running "quote list" while
-// browsing (mirrors cartStore.ts's localStorage pattern), then submit ONE
-// consolidated quote request covering all of them from /quote-request,
-// instead of having to fill out the contact form separately for every
-// single product they want pricing on.
+// A guest's request list ("Price to confirm" in the cart): items we price on
+// request. Signed-in customers keep theirs on the server (/quote-list); this
+// one is merged in at sign-in via POST /quote-list/merge.
+//
+// Two kinds of line: a product from our catalog (productId), or a material
+// from the supplier reference library, which is not in our catalog
+// (source SUPPLIER_REFERENCE, identified by referenceCode).
+
 const QUOTE_LIST_KEY = 'cocojojochem_quote_list';
 const QUOTE_LIST_EVENT = 'cocojojochem-quote-list-changed';
 
+export type QuoteLineSource = 'COCOJOJO' | 'SUPPLIER_REFERENCE';
+
 export interface QuoteListItem {
-  productId: string;
+  source?: QuoteLineSource;
+  productId: string | null;
+  referenceCode?: string | null;
+  sourceUrl?: string | null;
   productSlug: string;
   productName: string;
   variantLabel: string | null;
@@ -19,14 +27,20 @@ export interface QuoteListItem {
   quantity: number;
 }
 
+/** Stable identity of a line: what it is plus the size asked for. */
+export function quoteLineKey(item: Pick<QuoteListItem, 'source' | 'productId' | 'referenceCode' | 'variantLabel'>) {
+  const target = item.source === 'SUPPLIER_REFERENCE' ? `ref:${item.referenceCode}` : `p:${item.productId}`;
+  return `${target}|${item.variantLabel ?? ''}`;
+}
+
 function readQuoteList(): QuoteListItem[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = JSON.parse(localStorage.getItem(QUOTE_LIST_KEY) || '[]');
     if (!Array.isArray(raw)) return [];
-    // Entries saved before ids became uuids hold a number and name no
-    // product, so they are dropped rather than submitted with the request.
-    return raw.filter((i) => i && typeof i.productId === 'string');
+    return raw.filter(
+      (i) => i && (typeof i.productId === 'string' || (i.source === 'SUPPLIER_REFERENCE' && i.referenceCode)),
+    );
   } catch {
     return [];
   }
@@ -39,7 +53,7 @@ function writeQuoteList(items: QuoteListItem[]) {
 
 export function addToQuoteList(item: QuoteListItem) {
   const items = readQuoteList();
-  const existing = items.find((i) => i.productId === item.productId && i.variantLabel === item.variantLabel);
+  const existing = items.find((i) => quoteLineKey(i) === quoteLineKey(item));
   if (existing) {
     existing.quantity += item.quantity;
   } else {
@@ -48,15 +62,16 @@ export function addToQuoteList(item: QuoteListItem) {
   writeQuoteList(items);
 }
 
-export function updateQuoteListQuantity(productId: string, variantLabel: string | null, quantity: number) {
-  const items = readQuoteList()
-    .map((i) => (i.productId === productId && i.variantLabel === variantLabel ? { ...i, quantity } : i))
-    .filter((i) => i.quantity > 0);
-  writeQuoteList(items);
+export function updateQuoteListQuantity(key: string, quantity: number) {
+  writeQuoteList(
+    readQuoteList()
+      .map((i) => (quoteLineKey(i) === key ? { ...i, quantity } : i))
+      .filter((i) => i.quantity > 0),
+  );
 }
 
-export function removeFromQuoteList(productId: string, variantLabel: string | null) {
-  writeQuoteList(readQuoteList().filter((i) => !(i.productId === productId && i.variantLabel === variantLabel)));
+export function removeFromQuoteList(key: string) {
+  writeQuoteList(readQuoteList().filter((i) => quoteLineKey(i) !== key));
 }
 
 export function clearQuoteList() {
@@ -91,7 +106,31 @@ export function useQuoteList() {
   };
 }
 
-// Shape expected by the backend's POST /quote-list/merge (AddQuoteListItemDto[]).
+/**
+ * Shape expected by the backend's POST /quote-list/merge. Only the fields the
+ * DTO accepts (the API rejects unknown ones), and only those that apply to
+ * each kind of line.
+ */
 export function getQuoteListAsMergePayload() {
-  return readQuoteList();
+  return readQuoteList().map((i) =>
+    i.source === 'SUPPLIER_REFERENCE'
+      ? {
+          source: 'SUPPLIER_REFERENCE' as const,
+          referenceCode: i.referenceCode,
+          sourceUrl: i.sourceUrl || undefined,
+          productSlug: i.productSlug,
+          productName: i.productName,
+          variantLabel: i.variantLabel,
+          imageUrl: i.imageUrl,
+          quantity: i.quantity,
+        }
+      : {
+          productId: i.productId,
+          productSlug: i.productSlug,
+          productName: i.productName,
+          variantLabel: i.variantLabel,
+          imageUrl: i.imageUrl,
+          quantity: i.quantity,
+        },
+  );
 }

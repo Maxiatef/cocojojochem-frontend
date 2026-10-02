@@ -420,7 +420,7 @@ function CatalogBrowserInner({ basePath }: { basePath: string }) {
 
         <p className="r-fine r-catalog-note">
           Prices are per pack size in USD, before shipping and tax. Ingredients without a published
-          price can be added to your quote list, and we confirm pricing and availability with you.
+          price can still be added to your cart under “Price to confirm”, and we confirm pricing and availability with you.
         </p>
       </section>
     </div>

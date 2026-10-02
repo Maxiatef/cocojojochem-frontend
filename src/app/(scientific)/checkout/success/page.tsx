@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CircleCheck } from 'lucide-react';
@@ -13,6 +13,17 @@ import { CircleCheck } from 'lucide-react';
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order');
+  // Set by checkout just before the Stripe redirect when the cart also had
+  // "Price to confirm" items (see PENDING_REQUEST_REF_KEY in checkout).
+  const [requestRef, setRequestRef] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setRequestRef(sessionStorage.getItem('cocojojochem_pending_request_ref'));
+      sessionStorage.removeItem('cocojojochem_pending_request_ref');
+    } catch {
+      /* storage blocked — the request is still in their account */
+    }
+  }, []);
 
   return (
     <section className="r-wrap r-section">
@@ -22,6 +33,12 @@ function SuccessContent() {
         <h1>Payment received.</h1>
         <p>{orderId ? `Order #${orderId}` : 'Your order'} has been placed and paid.</p>
         <p>We&apos;ll email you a confirmation shortly.</p>
+        {requestRef && (
+          <p>
+            Pricing for your other items is also requested: reference <strong>{requestRef}</strong>. We&apos;ll reply
+            with prices and availability — nothing has been charged for those items.
+          </p>
+        )}
         <Link href="/account/orders" className="r-btn r-primary">
           View my orders
         </Link>

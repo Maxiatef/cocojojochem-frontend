@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Package } from 'lucide-react';
 import { customerApi } from '@/lib/customerApi';
 import { Product, ServerCart } from '@/lib/types';
-import { CartLines, CartTotals } from '@/components/gloss/CartLines';
+import { CartLines, CartTotals, useCartTotalCount } from '@/components/gloss/CartLines';
 import { ProductCard } from '@/components/gloss/ProductCard';
 import { useUnifiedCart } from '@/lib/gloss/useUnifiedCart';
 
@@ -17,7 +17,10 @@ import { useUnifiedCart } from '@/lib/gloss/useUnifiedCart';
  */
 export function CartView() {
   const cart = useUnifiedCart();
-  const hasLines = cart.loaded && cart.lines.length > 0;
+  const all = useCartTotalCount();
+  // Either group counts: an all-"Price to confirm" cart still goes to
+  // checkout, where it becomes an order request.
+  const hasLines = all.hasLines;
 
   return (
     <>
@@ -30,10 +33,10 @@ export function CartView() {
             <Link
               className="r-btn r-primary"
               href="/checkout"
-              aria-disabled={cart.saving}
+              aria-disabled={all.saving}
               onClick={(e) => {
                 // A quantity change still in flight would reach checkout stale.
-                if (cart.saving) e.preventDefault();
+                if (all.saving) e.preventDefault();
               }}
             >
               Continue to checkout
@@ -50,13 +53,12 @@ export function CartView() {
           )}
           <div className="r-summary-help">
             <Package size={22} />
-            <p>Secure card payment at checkout. Need bulk or custom sizes? Request a quote and we’ll price them for you.</p>
+            <p>Priced items are paid securely by card at checkout. Items marked “Price to confirm” are sent to us as an order request — we reply with pricing before anything is charged for them.</p>
           </div>
-          <Link href="/quote-request">Your quote list</Link>
           <Link href="/shipping-returns">Shipping &amp; return information</Link>
         </aside>
       </div>
-      {hasLines && <CartSuggestions />}
+      {cart.lines.length > 0 && <CartSuggestions />}
     </>
   );
 }

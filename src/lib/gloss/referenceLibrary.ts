@@ -52,3 +52,14 @@ export function getReferenceCategories(): ReferenceCategory[] {
     .map(([name, count]) => ({ id: referenceCategoryId(name), name, count }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/** One entry by its slug (the supplier's item code, lower-cased). */
+export function getReferenceEntry(slug: string): ReferenceEntry | null {
+  const key = slug.toLowerCase();
+  return LIBRARY.find((e) => e.slug === key) ?? null;
+}
+
+/** Other entries in the same category, for a reference page's "More we can source". */
+export function getRelatedReferences(entry: ReferenceEntry, limit = 4): ReferenceEntry[] {
+  return LIBRARY.filter((e) => e.category === entry.category && e.slug !== entry.slug).slice(0, limit);
+}

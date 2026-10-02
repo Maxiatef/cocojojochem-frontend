@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { customerApi } from '@/lib/customerApi';
-import { getCustomerToken, setCustomerToken } from '@/lib/customerAuth';
+import { decodeCustomerToken, getCustomerToken, setCustomerToken } from '@/lib/customerAuth';
 import { addToCart, useCart, clearCart } from '@/lib/cartStore';
 import { formatUsd } from '@/lib/pricing';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -17,6 +17,12 @@ import { CheckoutSuggestions } from '@/components/scientific/CheckoutSuggestions
 import { EmptyState } from '@/components/gloss/EmptyState';
 import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 import { categoryImage, productImage } from '@/lib/gloss/images';
+import { requestItemsPayload, useRequestList } from '@/lib/gloss/useUnifiedCart';
+import { OrderRequestForm, RequestSummaryList } from '@/components/gloss/workspace/OrderRequestForm';
+import { requestReference } from '@/lib/types';
+
+/** Read by /checkout/success to show the pricing request sent with a payment. */
+const PENDING_REQUEST_REF_KEY = 'cocojojochem_pending_request_ref';
 
 const DEFAULT_MINIMUM_DISPLAY = '$250.00';
 
@@ -25,6 +31,18 @@ export default function CheckoutPage() {
   const [ready, setReady] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const localCart = useCart();
+  // The cart's "Price to confirm" group. With priced items too, checkout
+  // sends it as an order request and then takes payment for the rest; on
+  // its own it becomes a request-only checkout (OrderRequestForm).
+  const requests = useRequestList();
+  const [accountEmail, setAccountEmail] = useState('');
+  // The request already sent in this visit, so a failed payment start that is
+  // retried doesn't send a second copy.
+  const [sentRequest, setSentRequest] = useState<{ id: string; ref: string } | null>(null);
+  const [website, setWebsite] = useState('');
+  // Request-only checkout: stays on its confirmation after the request list
+  // is cleared, instead of dropping to the empty-cart state.
+  const [requestOnlySent, setRequestOnlySent] = useState(false);
 
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -63,7 +81,9 @@ export default function CheckoutPage() {
   const [shippingLoading, setShippingLoading] = useState(false);
 
   useEffect(() => {
-    setIsAuthed(!!getCustomerToken());
+    const token = getCustomerToken();
+    setIsAuthed(!!token);
+    setAccountEmail((token && decodeCustomerToken(token)?.email) || '');
     setReady(true);
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -268,6 +288,37 @@ export default function CheckoutPage() {
         }));
       }
 
+      // Combined checkout: send the "Price to confirm" items as an order
+      // request first, then pay for the rest with its id attached. The
+      // webhook links the paid order to it. If payment then fails or is
+      // abandoned the request still stands — we price it either way.
+      if (requests.lines.length > 0 || sentRequest) {
+        let sent = sentRequest;
+        if (!sent) {
+          const created = await customerApi.post<{ id: string }>('/wholesale/quote-requests', {
+            fullName,
+            email: isAuthed ? accountEmail : email,
+            phone: phone || undefined,
+            companyName: companyName || undefined,
+            destination: `${city}, ${stateCode} ${zip}, ${country}`.trim(),
+            message: notes || undefined,
+            type: 'QUOTE',
+            withPayment: true,
+            items: requestItemsPayload(requests.lines),
+            website: website || undefined,
+          });
+          sent = { id: created.id, ref: requestReference(created.id) };
+          setSentRequest(sent);
+          await requests.clear();
+        }
+        payload.quoteRequestId = sent.id;
+        try {
+          sessionStorage.setItem(PENDING_REQUEST_REF_KEY, sent.ref);
+        } catch {
+          /* storage blocked — the success page just won't mention it */
+        }
+      }
+
       const { checkoutUrl, accessToken } = await customerApi.post<CheckoutResponse>('/orders/checkout', payload);
 
       if (!isAuthed) {
@@ -292,6 +343,7 @@ export default function CheckoutPage() {
     }
   }
 
+  const requestCount = requests.lines.length;
   const intro = (
     <div className="r-page-intro r-wrap">
       <span className="r-eyebrow">Checkout</span>
@@ -300,12 +352,39 @@ export default function CheckoutPage() {
     </div>
   );
 
-  if (!ready || (isAuthed && isLoading)) {
+  if (!ready || (isAuthed && isLoading) || !requests.loaded) {
     return (
       <>
         {intro}
         <section className="r-wrap r-section" aria-busy="true">
           <p className="r-loading">Loading your checkout…</p>
+        </section>
+      </>
+    );
+  }
+
+  // Only "Price to confirm" items: an order request, no payment.
+  if (items.length === 0 && (requestCount > 0 || requestOnlySent)) {
+    return (
+      <>
+        <div className="r-page-intro r-wrap">
+          <span className="r-eyebrow">Checkout</span>
+          <h1>Request your order.</h1>
+          <p>
+            Everything in your cart is priced on request. Send it to us and we&apos;ll confirm prices and
+            availability.
+          </p>
+        </div>
+        <section className="r-wrap r-section">
+          <OrderRequestForm
+            lines={requests.lines}
+            signedIn={isAuthed}
+            defaultEmail={accountEmail}
+            onSubmitted={async () => {
+              setRequestOnlySent(true);
+              await requests.clear();
+            }}
+          />
         </section>
       </>
     );
@@ -543,6 +622,38 @@ export default function CheckoutPage() {
               )} */}
             </div>
 
+            {(requestCount > 0 || sentRequest) && (
+              <div className="r-form-card">
+                <h2>Price to confirm</h2>
+                {sentRequest ? (
+                  <p>
+                    Your pricing request <strong>{sentRequest.ref}</strong> is sent. Only the priced items remain
+                    to pay.
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      {requestCount === 1 ? 'This item is' : `These ${requestCount} items are`} sent to us as an
+                      order request when you pay. We reply with prices and availability; nothing is charged for{' '}
+                      {requestCount === 1 ? 'it' : 'them'} now.
+                    </p>
+                    <RequestSummaryList lines={requests.lines} />
+                  </>
+                )}
+                {/* Spam trap for the request: hidden from people and screen readers. */}
+                <div className="r-honeypot" aria-hidden="true">
+                  <label htmlFor="f-website">Website</label>
+                  <input
+                    id="f-website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="r-form-card">
               <h2>Payment</h2>
               <div className="ga-pay-note">
@@ -553,7 +664,10 @@ export default function CheckoutPage() {
 
             {cancelledNoticeVisible && (
               <div className="ga-notice ga-dismissable" role="status">
-                <span>Payment was cancelled — your order is saved and you can complete payment later.</span>
+                <span>
+                  Payment was cancelled — nothing was charged. Your cart is saved, so you can complete payment now.
+                  Any pricing request you sent is still with us.
+                </span>
                 <button type="button" onClick={() => setCancelledNoticeVisible(false)}>
                   Dismiss
                 </button>
@@ -605,6 +719,8 @@ export default function CheckoutPage() {
                 </>
               ) : belowMinimum ? (
                 `Add ${formatUsd(shippingEstimate!.minimumRemaining)} to reach the minimum`
+              ) : requestCount > 0 ? (
+                `Pay ${formatUsd(total)} and request pricing for ${requestCount} item${requestCount === 1 ? '' : 's'}`
               ) : (
                 `Continue to payment — ${formatUsd(total)}`
               )}
@@ -655,6 +771,13 @@ export default function CheckoutPage() {
                     </li>
                   ))}
             </ul>
+
+            {requestCount > 0 && (
+              <div className="ga-summary-block">
+                <span className="ga-label">Price to confirm · not included in total</span>
+                <RequestSummaryList lines={requests.lines} />
+              </div>
+            )}
 
             <div className="ga-summary-block">
               <ShippingSummaryPanel countryIso2={countryIso2} estimate={shippingEstimate} loading={shippingLoading} />

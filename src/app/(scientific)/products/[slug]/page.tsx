@@ -16,6 +16,8 @@ import {
 import { JsonLd, breadcrumbSchema, productSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
 import { formatUsd } from '@/lib/pricing';
+import { getReferenceEntry, getRelatedReferences } from '@/lib/gloss/referenceLibrary';
+import { ReferenceDetail } from '@/components/gloss/catalog/ReferenceDetail';
 
 /**
  * A single product, in the Gloss Studio markup (prototype
@@ -72,7 +74,24 @@ export async function generateMetadata({
   // soft 404: Google treats it as a quality problem and will happily index
   // the empty shell. generateMetadata runs before the stream opens, which is
   // the last point a real 404 can still be sent.
-  if (!product) notFound();
+  if (!product) {
+    // Not ours: maybe a supplier reference library entry (prototype URLs use
+    // the supplier's item code here). Kept out of the index — it's another
+    // supplier's catalog — but its links are followed.
+    const ref = getReferenceEntry(params.slug);
+    if (!ref) notFound();
+    return {
+      ...pageMetadata({
+        title: `${ref.name} — Supplier Reference`,
+        description: clampDescription(
+          `${ref.name}${ref.inci ? ` (INCI ${ref.inci})` : ''} from our supplier reference library. COCOJOJO can source it on request; price, grade and availability are confirmed before anything is charged.`,
+          `${ref.name} — supplier reference, sourced on request by ${SITE_NAME}.`,
+        ),
+        path: `/products/${ref.slug}`,
+      }),
+      robots: { index: false, follow: true },
+    };
+  }
 
   // The admin's per-product SEO fields (ProductSeo) take priority over the
   // derived defaults, so anything typed in the product editor's SEO tab
@@ -130,7 +149,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const product = await serverFetch<Product>(`/wholesale/products/${params.slug}`, {
     cache: 'no-store',
   });
-  if (!product) notFound();
+  if (!product) {
+    const ref = getReferenceEntry(params.slug);
+    if (!ref) notFound();
+    return <ReferenceDetail entry={ref} related={getRelatedReferences(ref)} />;
+  }
 
   const related = await serverFetch<Product[]>(
     `/wholesale/products/${params.slug}/related?limit=4`,

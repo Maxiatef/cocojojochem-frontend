@@ -1,40 +1,10 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CircleCheck, Package, Trash2 } from 'lucide-react';
-import { useQuoteList } from '@/lib/quoteListStore';
-import { customerApi } from '@/lib/customerApi';
-import { getCustomerToken, decodeCustomerToken } from '@/lib/customerAuth';
-import { getFriendlyErrorMessage } from '@/lib/errorMessages';
-import { ServerQuoteListItem } from '@/lib/types';
-import { categoryImage } from '@/lib/gloss/images';
+import { Package } from 'lucide-react';
+import { useRequestList } from '@/lib/gloss/useUnifiedCart';
 import { EmptyState } from '@/components/gloss/EmptyState';
-import { Quantity } from '@/components/gloss/Quantity';
-
-/**
- * Quote request, in the Gloss Studio design (the prototype's request form:
- * `r-checkout-layout` with an `r-form-card` and an `r-summary`).
- *
- * The page's own behaviour is unchanged: a quote list you can edit, a contact
- * form beside it, guest and signed-in paths, the same submission to
- * `/wholesale/quote-requests`, and the list cleared once it is sent.
- *
- * The form deliberately does not ask for ingredient / quantity / packaging in
- * free text: this page already collects all three per line item, from the
- * quote list beside it.
- */
-
-interface QuoteListRow {
-  key: string;
-  productId: string;
-  productSlug: string;
-  productName: string;
-  variantLabel: string | null;
-  imageUrl: string | null;
-  quantity: number;
-}
+import { RequestSummaryList } from '@/components/gloss/workspace/OrderRequestForm';
 
 /**
  * What a buyer actually needs to know before sending a request. The page is
@@ -64,187 +34,22 @@ const QUOTING_SECTIONS: { title: string; text: string }[] = [
   },
 ];
 
-function ContactForm({
-  items,
-  defaultEmail,
-  onSubmitted,
-}: {
-  items: QuoteListRow[];
-  defaultEmail: string;
-  onSubmitted: () => void;
-}) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState(defaultEmail);
-  const [phone, setPhone] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [message, setMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * The request list now lives in the cart ("Price to confirm") and is sent
+ * from checkout as an order request, so this page shows what is waiting and
+ * sends people there. The guide below stays: it is the page's indexable
+ * content.
+ */
+function RequestListPanel() {
+  const requests = useRequestList();
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (items.length === 0) {
-      setError('Add at least one product to your quote list first.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await customerApi.post('/wholesale/quote-requests', {
-        fullName,
-        email,
-        phone: phone || undefined,
-        companyName: companyName || undefined,
-        message: message || undefined,
-        type: 'QUOTE',
-        items: items.map((item) => ({
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          unit: item.variantLabel || undefined,
-        })),
-      });
-      onSubmitted();
-    } catch (err) {
-      setError(getFriendlyErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  if (!requests.loaded) return <p className="r-loading">Loading your cart…</p>;
 
-  return (
-    <form className="r-form-card" onSubmit={handleSubmit}>
-      <div className="r-step-label">
-        <span>1</span> Your details <span>2</span> Review &amp; submit
-      </div>
-      <h2>Tell us about your project.</h2>
-      <p>A few details will help us understand your project. Grades, availability and specifications are confirmed during quotation.</p>
-      <div className="r-form-grid">
-        <label className="r-field">
-          Full name
-          <input
-            required
-            autoComplete="name"
-            maxLength={120}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="First and last name"
-          />
-        </label>
-        <label className="r-field">
-          Work email
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            maxLength={200}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
-          />
-        </label>
-        <label className="r-field">
-          <span>
-            Company <small>optional</small>
-          </span>
-          <input
-            autoComplete="organization"
-            maxLength={200}
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            placeholder="Company name"
-          />
-        </label>
-        <label className="r-field">
-          <span>
-            Phone <small>optional</small>
-          </span>
-          <input
-            type="tel"
-            autoComplete="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Where we can reach you"
-          />
-        </label>
-        <label className="r-field r-full">
-          Project details
-          <textarea
-            rows={5}
-            maxLength={5000}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Application, specifications, delivery location, or other requirements"
-          />
-        </label>
-      </div>
-
-      {error && (
-        <p className="r-error" role="alert">
-          {error}
-        </p>
-      )}
-
-      <button type="submit" className="r-btn r-primary" disabled={submitting}>
-        {submitting ? 'Sending…' : `Send quote request (${items.length} item${items.length === 1 ? '' : 's'})`}
-      </button>
-      <p className="r-fine">
-        Our team replies by email with trade pricing and lead times, usually within one business day. No payment is
-        taken.
-      </p>
-    </form>
-  );
-}
-
-/** One quote-list line, in the prototype's `r-cart-line` markup. */
-function QuoteLine({
-  item,
-  onUpdateQuantity,
-  onRemove,
-}: {
-  item: QuoteListRow;
-  onUpdateQuantity: (quantity: number) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <article className="r-cart-line">
-      <Link href={`/products/${item.productSlug}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={item.imageUrl || categoryImage(item.productName)} alt={item.productName} width={100} height={100} />
-      </Link>
-      <div>
-        <Link href={`/products/${item.productSlug}`}>
-          <h3>{item.productName}</h3>
-        </Link>
-        <p>{item.variantLabel || 'Size to confirm'}</p>
-        <Quantity value={item.quantity} onChange={onUpdateQuantity} />
-      </div>
-      <button type="button" className="r-icon-button" aria-label={`Remove ${item.productName}`} onClick={onRemove}>
-        <Trash2 size={18} />
-      </button>
-    </article>
-  );
-}
-
-/** Form card + quote-list summary. Shared by the guest and signed-in paths. */
-function QuoteRequestLayout({
-  rows,
-  onUpdateQuantity,
-  onRemove,
-  defaultEmail,
-  onSubmitted,
-}: {
-  rows: QuoteListRow[];
-  onUpdateQuantity: (row: QuoteListRow, quantity: number) => void;
-  onRemove: (row: QuoteListRow) => void;
-  defaultEmail: string;
-  onSubmitted: () => void;
-}) {
-  if (rows.length === 0) {
+  if (requests.lines.length === 0) {
     return (
       <EmptyState
-        title="Your quote list is empty."
-        text="Choose Request on any ingredient to add it here, then send one request for everything you need priced."
+        title="Nothing waiting for a price."
+        text="Choose Request, or Add to cart on a supplier reference material, and it joins your cart under “Price to confirm”. Send everything from checkout in one request."
         href="/products"
         label="Browse ingredients"
       />
@@ -253,170 +58,47 @@ function QuoteRequestLayout({
 
   return (
     <div className="r-checkout-layout">
-      <ContactForm items={rows} defaultEmail={defaultEmail} onSubmitted={onSubmitted} />
-      <aside className="r-summary">
-        <h2>Your quote list</h2>
-        <p className="r-fine">
-          {rows.length} {rows.length === 1 ? 'item' : 'items'} · adjust quantities before sending
+      <div className="r-form-card">
+        <h2>Ready to send.</h2>
+        <p>
+          {requests.lines.length} item{requests.lines.length === 1 ? ' is' : 's are'} in your cart under “Price to
+          confirm”. Send them from checkout — on their own as an order request, or together with priced items you pay
+          for now.
         </p>
-        <div className="r-cart-lines">
-          {rows.map((row) => (
-            <QuoteLine
-              key={row.key}
-              item={row}
-              onUpdateQuantity={(q) => onUpdateQuantity(row, q)}
-              onRemove={() => onRemove(row)}
-            />
-          ))}
-        </div>
+        <Link className="r-btn r-primary" href="/checkout">
+          Submit order request
+        </Link>
+        <Link className="r-btn r-outline" href="/cart">
+          Review cart
+        </Link>
+        <p className="r-fine">No payment is taken for items marked “Price to confirm”.</p>
+      </div>
+      <aside className="r-summary">
+        <h2>Price to confirm</h2>
+        <RequestSummaryList lines={requests.lines} />
         <div className="r-summary-help">
           <Package size={22} />
-          <p>Add as many products as you need pricing on, then submit one request for all of them.</p>
+          <p>We confirm price, grade and availability for each item, then reply by email.</p>
         </div>
-        <Link href="/products">Add more ingredients</Link>
       </aside>
     </div>
   );
 }
 
-function CustomerQuoteListView({ email }: { email: string }) {
-  const queryClient = useQueryClient();
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
-  const { data, isLoading } = useQuery({
-    queryKey: ['customer-quote-list'],
-    queryFn: () => customerApi.get<ServerQuoteListItem[]>('/quote-list'),
-  });
-
-  function notifyChanged() {
-    queryClient.invalidateQueries({ queryKey: ['customer-quote-list'] });
-    window.dispatchEvent(new Event('cocojojochem-server-quote-list-changed'));
-  }
-
-  const updateQuantity = useMutation({
-    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
-      customerApi.patch(`/quote-list/items/${id}`, { quantity }),
-    onSuccess: notifyChanged,
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
-
-  const removeItem = useMutation({
-    mutationFn: (id: string) => customerApi.delete(`/quote-list/items/${id}`),
-    onSuccess: notifyChanged,
-    onError: (err) => setError(getFriendlyErrorMessage(err)),
-  });
-
-  const clearAll = useMutation({
-    mutationFn: () => customerApi.delete('/quote-list'),
-    onSuccess: notifyChanged,
-  });
-
-  if (isLoading) return <p className="r-loading">Loading your quote list…</p>;
-
-  if (done) return <QuoteRequestSentPanel />;
-
-  const rows: QuoteListRow[] = (data || []).map((item) => ({
-    key: String(item.id),
-    productId: item.productId,
-    productSlug: item.productSlug,
-    productName: item.productName,
-    variantLabel: item.variantLabel,
-    imageUrl: item.imageUrl,
-    quantity: item.quantity,
-  }));
-
-  return (
-    <>
-      {error && (
-        <p className="r-error" role="alert">
-          {error}
-        </p>
-      )}
-      <QuoteRequestLayout
-        rows={rows}
-        defaultEmail={email}
-        onUpdateQuantity={(row, quantity) => updateQuantity.mutate({ id: row.key, quantity })}
-        onRemove={(row) => removeItem.mutate(row.key)}
-        onSubmitted={() => {
-          setDone(true);
-          clearAll.mutate();
-        }}
-      />
-    </>
-  );
-}
-
-function QuoteRequestSentPanel() {
-  return (
-    <div className="r-confirmation">
-      <CircleCheck size={54} />
-      <span className="r-eyebrow">Request received</span>
-      <h2>Quote request sent.</h2>
-      <p>Thanks — our team will follow up by email shortly with trade pricing and lead times.</p>
-      <Link className="r-btn r-primary" href="/products">
-        Continue browsing
-      </Link>
-      <Link className="r-btn r-outline" href="/account">
-        Your account
-      </Link>
-    </div>
-  );
-}
-
-function GuestQuoteRequestFlow() {
-  const quoteList = useQuoteList();
-  const [done, setDone] = useState(false);
-
-  if (done) return <QuoteRequestSentPanel />;
-
-  const rows: QuoteListRow[] = quoteList.items.map((item) => ({
-    key: `${item.productId}-${item.variantLabel}`,
-    productId: item.productId,
-    productSlug: item.productSlug,
-    productName: item.productName,
-    variantLabel: item.variantLabel,
-    imageUrl: item.imageUrl,
-    quantity: item.quantity,
-  }));
-
-  return (
-    <QuoteRequestLayout
-      rows={rows}
-      defaultEmail=""
-      onUpdateQuantity={(row, q) => quoteList.updateQuantity(row.productId, row.variantLabel, q)}
-      onRemove={(row) => quoteList.remove(row.productId, row.variantLabel)}
-      onSubmitted={() => {
-        setDone(true);
-        quoteList.clear();
-      }}
-    />
-  );
-}
-
 export default function QuoteRequestPage() {
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [email, setEmail] = useState('');
-
-  useEffect(() => {
-    const token = getCustomerToken();
-    const decoded = token ? decodeCustomerToken(token) : null;
-    setIsAuthed(!!token);
-    setEmail(decoded?.email || '');
-  }, []);
-
   return (
     <>
       <div className="r-page-intro r-wrap">
         <span className="r-eyebrow">Let’s make the right connection</span>
         <h1>Request a quote.</h1>
         <p>
-          Tell us what you’re working on. Add as many products as you need pricing on, then submit one request — no
-          need to fill out the form again for each product.
+          Add the ingredients you need priced to your cart, then send them in one order request from checkout. We reply
+          with trade pricing and lead times.
         </p>
       </div>
 
       <section className="r-wrap r-section">
-        {isAuthed ? <CustomerQuoteListView email={email} /> : <GuestQuoteRequestFlow />}
+        <RequestListPanel />
       </section>
 
       <section className="r-wrap r-section r-quote-guide">

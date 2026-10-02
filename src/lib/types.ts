@@ -152,7 +152,11 @@ export interface ServerCart {
 
 export interface ServerQuoteListItem {
   id: string;
-  productId: string;
+  /** COCOJOJO = our catalog; SUPPLIER_REFERENCE = supplier reference library (no productId). */
+  source?: 'COCOJOJO' | 'SUPPLIER_REFERENCE';
+  productId: string | null;
+  referenceCode?: string | null;
+  sourceUrl?: string | null;
   productSlug: string;
   productName: string;
   variantLabel: string | null;
@@ -234,10 +238,14 @@ export interface CustomerProfile {
 
 export interface QuoteRequestItem {
   id: string;
+  productId?: string | null;
   productName: string;
   quantity: number | null;
   unit: string | null;
   notes: string | null;
+  source?: 'COCOJOJO' | 'SUPPLIER_REFERENCE';
+  referenceCode?: string | null;
+  sourceUrl?: string | null;
 }
 
 export interface QuoteRequest {
@@ -252,6 +260,19 @@ export interface QuoteRequest {
   items: QuoteRequestItem[];
   createdAt: string;
   user?: { id: string; fullName: string; email: string } | null;
+  /** Set for a signed-in customer's request; null for a guest. */
+  userId?: string | null;
+  /** Shipping city, state and country. */
+  destination?: string | null;
+  /** Submitted together with a card payment for priced items. */
+  paymentRequested?: boolean;
+  /** The paid order, once Stripe confirmed it. */
+  orderId?: string | null;
+}
+
+/** The customer-facing reference for a request, e.g. CJ-1A2B3C4D. */
+export function requestReference(id: string) {
+  return `CJ-${id.slice(0, 8).toUpperCase()}`;
 }
 
 export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';

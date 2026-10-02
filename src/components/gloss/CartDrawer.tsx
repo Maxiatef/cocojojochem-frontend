@@ -3,8 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
-import { useUnifiedCart } from '@/lib/gloss/useUnifiedCart';
-import { CartLines, CartTotals } from './CartLines';
+import { CartLines, CartTotals, useCartTotalCount } from './CartLines';
 
 /**
  * The prototype's slide-in cart (`r-drawer`). Opened from the header's Cart
@@ -12,7 +11,7 @@ import { CartLines, CartTotals } from './CartLines';
  * focus is trapped inside while it is open.
  */
 export function CartDrawer({ close }: { close: () => void }) {
-  const cart = useUnifiedCart();
+  const cart = useCartTotalCount();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -67,7 +66,7 @@ export function CartDrawer({ close }: { close: () => void }) {
         <div className="r-drawer-body">
           <CartLines />
         </div>
-        {cart.lines.length > 0 && (
+        {cart.hasLines && (
           <div className="r-drawer-foot">
             <CartTotals />
             <button

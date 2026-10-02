@@ -16,6 +16,7 @@ import { useStorefrontSession } from '@/lib/useStorefrontSession';
 import { useCompare, useProjects } from '@/lib/gloss/stores';
 import { OrderCard } from '@/components/gloss/account/OrderCard';
 import { ReorderButton } from '@/components/gloss/account/ReorderButton';
+import { RequestHistory } from '@/components/gloss/account/RequestHistory';
 import { PasswordInput } from '@/components/gloss/account/PasswordInput';
 
 /**
@@ -141,7 +142,7 @@ export default function AccountPage() {
 
   const tiles: { href: string; value: ReactNode; label: string }[] = [
     { href: '/account/orders', value: ordersLoading ? '—' : (orders || []).length, label: 'Orders' },
-    { href: '/quote-request', value: quoteListCount, label: 'Quote requests' },
+    { href: '#requests', value: quoteListCount, label: 'Price to confirm' },
     { href: '/saved', value: wishlistCount, label: 'Wishlist' },
     { href: '/projects', value: projects.length, label: 'Projects' },
     { href: '/compare', value: compare.length, label: 'Compare' },
@@ -249,21 +250,13 @@ export default function AccountPage() {
               </ul>
             )}
 
-            <div className="r-section-heading">
+            <div className="r-section-heading" id="requests">
               <h2>Your requests</h2>
-              <Link href="/quote-request">Start a new request</Link>
+              <Link href="/cart">
+                {quoteListCount > 0 ? `${quoteListCount} waiting in your cart` : 'Your cart'}
+              </Link>
             </div>
-            <div className="r-muted-panel">
-              {quoteListCount > 0
-                ? `Your quote list holds ${quoteListCount} ingredient${quoteListCount === 1 ? '' : 's'}. `
-                : 'Need something sourced? '}
-              Tell us the grade, volume and timing and we&rsquo;ll confirm what we can supply.
-              <p>
-                <Link href="/quote-request" className="ga-link">
-                  {quoteListCount > 0 ? 'Review and send your quote list' : 'Request a quote'}
-                </Link>
-              </p>
-            </div>
+            <RequestHistory />
           </div>
 
           {/* ---- Profile panel ---- */}

@@ -211,7 +211,7 @@ export function ProductDetailHero({ product }: { product: Product }) {
                 onClick={handleQuote}
               >
                 <ClipboardList size={18} aria-hidden />
-                {busy === 'quote' ? 'Adding…' : 'Add to quote list'}
+                {busy === 'quote' ? 'Adding…' : 'Add to cart · price to confirm'}
               </button>
             ) : (
               <button
@@ -250,7 +250,7 @@ export function ProductDetailHero({ product }: { product: Product }) {
               onClick={handleQuote}
             >
               <ClipboardList size={17} aria-hidden />
-              {busy === 'quote' ? 'Adding…' : 'Add to quote list'}
+              {busy === 'quote' ? 'Adding…' : 'Add to cart · price to confirm'}
             </button>
           )}
 

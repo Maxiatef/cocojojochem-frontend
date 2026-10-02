@@ -46,7 +46,7 @@ const NAV: {
 }[] = [
   { href: '/admin', label: 'Overview', icon: DashboardIcon, permission: 'canViewDashboard' },
   { href: '/admin/messages', label: 'Messages', icon: MailIcon, permission: 'canViewContactMessages' },
-  { href: '/admin/quote-requests', label: 'Quote Requests', icon: InboxIcon, permission: 'canViewQuoteRequests' },
+  { href: '/admin/quote-requests', label: 'Order Requests', icon: InboxIcon, permission: 'canViewQuoteRequests' },
   { href: '/admin/products', label: 'Products', icon: BottleIcon, permission: 'canViewProducts' },
   { href: '/admin/categories', label: 'Categories', icon: GridIcon, permission: 'canViewCategories' },
   { href: '/admin/functions', label: 'Functions', icon: TagIcon, permission: 'canViewFunctions' },

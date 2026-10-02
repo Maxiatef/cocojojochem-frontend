@@ -109,3 +109,15 @@
 .gloss-theme .r-confirmation > a.r-btn {
   display: inline-flex;
 }
+
+/* ---- One cart, two groups: "Ready to pay" and "Price to confirm" ---- */
+.gloss-theme .r-cart-groups{display:flex;flex-direction:column;gap:28px}
+.gloss-theme .r-cart-group-title{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--r-ink,#1d2d33)}
+.gloss-theme .r-cart-group-title span{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--r-line,#e3e8ea);font-size:11px;letter-spacing:0}
+.gloss-theme .r-cart-group-note{margin:-6px 0 14px;font-size:13px;color:#627a84}
+.gloss-theme .r-cart-line.is-request strong{color:#8a5a00}
+.gloss-theme .r-summary-requests{margin:0;padding:0;list-style:none}
+.gloss-theme .r-summary-requests li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--r-line,#e3e8ea);font-size:13px}
+.gloss-theme .r-summary-requests li span:last-child{color:#8a5a00;white-space:nowrap}
+.gloss-theme .r-ref-badge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:10px;background:#fff4e0;color:#8a5a00;font-size:11px}
+.gloss-theme .r-honeypot{position:absolute!important;left:-10000px!important;width:1px;height:1px;overflow:hidden}

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { RecordHistory } from '@/components/admin/RecordHistory';
+import { LinkedRequestNote } from '@/components/admin/LinkedRequestNote';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { Order, OrderStatus, Paginated } from '@/lib/types';
 import {
@@ -58,6 +59,14 @@ export default function OrdersPage() {
     queryKey: ['orders-admin'],
     queryFn: () => api.get<Paginated<Order>>('/orders/admin?page=1&limit=50'),
   });
+
+  // ?open=<orderId> (e.g. from a linked order request) opens that order's
+  // detail once the list has loaded.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('open');
+    const match = id && data?.data.find((o) => o.id === id);
+    if (match) setViewOrder(match);
+  }, [data]);
 
   const { data: stats } = useQuery({
     queryKey: ['orders-admin-stats'],
@@ -319,6 +328,8 @@ function ViewOrderModal({ order, onClose }: { order: Order; onClose: () => void 
             <CancelOrderControl order={order} />
           </div>
         </div>
+
+        <LinkedRequestNote orderId={order.id} />
 
         <div className="border-t border-slate-100 pt-5">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Customer</p>
