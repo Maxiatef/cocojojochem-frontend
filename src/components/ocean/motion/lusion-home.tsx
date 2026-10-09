@@ -28,7 +28,17 @@ const collections = [
   },
 ];
 
-export default function LusionHero({ price, pack }: { price: string; pack: string }) {
+export default function LusionHero({
+  price,
+  pack,
+  href = "/products/jojoba-golden-retail",
+  name = "Golden Jojoba Oil",
+}: {
+  price: string;
+  pack: string;
+  href?: string;
+  name?: string;
+}) {
   const [selected, setSelected] = useState(0);
   const [shifted, setShifted] = useState(false);
   const [paused, setPaused] = useState(true);
@@ -228,9 +238,9 @@ export default function LusionHero({ price, pack }: { price: string; pack: strin
             <span className="l-underlined">Explore this collection</span>
           </div>
         </a>
-        <a className="l-spotlight" href="/products/jojoba-golden-retail">
+        <a className="l-spotlight" href={href}>
           <span className="l-label">Ingredient spotlight</span>
-          <strong>Golden Jojoba Oil</strong>
+          <strong>{name}</strong>
           <span>
             {pack} · {price}
           </span>

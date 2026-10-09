@@ -1,26 +1,29 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { BookOpen, FlaskConical, GitCompareArrows } from 'lucide-react';
+import { ArrowUpRight, BookOpen, FlaskConical, GitCompareArrows } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
-import { Category, Paginated, Product, SeoPage } from '@/lib/types';
+import { Paginated, Product, SeoPage } from '@/lib/types';
 import { JsonLd, organizationSchema, webSiteSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
 import { formatUsd, getDefaultVariant } from '@/lib/pricing';
-import { GLOSS_IMAGES } from '@/lib/gloss/images';
-import { ProductCard } from '@/components/gloss/ProductCard';
-import { HomeHero, HeroSpotlight } from '@/components/gloss/home/HomeHero';
-import { CategoryCarousel } from '@/components/gloss/home/CategoryCarousel';
-import { GlossReveal } from '@/components/gloss/home/GlossReveal';
-import { carouselCategories, heroCollections } from '@/components/gloss/home/homeCategories';
+import { ingredientCategories, categoryImage, categoryDescription } from '@/lib/ocean/catalog-data';
+import { packagingCategory } from '@/lib/ocean/packaging-data';
+import { referenceCatalog } from '@/lib/ocean/references';
+import CategoryCarousel from '@/components/ocean/home/CategoryCarousel';
+import LusionHero from '@/components/ocean/motion/lusion-home';
+import { HomeMotion, MotionCount } from '@/components/ocean/motion/home-motion';
+import MolecularScroll from '@/components/ocean/motion/molecular-scroll';
+import { ScrollExperience, IngredientPortal } from '@/components/ocean/motion/scroll-experience';
 
 /**
- * COCOJOJO home page, ported to the Gloss Studio prototype: hero with the
- * three-slide ingredient edit, category carousel, featured products, the
- * formulation-workspace editorial and the A–Z library band.
+ * COCOJOJO home page — the Ocean redesign, a copy of the reference site's
+ * Home: Lusion hero (gel sculpture + ingredient spotlight), category
+ * carousel, molecular scroll threads, the sideways "Meet your next
+ * essentials" rail, the formulation-workspace editorial, the ingredient
+ * portal and the A–Z library band. The shell adds the cinematic intro,
+ * the lusion-home-shell wrapper and the interactive finale for "/".
  *
- * The prototype's collections and products are placeholders; here they are
- * our categories (matched to the prototype's collections by keyword) and our
- * featured products, so every card links to something real.
+ * The spotlight is our product (admin pick, else a priced featured product);
+ * the library count is our products plus the supplier references.
  */
 
 const HOME_TITLE = 'Wholesale Cosmetic Ingredients in Bulk';
@@ -101,159 +104,215 @@ async function chosenSpotlight(): Promise<Product | null> {
   return found?.[0] ?? null;
 }
 
-/** The hero's glass note: the admin's pick, else the first product we can quote a pack and price for. */
-function spotlightFor(products: Product[], chosen: Product | null): HeroSpotlight | null {
-  if (chosen) {
-    const v = getDefaultVariant(chosen.variants || []);
-    const priced = !!v && Number(v.effectivePrice ?? v.price) > 0;
-    return {
-      href: `/products/${chosen.slug}`,
-      name: chosen.name,
-      pack: priced ? v!.label || null : null,
-      price: priced ? formatUsd(v!.effectivePrice ?? v!.price) : 'Price on request',
-    };
-  }
-  const priced = products.find((p) => {
-    const v = getDefaultVariant(p.variants || []);
-    return !!v && Number(v.effectivePrice ?? v.price) > 0;
-  });
-  const product = priced || products[0];
-  if (!product) return null;
-  const variant = priced ? getDefaultVariant(product.variants || []) : null;
+type Spotlight = { href: string; name: string; pack: string; price: string };
+
+function spotlightOf(product: Product, requirePrice = false): Spotlight | null {
+  const v = getDefaultVariant(product.variants || []);
+  const priced = !!v && Number(v.effectivePrice ?? v.price) > 0;
+  if (requirePrice && !priced) return null;
   return {
     href: `/products/${product.slug}`,
     name: product.name,
-    pack: variant?.label || null,
-    price: variant ? formatUsd(variant.effectivePrice ?? variant.price) : 'Price on request',
+    pack: priced ? v!.label || 'Request a pack' : 'Request a pack',
+    price: priced ? formatUsd(v!.effectivePrice ?? v!.price) : 'Price on request',
   };
 }
 
+/** The hero's spotlight: the admin's pick, else the first product we can quote a pack and price for. */
+function spotlightFor(products: Product[], chosen: Product | null): Spotlight | null {
+  if (chosen) return spotlightOf(chosen);
+  for (const p of products) {
+    const s = spotlightOf(p, true);
+    if (s) return s;
+  }
+  return products[0] ? spotlightOf(products[0]) : null;
+}
+
+const FEATURED_CATEGORY_IDS = ['carrier-oils', 'actives-vitamins', 'butters-waxes', 'botanicals'];
+
 export default async function ScientificHomePage() {
-  const [categoriesRes, products, chosen] = await Promise.all([
-    serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100&rootsOnly=true'),
+  const [products, chosen, productPage] = await Promise.all([
     homeProducts(),
     chosenSpotlight(),
+    serverFetch<Paginated<Product>>('/wholesale/products?page=1&limit=1'),
   ]);
 
-  const categories = categoriesRes?.data || [];
-  const categoryTotal = categoriesRes?.pagination.total ?? categories.length;
-  const carousel = carouselCategories(categories);
+  const spotlight = spotlightFor(products, chosen);
+  const libraryCount = (productPage?.pagination?.total ?? 0) + referenceCatalog.length;
+  const featuredCategories = FEATURED_CATEGORY_IDS.map((id) => ingredientCategories.find((c) => c.id === id)).filter(
+    (c): c is (typeof ingredientCategories)[number] => !!c,
+  );
 
   return (
     <>
       <JsonLd data={[organizationSchema(), webSiteSchema()]} />
-      <GlossReveal />
-
-      <HomeHero collections={heroCollections(categories)} spotlight={spotlightFor(products, chosen)} />
-
-      {carousel.length ? <CategoryCarousel categories={carousel} total={categoryTotal} /> : null}
-
-      {products.length ? (
-        <section className="r-soft-section">
-          <div className="r-wrap r-section">
+      <div className="l-home">
+        <HomeMotion />
+        <ScrollExperience />
+        <LusionHero
+          price={spotlight?.price ?? 'Price on request'}
+          pack={spotlight?.pack ?? 'Request a pack'}
+          href={spotlight?.href ?? '/products'}
+          name={spotlight?.name ?? 'Shop COCOJOJO'}
+        />
+        <div className="l-category-gallery">
+          <CategoryCarousel
+            categories={[
+              ...ingredientCategories.map((c) => ({ id: c.id, label: c.label, image: categoryImage(c.id) })),
+              packagingCategory,
+            ]}
+          />
+        </div>
+        <MolecularScroll />
+        <section className="x-category-journey" aria-labelledby="featured-categories-title">
+          <div className="l-featured r-wrap r-section x-category-stage">
+            <MolecularScroll variant="thread" />
             <div className="r-section-heading">
               <div>
-                <span className="r-eyebrow">The formulation shelf</span>
-                <h2>Meet your next essentials.</h2>
+                <span className="r-eyebrow">Shop by category</span>
+                <h2 id="featured-categories-title">
+                  Meet your
+                  <br />
+                  <span>next essentials.</span>
+                </h2>
               </div>
-              <Link className="r-text-link" href="/products">
-                Shop COCOJOJO
-              </Link>
+              <a className="r-btn r-outline" href="/categories">
+                View all {ingredientCategories.length} categories
+              </a>
             </div>
-            <div className="r-product-grid">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+            <div className="x-category-viewport">
+              <div className="r-product-grid">
+                {featuredCategories.map((category) => (
+                  <article className="r-product-card l-featured-category" key={category.id}>
+                    <a
+                      className="l-category-link"
+                      href={'/products?category=' + category.id}
+                      aria-labelledby={'featured-category-' + category.id}
+                    >
+                      <div className="r-product-photo">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={categoryImage(category.id)}
+                          alt={category.label + ' representative ingredient texture'}
+                          width={700}
+                          height={530}
+                          loading="lazy"
+                        />
+                        <span>Ingredient collection</span>
+                      </div>
+                      <div className="r-product-info">
+                        <h3 id={'featured-category-' + category.id}>{category.label}</h3>
+                        <p>{categoryDescription(category.id)}</p>
+                        <div className="l-category-action">
+                          <span>Explore category</span>
+                          <ArrowUpRight size={22} aria-hidden="true" />
+                        </div>
+                      </div>
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </div>
+            <div className="x-rail-caption" aria-hidden="true">
+              <span>Keep scrolling to discover</span>
+              <div>
+                <i />
+              </div>
+              <span className="x-rail-index">01 / 04</span>
             </div>
           </div>
         </section>
-      ) : null}
-
-      <section className="r-wrap r-section">
-        <div className="r-editorial">
-          <div className="r-editorial-photo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={GLOSS_IMAGES.texture}
-              alt="Clear gel and ingredient flakes, representative texture photograph"
-              width={700}
-              height={650}
-              loading="lazy"
-            />
-            <span>Texture. Structure. Possibility.</span>
-          </div>
-          <div className="r-editorial-copy">
-            <span className="r-eyebrow">Your own formulation workspace</span>
-            <h2>
-              Bring a little more
-              <br />
-              <em>clarity to creating.</em>
-            </h2>
-            <p>
-              Compare technical properties, build an ingredient shortlist and calculate weights for your next trial
-              batch. Keep the details in one place.
-            </p>
-            <div className="r-tool-links">
-              <Link href="/compare">
-                <GitCompareArrows size={22} />
-                <span>
-                  <strong>Compare ingredients</strong>
-                  <small>See the details side by side</small>
-                </span>
-              </Link>
-              <Link href="/formulation-tools">
-                <FlaskConical size={22} />
-                <span>
-                  <strong>Calculate your batch</strong>
-                  <small>Turn percentages into weights</small>
-                </span>
-              </Link>
-              <Link href="/projects">
-                <BookOpen size={22} />
-                <span>
-                  <strong>Create a project</strong>
-                  <small>Save ingredients and development notes</small>
-                </span>
-              </Link>
+        <section className="l-workspace r-wrap r-section">
+          <div className="r-editorial">
+            <div className="r-editorial-copy">
+              <span className="r-eyebrow">Your own formulation workspace</span>
+              <h2>
+                Bring a little more
+                <br />
+                <em>clarity to creating.</em>
+              </h2>
+              <p>
+                Compare technical properties, build an ingredient shortlist and calculate weights for your next trial
+                batch. Keep the details in one place.
+              </p>
+              <div className="r-tool-links">
+                <a href="/compare">
+                  <GitCompareArrows size={22} />
+                  <span>
+                    <strong>Compare ingredients</strong>
+                    <small>See the details side by side</small>
+                  </span>
+                  <b aria-hidden="true">+</b>
+                </a>
+                <a href="/formulation-tools">
+                  <FlaskConical size={22} />
+                  <span>
+                    <strong>Calculate your batch</strong>
+                    <small>Turn percentages into weights</small>
+                  </span>
+                  <b aria-hidden="true">+</b>
+                </a>
+                <a href="/projects">
+                  <BookOpen size={22} />
+                  <span>
+                    <strong>Create a project</strong>
+                    <small>Save ingredients and development notes</small>
+                  </span>
+                  <b aria-hidden="true">+</b>
+                </a>
+              </div>
+            </div>
+            <div className="r-editorial-photo">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/ingredients/texture.webp"
+                alt="Clear gel and ingredient flakes, representative texture photograph"
+                width={700}
+                height={650}
+                loading="lazy"
+              />
+              <span>Texture. Structure. Possibility.</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="r-library-band">
-        <div className="r-wrap">
-          <div>
-            <span className="r-eyebrow">For the curious formulator</span>
-            {/* The prototype counts products plus supplier references ("1,103
-                starting points"). That library's size isn't available here,
-                so the heading makes no numeric claim. */}
-            <h2>
-              One library.
-              <br />
-              Every starting point.
-            </h2>
-            <p>
-              Explore MakingCosmetics supplier references, available use ranges and published technical documents.
-              COCOJOJO supply is confirmed separately.
-            </p>
-            <Link className="r-btn r-white" href="/ingredients-a-z">
-              Open the ingredient library
-            </Link>
+        </section>
+        <IngredientPortal count={libraryCount} />
+        <section className="r-library-band l-library">
+          <MolecularScroll variant="orbit" />
+          <div className="r-wrap">
+            <div>
+              <span className="r-eyebrow">For the curious formulator</span>
+              <h2>
+                One library.
+                <br />
+                <span className="l-library-number">
+                  <MotionCount value={libraryCount} />
+                </span>
+                <br />
+                starting points.
+              </h2>
+              <p>
+                Explore supplier references, available technical properties and published documents across the
+                reviewed source catalogs. COCOJOJO supply is confirmed separately.
+              </p>
+              <a className="r-btn r-primary" href="/ingredients-a-z">
+                Open the ingredient library
+              </a>
+            </div>
+            <div className="g-library-tiles" aria-label="Explore the ingredient library">
+              <a href="/ingredients-a-z?letter=A">
+                <span>Start with</span>
+                <strong>A</strong>
+                <small>Explore A ingredients</small>
+              </a>
+              <a href="/ingredients-a-z?letter=Z">
+                <span>Discover through</span>
+                <strong>Z</strong>
+                <small>Explore Z ingredients</small>
+              </a>
+            </div>
           </div>
-          <div className="g-library-tiles" aria-label="Explore the ingredient library">
-            <Link href="/ingredients-a-z?letter=A">
-              <span>Start with</span>
-              <strong>A</strong>
-              <small>Explore A ingredients</small>
-            </Link>
-            <Link href="/ingredients-a-z?letter=Z">
-              <span>Discover through</span>
-              <strong>Z</strong>
-              <small>Explore Z ingredients</small>
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </>
   );
 }
