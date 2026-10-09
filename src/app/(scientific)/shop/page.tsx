@@ -1,26 +1,40 @@
-import { permanentRedirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
+import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
+import { Catalog, isReferenceView, toSearchParams } from '@/components/ocean/catalog/Catalog';
+import { getOurProducts } from '@/components/ocean/catalog/ourProducts';
 
 /**
- * /shop is the prototype's main shop URL. Our catalog lives at /products (its
- * URLs are indexed), so this answers with a permanent redirect there, keeping
- * the query string. The prototype's `?q=` search maps onto our `?search=`.
+ * /shop — the ocean design's shop (reference retail-page.tsx `Catalog` with
+ * path "/shop"): OUR products by default (`source` defaults to cocojojo),
+ * with the same filters as /products. Supplier-reference views stay
+ * noindex,follow.
  */
-export default function ShopRedirect({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
-  const qs = new URLSearchParams();
-  for (const [key, value] of Object.entries(searchParams)) {
-    for (const v of Array.isArray(value) ? value : value === undefined ? [] : [value]) {
-      qs.append(key, v);
-    }
-  }
-  const q = qs.get('q');
-  if (q !== null) {
-    qs.delete('q');
-    if (q && !qs.has('search')) qs.set('search', q);
-  }
-  const query = qs.toString();
-  permanentRedirect(query ? `/products?${query}` : '/products');
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export function generateMetadata({ searchParams }: { searchParams: SearchParams }): Metadata {
+  const base = pageMetadata({
+    title: 'Shop Wholesale Cosmetic Ingredients',
+    description:
+      'Shop COCOJOJO wholesale cosmetic ingredients — choose a published pack size and add it to your cart, or request the size you need.',
+    path: '/shop',
+    keywords: ['buy cosmetic ingredients online', 'wholesale cosmetic ingredients shop', 'cosmetic raw materials'],
+  });
+  return isReferenceView(toSearchParams(searchParams)) ? { ...base, robots: { index: false, follow: true } } : base;
+}
+
+export default async function ShopPage({ searchParams }: { searchParams: SearchParams }) {
+  const ours = await getOurProducts();
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Shop', path: '/shop' },
+        ])}
+      />
+      <Catalog path="/shop" params={toSearchParams(searchParams)} ours={ours} />
+    </>
+  );
 }
