@@ -1,1 +1,5 @@
 /* Ocean redesign — categories group additions. Scope every rule under .ocean */
+
+/* Buying guidance under /categories/<slug> (CategoryGuide), in the FAQ's parts. */
+.ocean .cg-guide-lead{font-size:16px;line-height:1.9;color:#3d5568;margin:0 0 18px;max-width:780px}
+.ocean .cg-guide .r-faq details p+p{margin-top:-8px!important}
