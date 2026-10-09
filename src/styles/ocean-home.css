@@ -1,0 +1,10 @@
+/* Ocean redesign — home group additions. Scope every rule under .ocean */
+
+/* The logo is dark lettering on a transparent PNG, so on the dark scenes
+   (intro, hero, sideways, molecule close-up, closing copy) it sits on a solid
+   white card. Light areas (header, footer) show it with no card. */
+.ocean .cj-brand-surface,
+.ocean.gloss-theme .cj-brand-surface {
+  background: #fff;
+  border-color: #fff;
+}

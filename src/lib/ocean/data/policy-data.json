@@ -1,0 +1,45 @@
+{
+  "checkedOn": "2026-09-30",
+  "recommendation": "Use concise local legal-information summaries with prominent links to the complete official policies. Do not label these summaries as the full governing policy or invent replacement commitments.",
+  "privacy": {
+    "title": "Privacy information",
+    "url": "https://cocojojo.com/legal/privacy-policy",
+    "effectiveDate": "2026-05-27",
+    "updatedDate": "2026-08-27",
+    "summary": "COCOJOJO's Privacy Policy describes how it handles information collected through orders, accounts, support, manufacturing inquiries and website activity. It explains use of that information for fulfillment, customer service, security, analytics and marketing, along with disclosures to service providers and advertising partners. The policy also covers cookies, retention, international transfers, AI-assisted systems and California privacy rights. Privacy requests may be sent to support@cocojojo.com. Read the complete official policy for the detailed practices, choices and request procedures.",
+    "cta": "Read the full Privacy Policy",
+    "sourceRef": "turn26view0"
+  },
+  "terms": {
+    "title": "Terms of service information",
+    "url": "https://cocojojo.com/legal/terms-of-service",
+    "effectiveDate": "2026-05-27",
+    "version": "5.0",
+    "summary": "COCOJOJO's Terms of Service address use of its websites, accounts, products, communications and manufacturing services. They cover eligibility, electronic acceptance, account responsibilities, purchases, commercial relationships and dispute procedures. The terms distinguish retail purchases from business transactions and describe responsibilities for wholesale, private label and manufacturing customers. Questions may be directed to support@cocojojo.com. Review the complete official terms and any applicable separately signed agreement before placing an order or starting a project.",
+    "cta": "Read the full Terms of Service",
+    "sourceRef": "turn26view1"
+  },
+  "additionalLegalLinks": [
+    {"title": "Legal notices", "url": "https://cocojojo.com/legal"},
+    {"title": "Wholesale, B2B & Private Label Terms", "url": "https://cocojojo.com/legal/wholesale-b2b-private-label-custom-manufacturing-terms"},
+    {"title": "Do Not Sell or Share My Personal Information", "url": "https://cocojojo.com/legal/do-not-sell-or-share"}
+  ],
+  "account": {
+    "loginUrl": "https://cocojojo.com/login",
+    "loginEvidence": "Official linked page renders the heading Sign in to your account.",
+    "registrationUrl": "https://cocojojo.com/register",
+    "registrationEvidence": "Official Register navigation link resolves here; rendered search output did not expose the registration form.",
+    "sourceRefs": ["turn29view0", "turn29view1"]
+  },
+  "contact": {
+    "url": "https://cocojojo.com/contact",
+    "company": "COCO JOJO LLC",
+    "email": "support@cocojojo.com",
+    "phone": "+1 949-610-7164",
+    "location": "California, United States",
+    "hoursAsPublished": "Monday–Friday, 9:00 AM–6:00 PM PST",
+    "streetAddress": null,
+    "sourceRefs": ["turn28view0", "turn26view0", "turn26view1"],
+    "researchNotes": "Current contact page confirms phone, California location and published hours. Older product footers show Red Hill Ave, Irvine, CA 92606 without a street number, and conflicting 10 AM–5 PM hours; do not use that as a verified mailing address. Avoid copying the contact form's blanket no-third-party-sharing sentence because the detailed Privacy Policy discloses service-provider and advertising sharing."
+  }
+}

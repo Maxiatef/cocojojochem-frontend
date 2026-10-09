@@ -1,0 +1,1259 @@
+{
+  "ingredient-sourcing": {
+    "title": "Ingredient sourcing",
+    "eyebrow": "Ingredients & sourcing",
+    "intro": "Start with the material your product needs. Discuss ingredient identity, purchasing quantities and required documentation to shape a sourcing request.",
+    "image": "oils",
+    "group": "Ingredients & sourcing",
+    "offerings": [
+      "Ingredient and grade requirements",
+      "Bulk purchasing inquiries",
+      "Origin and document requests",
+      "Alternative source review"
+    ],
+    "steps": [
+      [
+        "Define the material",
+        "Share the ingredient name and specification."
+      ],
+      [
+        "Set purchasing needs",
+        "Outline quantity, delivery location and forecast."
+      ],
+      [
+        "Review the options",
+        "Compare available specifications, samples and quotation terms."
+      ]
+    ],
+    "include": [
+      "Ingredient name or INCI",
+      "Required specification",
+      "Estimated quantity",
+      "Delivery destination"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Global chemical supply chain",
+        "url": "https://www.univarsolutions.com/services/supply-chain"
+      },
+      {
+        "title": "Barentz | Group-wide capabilities, spanning several industries",
+        "url": "https://www.barentz.com/knowledge/"
+      },
+      {
+        "title": "Lotioncrafter | Bulk sourcing and quotations",
+        "url": "https://lotioncrafter.com/pages/policies"
+      }
+    ]
+  },
+  "ingredient-evaluation": {
+    "title": "Ingredient evaluation & alternatives",
+    "eyebrow": "Ingredients & sourcing",
+    "intro": "Compare ingredients against a specific formulation goal. Request a review of candidate materials, supporting documents and the evaluation needed before substitution.",
+    "image": "actives",
+    "group": "Ingredients & sourcing",
+    "offerings": [
+      "Ingredient comparison briefs",
+      "Alternative material screening",
+      "Specification gap review",
+      "Evaluation criteria planning"
+    ],
+    "steps": [
+      [
+        "Describe the role",
+        "Explain what the ingredient does in your product."
+      ],
+      [
+        "Compare candidates",
+        "Identify the properties and documents that matter."
+      ],
+      [
+        "Plan evaluation",
+        "Define the checks needed before adopting a change."
+      ]
+    ],
+    "include": [
+      "Current ingredient",
+      "Formula application",
+      "Reason for substitution",
+      "Required performance"
+    ],
+    "sources": [
+      {
+        "title": "Brenntag | Application centers across multiple industries, including beauty and personal care",
+        "url": "https://www.brenntag.com/en-us/services/innovation-and-application-centers/"
+      },
+      {
+        "title": "Barentz | Performance materials; not automatically personal care",
+        "url": "https://www.barentz.com/performance-materials/"
+      }
+    ]
+  },
+  "sustainability": {
+    "title": "Sustainability & responsible sourcing",
+    "eyebrow": "Ingredients & sourcing",
+    "intro": "Turn a sustainability goal into questions that can be checked. Discuss material origin, supporting evidence, packaging choices and formulation tradeoffs.",
+    "image": "botanicals",
+    "group": "Ingredients & sourcing",
+    "offerings": [
+      "Origin and traceability questions",
+      "Supplier evidence requests",
+      "Material and packaging comparisons",
+      "Environmental claim evidence planning"
+    ],
+    "steps": [
+      [
+        "Set the objective",
+        "Name the environmental or sourcing issue you want to address."
+      ],
+      [
+        "Identify evidence",
+        "List the documents and comparisons needed."
+      ],
+      [
+        "Assess tradeoffs",
+        "Review practical options before making product claims."
+      ]
+    ],
+    "include": [
+      "Sustainability objective",
+      "Materials or packaging in scope",
+      "Available supplier evidence",
+      "Target market and claims"
+    ],
+    "sources": [
+      {
+        "title": "Croda Beauty | Market insight and sustainability support",
+        "url": "https://www.crodabeauty.com/en-gb/capabilities/indie-beauty"
+      },
+      {
+        "title": "Redox | Company quality assurance and regulatory affairs",
+        "url": "https://redox.com/about/quality/"
+      },
+      {
+        "title": "Azelis | Formulation development",
+        "url": "https://www.azelis.com/en/en/about-azelis/our-purpose"
+      }
+    ]
+  },
+  "formulation": {
+    "title": "Custom formulation",
+    "eyebrow": "Formulation & development",
+    "intro": "Bring a product idea, a clear brief or a reference for the experience you want. Discuss a new formula built around your ingredients, texture and product goals.",
+    "image": "texture",
+    "group": "Formulation & development",
+    "offerings": [
+      "New formula briefs",
+      "Ingredient preference review",
+      "Texture and sensory targets",
+      "Development and approval planning"
+    ],
+    "steps": [
+      [
+        "Build the brief",
+        "Describe the product, user and desired experience."
+      ],
+      [
+        "Agree the direction",
+        "Discuss feasibility and priorities for development."
+      ],
+      [
+        "Plan review",
+        "Set sample feedback and approval milestones."
+      ]
+    ],
+    "include": [
+      "Product type",
+      "Desired texture and finish",
+      "Ingredient preferences",
+      "Target market"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "MakingCosmetics | Custom formulation and R&D",
+        "url": "https://www.makingcosmetics.com/Service-For-New-Product.html?lang=en_US"
+      },
+      {
+        "title": "Barentz | Personal and home care application laboratories",
+        "url": "https://www.barentz.com/personal-and-home-care/formulations-quality/"
+      }
+    ]
+  },
+  "formula-improvement": {
+    "title": "Formula improvement",
+    "eyebrow": "Formulation & development",
+    "intro": "Share what is working and what needs to change. Discuss formula fixing, ingredient substitutions or process adjustments with clear priorities for the revised product.",
+    "image": "texture",
+    "group": "Formulation & development",
+    "offerings": [
+      "Formula troubleshooting inquiries",
+      "Texture and appearance changes",
+      "Ingredient substitution review",
+      "Cost and process improvement briefs"
+    ],
+    "steps": [
+      [
+        "Document the issue",
+        "Describe the behavior and when it occurs."
+      ],
+      [
+        "Review possible changes",
+        "Discuss the formula, process and constraints."
+      ],
+      [
+        "Plan confirmation",
+        "Define how proposed changes will be evaluated."
+      ]
+    ],
+    "include": [
+      "Current formula if available",
+      "Description of the issue",
+      "Batch and process notes",
+      "Desired improvement"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "MakingCosmetics | Formula troubleshooting and reformulation",
+        "url": "https://www.makingcosmetics.com/Consultation-Service.html?lang=en_US"
+      },
+      {
+        "title": "Brenntag | Application centers across multiple industries, including beauty and personal care",
+        "url": "https://www.brenntag.com/en-us/services/innovation-and-application-centers/"
+      }
+    ]
+  },
+  "base-customization": {
+    "title": "Base customization",
+    "eyebrow": "Formulation & development",
+    "intro": "Explore changes to an existing base instead of starting with a new formula. Discuss the desired adjustments and the evaluation they may require.",
+    "image": "butters",
+    "group": "Formulation & development",
+    "offerings": [
+      "Existing base review",
+      "Ingredient addition requests",
+      "Sensory adjustment briefs",
+      "Bulk customized product inquiries"
+    ],
+    "steps": [
+      [
+        "Choose the starting point",
+        "Identify the base and its current use."
+      ],
+      [
+        "Define the changes",
+        "Set priorities for feel, appearance or composition."
+      ],
+      [
+        "Confirm the next stage",
+        "Discuss samples and any testing needed after modification."
+      ]
+    ],
+    "include": [
+      "Base name or formula",
+      "Requested changes",
+      "Intended product use",
+      "Estimated quantity"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "MakingCosmetics | Base customization and bulk manufacture",
+        "url": "https://www.makingcosmetics.com/Base-Customization.html?lang=en_US"
+      }
+    ]
+  },
+  "samples-prototyping": {
+    "title": "Samples & prototyping",
+    "eyebrow": "Formulation & development",
+    "intro": "Make the next decision with a focused sample request. Discuss ingredient evaluation samples or a product prototype and the questions each should answer.",
+    "image": "actives",
+    "group": "Formulation & development",
+    "offerings": [
+      "Ingredient sample inquiries",
+      "Prototype development briefs",
+      "Reference product comparisons",
+      "Structured sample feedback"
+    ],
+    "steps": [
+      [
+        "State the decision",
+        "Explain what the sample should help you decide."
+      ],
+      [
+        "Define the sample",
+        "Confirm the material or prototype and evaluation needs."
+      ],
+      [
+        "Record feedback",
+        "Capture observations before moving to the next version."
+      ]
+    ],
+    "include": [
+      "Ingredient or product brief",
+      "Evaluation objective",
+      "Required sample format",
+      "Reference sample details"
+    ],
+    "sources": [
+      {
+        "title": "Azelis | Global sampling service",
+        "url": "https://www.azelis.com/en/services/sampling-service"
+      },
+      {
+        "title": "Croda Beauty | Ingredient and formulation samples",
+        "url": "https://www.crodabeauty.com/en-gb/formulations/standard-terms-and-conditions-for-the-supply-of-samples"
+      },
+      {
+        "title": "MakingCosmetics | Custom formulation and R&D",
+        "url": "https://www.makingcosmetics.com/Service-For-New-Product.html?lang=en_US"
+      }
+    ]
+  },
+  "technical-support": {
+    "title": "Technical support & formulation guidance",
+    "eyebrow": "Formulation & development",
+    "intro": "Bring an ingredient, application or process question. Request guidance on available technical information and the next practical step for your formulation.",
+    "image": "cleansing",
+    "group": "Formulation & development",
+    "offerings": [
+      "Ingredient application questions",
+      "Document interpretation requests",
+      "Formulation calculation questions",
+      "Technical troubleshooting briefs"
+    ],
+    "steps": [
+      [
+        "Ask the question",
+        "Describe the application and the decision you face."
+      ],
+      [
+        "Share the context",
+        "Include the formula details or records relevant to the issue."
+      ],
+      [
+        "Agree next steps",
+        "Identify information, trials or specialist input needed."
+      ]
+    ],
+    "include": [
+      "Technical question",
+      "Product application",
+      "Relevant formula details",
+      "Existing documents or results"
+    ],
+    "sources": [
+      {
+        "title": "ChemPoint | Technical customer support",
+        "url": "https://www.chempoint.com/support/product-support"
+      },
+      {
+        "title": "IMCD | Beauty and personal care; public indexed page text",
+        "url": "https://www.imcdgroup.com/business-groups/beauty-and-personal-care/technical-expertise"
+      },
+      {
+        "title": "Lotioncrafter | Formulation calculations",
+        "url": "https://lotioncrafter.com/pages/calculators"
+      }
+    ]
+  },
+  "market-concepts": {
+    "title": "Product concepts & development planning",
+    "eyebrow": "Formulation & development",
+    "intro": "Shape an early idea into a usable development brief. Discuss your intended customer, reference products and the priorities that should guide formula and packaging decisions.",
+    "image": "botanicals",
+    "group": "Formulation & development",
+    "offerings": [
+      "Product concept briefs",
+      "Reference product reviews",
+      "Ingredient story planning",
+      "Development priority setting"
+    ],
+    "steps": [
+      [
+        "Define the audience",
+        "Describe who the product is for and how it will be used."
+      ],
+      [
+        "Shape the concept",
+        "Connect product format, experience and positioning."
+      ],
+      [
+        "Build the brief",
+        "Record priorities for formulation and packaging review."
+      ]
+    ],
+    "include": [
+      "Intended customer",
+      "Product concept",
+      "Reference products",
+      "Target price position"
+    ],
+    "sources": [
+      {
+        "title": "Croda Beauty | Market insight and sustainability support",
+        "url": "https://www.crodabeauty.com/en-gb/capabilities/indie-beauty"
+      },
+      {
+        "title": "Brenntag | Application centers across multiple industries, including beauty and personal care",
+        "url": "https://www.brenntag.com/en-us/services/innovation-and-application-centers/"
+      },
+      {
+        "title": "Barentz | Personal and home care application laboratories",
+        "url": "https://www.barentz.com/personal-and-home-care/formulations-quality/"
+      }
+    ]
+  },
+  "private-label": {
+    "title": "Private label",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Discuss a product under your own brand, from the formula direction to the presentation. Bring your launch goals to define the scope of a private label inquiry.",
+    "image": "butters",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Private and white label inquiries",
+      "Formula selection or customization",
+      "Packaging and labeling brief",
+      "Launch quantity planning"
+    ],
+    "steps": [
+      [
+        "Describe the brand",
+        "Share your product idea and customer."
+      ],
+      [
+        "Set the product scope",
+        "Discuss formula, packaging and labeling needs."
+      ],
+      [
+        "Review the proposal",
+        "Confirm specifications and approvals before proceeding."
+      ]
+    ],
+    "include": [
+      "Brand and product brief",
+      "Estimated launch quantity",
+      "Packaging preference",
+      "Target market"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "AMK Formulations | Private label and product launch support",
+        "url": "https://www.amkformulations.com/services/"
+      }
+    ]
+  },
+  "contract-manufacturing": {
+    "title": "Contract manufacturing",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Discuss a manufacturing project around an existing formula or a new development brief. Define responsibilities, specifications and approval points before production is planned.",
+    "image": "texture",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Existing formula project review",
+      "Custom manufacturing inquiries",
+      "Bulk production planning",
+      "Project specification review"
+    ],
+    "steps": [
+      [
+        "Present the project",
+        "Share the formula status, product format and quantity."
+      ],
+      [
+        "Define responsibilities",
+        "Clarify materials, packaging, testing and approvals."
+      ],
+      [
+        "Confirm the scope",
+        "Review the proposed production and delivery terms."
+      ]
+    ],
+    "include": [
+      "Formula or development status",
+      "Product specification",
+      "Estimated batch quantity",
+      "Packaging and delivery needs"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Contract manufacturing",
+        "url": "https://cocojojo.com/contract-manufacturing"
+      },
+      {
+        "title": "Cosmetic Laboratories | Pilot evaluation and production transfer",
+        "url": "https://cosmeticlaboratories.com/services/production-manufacturing/"
+      },
+      {
+        "title": "AMK Formulations | Bulk production, filling and sealing",
+        "url": "https://www.amkformulations.com/services/"
+      }
+    ]
+  },
+  "custom-blending": {
+    "title": "Custom blending",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Request a blending assessment for a defined ingredient mixture. Discuss material inputs, proportions, handling needs and the specification the blend should meet.",
+    "image": "oils",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Defined blend inquiries",
+      "Premix project assessment",
+      "Customer supplied material review",
+      "Bulk blend packaging requests"
+    ],
+    "steps": [
+      [
+        "Share the blend",
+        "Provide the ingredient list and target composition."
+      ],
+      [
+        "Review handling needs",
+        "Discuss material properties and process constraints."
+      ],
+      [
+        "Set acceptance criteria",
+        "Define the checks and packaging needed for the project."
+      ]
+    ],
+    "include": [
+      "Blend composition",
+      "Material specifications",
+      "Target quantity",
+      "Required packaging"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Custom chemical blending; confirm applicability and location",
+        "url": "https://www.univarsolutions.com/services/custom-blending"
+      },
+      {
+        "title": "Brenntag | Customer-specific chemical formulations across industries",
+        "url": "https://www.brenntag.com/en-us/services/blending-solutions/"
+      },
+      {
+        "title": "Barentz | Group-wide capabilities, spanning several industries",
+        "url": "https://www.barentz.com/knowledge/"
+      }
+    ]
+  },
+  "packaging-filling": {
+    "title": "Packaging & filling",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Discuss filling and labeling for your product and container. Share the formula format, pack design and quantity so the project can be assessed together.",
+    "image": "cleansing",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Filling and labeling inquiries",
+      "Container and closure review",
+      "Pack format assessment",
+      "Packing and dispatch requirements"
+    ],
+    "steps": [
+      [
+        "Define the product",
+        "Describe its format and filling requirements."
+      ],
+      [
+        "Review the pack",
+        "Share container, closure and label details."
+      ],
+      [
+        "Confirm the scope",
+        "Agree quantities, approvals and packing instructions."
+      ]
+    ],
+    "include": [
+      "Product format",
+      "Container and closure details",
+      "Unit size and quantity",
+      "Label or artwork status"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "Cosmetic Laboratories | Filling, labeling and packing",
+        "url": "https://cosmeticlaboratories.com/services/production-manufacturing/"
+      },
+      {
+        "title": "AMK Formulations | Bulk production, filling and sealing",
+        "url": "https://www.amkformulations.com/services/"
+      }
+    ]
+  },
+  "repacking": {
+    "title": "Bulk repacking",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Explore transferring a bulk ingredient or blend into a different pack size. Request an assessment of material handling, container choice and identification requirements.",
+    "image": "oils",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Bulk to smaller pack inquiries",
+      "Pack size conversion planning",
+      "Container suitability review",
+      "Lot identification requirements"
+    ],
+    "steps": [
+      [
+        "Identify the material",
+        "Provide its specification and handling information."
+      ],
+      [
+        "Choose the pack",
+        "Describe the proposed containers and fill quantities."
+      ],
+      [
+        "Plan the transfer",
+        "Confirm identification, checks and project responsibilities."
+      ]
+    ],
+    "include": [
+      "Material name and documents",
+      "Current bulk format",
+      "Requested pack sizes",
+      "Total quantity"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Custom chemicals packaging; not evidence of every finished cosmetic format",
+        "url": "https://www.univarsolutions.com/services/packaging-and-private-label-services"
+      },
+      {
+        "title": "Redox | US market overview; regional availability must be checked",
+        "url": "https://redox.com/usa/"
+      }
+    ]
+  },
+  "scale-up": {
+    "title": "Pilot batches & scale-up",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Plan the move from a development sample to a larger batch. Discuss process differences, material requirements and the checks needed to compare results.",
+    "image": "texture",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Pilot batch planning",
+      "Process transfer review",
+      "Scale dependent issue assessment",
+      "Batch comparison criteria"
+    ],
+    "steps": [
+      [
+        "Document the starting point",
+        "Share the formula and successful small batch process."
+      ],
+      [
+        "Identify transfer risks",
+        "Discuss mixing, heating, cooling and ingredient addition needs."
+      ],
+      [
+        "Define the comparison",
+        "Plan how pilot results will be reviewed against the target."
+      ]
+    ],
+    "include": [
+      "Formula and current batch size",
+      "Process instructions",
+      "Target production quantity",
+      "Sample or product specification"
+    ],
+    "sources": [
+      {
+        "title": "Cosmetic Laboratories | Pilot evaluation and production transfer",
+        "url": "https://cosmeticlaboratories.com/services/production-manufacturing/"
+      },
+      {
+        "title": "Brenntag | Application centers across multiple industries, including beauty and personal care",
+        "url": "https://www.brenntag.com/en-us/services/innovation-and-application-centers/"
+      },
+      {
+        "title": "Barentz | Group-wide capabilities, spanning several industries",
+        "url": "https://www.barentz.com/knowledge/"
+      }
+    ]
+  },
+  "label-artwork": {
+    "title": "Label & artwork support",
+    "eyebrow": "Manufacturing & packaging",
+    "intro": "Prepare a label brief that connects your product information with its packaging. Discuss label content, artwork readiness and the review needed for your intended market.",
+    "image": "botanicals",
+    "group": "Manufacturing & packaging",
+    "offerings": [
+      "Label content review requests",
+      "Ingredient declaration information",
+      "Artwork and container coordination",
+      "Label compliance assistance inquiries"
+    ],
+    "steps": [
+      [
+        "Gather the content",
+        "Bring product identity, ingredient information and proposed claims."
+      ],
+      [
+        "Match the package",
+        "Check dimensions, placement and artwork requirements."
+      ],
+      [
+        "Plan approval",
+        "Identify the technical and market review needed before printing."
+      ]
+    ],
+    "include": [
+      "Artwork or label draft",
+      "Ingredient information",
+      "Container dimensions",
+      "Sales market and proposed claims"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "AMK Formulations | Private label and product launch support",
+        "url": "https://www.amkformulations.com/services/"
+      },
+      {
+        "title": "MakingCosmetics | Regulatory formulation support",
+        "url": "https://www.makingcosmetics.com/Regulatory-Service.html?lang=en_US"
+      }
+    ]
+  },
+  "testing-analysis": {
+    "title": "Testing & analysis",
+    "eyebrow": "Testing & documentation",
+    "intro": "Define the question before choosing a test. Request a testing assessment and discuss whether specialist laboratory referral is needed for your ingredient or finished product.",
+    "image": "actives",
+    "group": "Testing & documentation",
+    "offerings": [
+      "Test requirement assessment",
+      "Physical property test planning",
+      "Performance evaluation briefs",
+      "Specialist laboratory referral discussion"
+    ],
+    "steps": [
+      [
+        "Set the objective",
+        "Explain the decision the results need to support."
+      ],
+      [
+        "Scope the evaluation",
+        "Discuss samples, methods and acceptance criteria with the provider."
+      ],
+      [
+        "Plan interpretation",
+        "Agree the report needs and follow-up questions."
+      ]
+    ],
+    "include": [
+      "Material or product identity",
+      "Testing objective",
+      "Existing specifications or results",
+      "Sample availability"
+    ],
+    "sources": [
+      {
+        "title": "Brenntag | Application centers across multiple industries, including beauty and personal care",
+        "url": "https://www.brenntag.com/en-us/services/innovation-and-application-centers/"
+      },
+      {
+        "title": "Azelis | Market-specific application laboratories",
+        "url": "https://www.azelis.com/en/services/application-laboratories"
+      },
+      {
+        "title": "BASF Personal Care | Sensory and performance evaluation",
+        "url": "https://www.basf.com/no/en/media/news-releases/2021/08/p-21-282"
+      }
+    ]
+  },
+  "stability-compatibility": {
+    "title": "Stability & packaging compatibility",
+    "eyebrow": "Testing & documentation",
+    "intro": "Plan how a formula and its packaging will be evaluated over time. Discuss study requirements and specialist testing options before setting product shelf-life expectations.",
+    "image": "texture",
+    "group": "Testing & documentation",
+    "offerings": [
+      "Stability study scoping",
+      "Formula and pack compatibility briefs",
+      "Observation and sampling plans",
+      "Existing study gap review"
+    ],
+    "steps": [
+      [
+        "Describe the product",
+        "Provide the formula format, package and intended storage."
+      ],
+      [
+        "Scope the study",
+        "Discuss conditions, observations and schedule with the testing provider."
+      ],
+      [
+        "Review the evidence",
+        "Identify what the results support and what remains unresolved."
+      ]
+    ],
+    "include": [
+      "Formula and product format",
+      "Final packaging details",
+      "Intended storage conditions",
+      "Existing stability information"
+    ],
+    "sources": [
+      {
+        "title": "Formulary Labs | Development and product testing",
+        "url": "https://formularyusa.com/"
+      },
+      {
+        "title": "Croda Beauty | Ingredient and formulation samples",
+        "url": "https://www.crodabeauty.com/en-gb/formulations/standard-terms-and-conditions-for-the-supply-of-samples"
+      }
+    ]
+  },
+  "microbiology-preservation": {
+    "title": "Microbiology & preservation",
+    "eyebrow": "Testing & documentation",
+    "intro": "Discuss the microbial evaluation your product may need. Scope specialist testing for microbial quality and preservative performance as separate questions.",
+    "image": "cleansing",
+    "group": "Testing & documentation",
+    "offerings": [
+      "Microbial quality testing briefs",
+      "Preservative efficacy study planning",
+      "Preservation review questions",
+      "Qualified laboratory referral discussion"
+    ],
+    "steps": [
+      [
+        "Describe the formula",
+        "Share composition, packaging and intended use."
+      ],
+      [
+        "Define the evaluation",
+        "Discuss microbial screening and preservation study needs with a specialist."
+      ],
+      [
+        "Review next steps",
+        "Use the laboratory findings to guide further work."
+      ]
+    ],
+    "include": [
+      "Formula composition",
+      "Preservative system details",
+      "Packaging and intended use",
+      "Previous microbial results"
+    ],
+    "sources": [
+      {
+        "title": "Intertek | Cosmetic preservative efficacy testing",
+        "url": "https://www.intertek.com/beauty-personal-care/preservative-efficacy-challenge-test-cosmetics/"
+      },
+      {
+        "title": "Cosmetic Laboratories | Quality control and microbiological testing",
+        "url": "https://cosmeticlaboratories.com/services/production-manufacturing/"
+      },
+      {
+        "title": "Croda Beauty | Ingredient and formulation samples",
+        "url": "https://www.crodabeauty.com/en-gb/formulations/standard-terms-and-conditions-for-the-supply-of-samples"
+      }
+    ]
+  },
+  "regulatory-documentation": {
+    "title": "Regulatory & technical documentation",
+    "eyebrow": "Testing & documentation",
+    "intro": "Bring your target market and documentation checklist. Discuss ingredient records, label questions and where specialist regulatory review may be needed.",
+    "image": "actives",
+    "group": "Testing & documentation",
+    "offerings": [
+      "SDS and technical document requests",
+      "Certificate of analysis inquiries",
+      "Formula and label review questions",
+      "Market specific documentation planning"
+    ],
+    "steps": [
+      [
+        "Define the market",
+        "State where the product will be sold and its intended claims."
+      ],
+      [
+        "Build the checklist",
+        "Identify the records and reviews needed for the project."
+      ],
+      [
+        "Review availability",
+        "Confirm available documents and outstanding specialist work."
+      ]
+    ],
+    "include": [
+      "Target country or market",
+      "Ingredient or product list",
+      "Required documents",
+      "Label and claims draft"
+    ],
+    "sources": [
+      {
+        "title": "COCOJOJO | Custom manufacturing and private label inquiries",
+        "url": "https://cocojojo.com/private-label-form/"
+      },
+      {
+        "title": "MakingCosmetics | Regulatory formulation support",
+        "url": "https://www.makingcosmetics.com/Regulatory-Service.html?lang=en_US"
+      },
+      {
+        "title": "MakingCosmetics | Technical and compliance documentation",
+        "url": "https://www.makingcosmetics.com/Document-Service.html?lang=en_US"
+      },
+      {
+        "title": "New Directions Aromatics | Ingredient documents and certificates",
+        "url": "https://www.newdirectionsaromatics.com/docs"
+      }
+    ]
+  },
+  "quality-traceability": {
+    "title": "Quality & traceability support",
+    "eyebrow": "Testing & documentation",
+    "intro": "Make quality expectations clear before an order or production project. Discuss specifications, lot information and the records needed to investigate a product question.",
+    "image": "oils",
+    "group": "Testing & documentation",
+    "offerings": [
+      "Specification review requests",
+      "Lot and document matching",
+      "Supplier evidence inquiries",
+      "Quality issue investigation briefs"
+    ],
+    "steps": [
+      [
+        "Set the requirement",
+        "Share the specification and records your project needs."
+      ],
+      [
+        "Link the records",
+        "Identify the material, lot and supporting documents."
+      ],
+      [
+        "Address the question",
+        "Document any discrepancy and agree the next review step."
+      ]
+    ],
+    "include": [
+      "Material or product name",
+      "Lot or order reference",
+      "Quality specification",
+      "Issue description and evidence"
+    ],
+    "sources": [
+      {
+        "title": "Redox | Company quality assurance and regulatory affairs",
+        "url": "https://redox.com/about/quality/"
+      },
+      {
+        "title": "Barentz | Personal and home care application laboratories",
+        "url": "https://www.barentz.com/personal-and-home-care/formulations-quality/"
+      },
+      {
+        "title": "ChemPoint | Technical customer support",
+        "url": "https://www.chempoint.com/support/product-support"
+      },
+      {
+        "title": "MakingCosmetics | Technical and compliance documentation",
+        "url": "https://www.makingcosmetics.com/Document-Service.html?lang=en_US"
+      }
+    ]
+  },
+  "supply-chain": {
+    "title": "Supply chain planning",
+    "eyebrow": "Supply & operations",
+    "intro": "Connect purchasing, packaging and delivery requirements in one project brief. Discuss the supply steps and coordination needed from material order to destination.",
+    "image": "oils",
+    "group": "Supply & operations",
+    "offerings": [
+      "Supply route assessment",
+      "Multi item order planning",
+      "Consolidation requirements",
+      "Import and export coordination questions"
+    ],
+    "steps": [
+      [
+        "Map the requirements",
+        "List materials, locations and expected demand."
+      ],
+      [
+        "Identify dependencies",
+        "Discuss sourcing, handling, documentation and delivery constraints."
+      ],
+      [
+        "Plan the handoffs",
+        "Define who is responsible for each stage."
+      ]
+    ],
+    "include": [
+      "Material and quantity list",
+      "Origin and destination",
+      "Required delivery window",
+      "Handling and document requirements"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Global chemical supply chain",
+        "url": "https://www.univarsolutions.com/services/supply-chain"
+      },
+      {
+        "title": "Azelis | International logistics",
+        "url": "https://www.azelis.com/en/services/international-supply-chain"
+      },
+      {
+        "title": "IMCD | Supply-chain operations",
+        "url": "https://www.imcdgroup.com/about-us/supply-chain"
+      }
+    ]
+  },
+  "warehousing": {
+    "title": "Warehousing & storage planning",
+    "eyebrow": "Supply & operations",
+    "intro": "Discuss storage needs for ingredients or packaged products. Request a feasibility assessment based on material requirements, location and expected movement.",
+    "image": "butters",
+    "group": "Supply & operations",
+    "offerings": [
+      "Storage requirement assessment",
+      "Bulk and packaged stock inquiries",
+      "Receiving and dispatch planning",
+      "Special storage condition review"
+    ],
+    "steps": [
+      [
+        "Describe the stock",
+        "Provide material details, quantities and pack formats."
+      ],
+      [
+        "Review storage needs",
+        "Identify temperature, segregation and handling requirements."
+      ],
+      [
+        "Confirm the arrangement",
+        "Discuss location, stock access and responsibilities."
+      ]
+    ],
+    "include": [
+      "Material safety information",
+      "Pack sizes and quantities",
+      "Required storage conditions",
+      "Location and expected duration"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Global chemical supply chain",
+        "url": "https://www.univarsolutions.com/services/supply-chain"
+      },
+      {
+        "title": "Barentz | Group-wide capabilities, spanning several industries",
+        "url": "https://www.barentz.com/knowledge/"
+      },
+      {
+        "title": "Azelis | Global services overview",
+        "url": "https://www.azelis.com/en/services"
+      }
+    ]
+  },
+  "transport": {
+    "title": "Transport & delivery planning",
+    "eyebrow": "Supply & operations",
+    "intro": "Plan a shipment around the product, pack format and destination. Discuss delivery requirements and the information a suitable transport provider will need.",
+    "image": "oils",
+    "group": "Supply & operations",
+    "offerings": [
+      "Shipment requirement review",
+      "Bulk and packaged freight inquiries",
+      "Delivery and access planning",
+      "Transport documentation questions"
+    ],
+    "steps": [
+      [
+        "Define the shipment",
+        "List materials, packaging, weights and destinations."
+      ],
+      [
+        "Review constraints",
+        "Share handling instructions and site access requirements."
+      ],
+      [
+        "Confirm the plan",
+        "Agree the transport scope, documentation and delivery terms."
+      ]
+    ],
+    "include": [
+      "Pickup and delivery locations",
+      "Material and package details",
+      "Shipment dimensions and weight",
+      "Delivery constraints"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Global chemical supply chain",
+        "url": "https://www.univarsolutions.com/services/supply-chain"
+      },
+      {
+        "title": "Redox | Distribution operations",
+        "url": "https://redox.com/about/logistics/"
+      },
+      {
+        "title": "Azelis | International logistics",
+        "url": "https://www.azelis.com/en/services/international-supply-chain"
+      }
+    ]
+  },
+  "inventory": {
+    "title": "Inventory & replenishment planning",
+    "eyebrow": "Supply & operations",
+    "intro": "Discuss stock planning around your demand and purchasing pattern. Explore forecast, reorder and visibility requirements before choosing an inventory arrangement.",
+    "image": "butters",
+    "group": "Supply & operations",
+    "offerings": [
+      "Demand and reorder planning",
+      "Stock visibility requirements",
+      "Scheduled supply inquiries",
+      "Bulk inventory monitoring assessment"
+    ],
+    "steps": [
+      [
+        "Share the demand",
+        "Provide usage patterns and expected changes."
+      ],
+      [
+        "Define stock needs",
+        "Discuss pack sizes, storage limits and reorder triggers."
+      ],
+      [
+        "Review the options",
+        "Confirm any proposed supply or monitoring arrangement."
+      ]
+    ],
+    "include": [
+      "Materials and usage forecast",
+      "Current stock pattern",
+      "Storage limits",
+      "Preferred reorder approach"
+    ],
+    "sources": [
+      {
+        "title": "Barentz | Group-wide capabilities, spanning several industries",
+        "url": "https://www.barentz.com/knowledge/"
+      },
+      {
+        "title": "Univar Solutions | Global chemical supply chain",
+        "url": "https://www.univarsolutions.com/services/supply-chain"
+      },
+      {
+        "title": "Univar Solutions | Tank inventory monitoring",
+        "url": "https://www.univarsolutions.com/services/telemetry-services"
+      }
+    ]
+  },
+  "digital-procurement": {
+    "title": "Ordering & document access",
+    "eyebrow": "Supply & operations",
+    "intro": "Make purchasing information easier to organize. Discuss quote requests, repeat order references and the technical documents needed for your procurement process.",
+    "image": "actives",
+    "group": "Supply & operations",
+    "offerings": [
+      "Quote request preparation",
+      "Repeat order inquiries",
+      "Order status questions",
+      "Product document requests"
+    ],
+    "steps": [
+      [
+        "Identify the request",
+        "Share the ingredient, product or previous order."
+      ],
+      [
+        "Gather purchasing details",
+        "Confirm quantities, destination and document needs."
+      ],
+      [
+        "Agree the next step",
+        "Clarify the available quotation and order communication process."
+      ]
+    ],
+    "include": [
+      "Product or ingredient name",
+      "Quantity and destination",
+      "Previous order reference if relevant",
+      "Documents needed"
+    ],
+    "sources": [
+      {
+        "title": "Brenntag | Customer portal",
+        "url": "https://www.brenntag.com/en-us/services/brenntag-connect-online-services/"
+      },
+      {
+        "title": "ChemPoint | Customer account portal",
+        "url": "https://www.chempoint.com/insights/introducing-mychempoint"
+      },
+      {
+        "title": "IMCD | Customer portal; public indexed page text",
+        "url": "https://www.imcdgroup.com/myimcd"
+      }
+    ]
+  },
+  "waste-resource": {
+    "title": "Waste & resource assessment",
+    "eyebrow": "Supply & operations",
+    "intro": "Discuss a project assessment or referral for surplus materials, byproducts or waste. Specialist handling, recovery and disposal require a suitable qualified provider.",
+    "image": "botanicals",
+    "group": "Supply & operations",
+    "offerings": [
+      "Surplus material assessment brief",
+      "Resource recovery questions",
+      "Waste stream information gathering",
+      "Specialist referral inquiry"
+    ],
+    "steps": [
+      [
+        "Describe the material",
+        "Gather composition, quantity and available safety information."
+      ],
+      [
+        "Define the objective",
+        "Explain the surplus, recovery or disposal question."
+      ],
+      [
+        "Discuss a referral",
+        "Identify the type of qualified provider needed for assessment."
+      ]
+    ],
+    "include": [
+      "Material composition and SDS",
+      "Quantity and current packaging",
+      "Location and storage conditions",
+      "Reason for assessment"
+    ],
+    "sources": [
+      {
+        "title": "Univar Solutions | Environmental programs for manufacturing, industrial and municipal customers",
+        "url": "https://www.univarsolutions.com/services/infinite-sustainable-solutions"
+      },
+      {
+        "title": "Univar Solutions | Specialist environmental waste services",
+        "url": "https://www.univarsolutions.com/waste-management"
+      },
+      {
+        "title": "Univar Solutions | Site-specific environmental field services",
+        "url": "https://www.univarsolutions.com/services/chemcare-services/field-services"
+      }
+    ]
+  }
+}

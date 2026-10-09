@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { serverFetch } from '@/lib/serverFetch';
 import { Category, Paginated, ProductFunction } from '@/lib/types';
 import { SITE_URL } from '@/lib/seo';
+import { serviceLinks } from '@/components/ocean/company/services';
+import { packagingCatalog } from '@/lib/ocean/packaging-data';
 
 // Regenerate hourly. A catalog sitemap that's a few minutes stale is fine;
 // rebuilding it on every crawler hit is not.
@@ -40,6 +42,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/legal/privacy-policy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${SITE_URL}/formulation-tools`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/services`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${SITE_URL}/packaging`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/shop`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE_URL}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/shipping-returns`, lastModified: now, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${SITE_URL}/accessibility`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
@@ -89,5 +93,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  return [...staticRoutes, ...productRoutes, ...categoryRoutes, ...functionRoutes];
+  // Static content from the ocean design: the service pages and the
+  // packaging catalog (src/lib/ocean data, no backend call).
+  const serviceRoutes: MetadataRoute.Sitemap = serviceLinks.map((sv) => ({
+    url: `${SITE_URL}/services/${sv.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  }));
+  const packagingRoutes: MetadataRoute.Sitemap = packagingCatalog.map((p) => ({
+    url: `${SITE_URL}/packaging/${p.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  }));
+
+  return [...staticRoutes, ...productRoutes, ...categoryRoutes, ...functionRoutes, ...serviceRoutes, ...packagingRoutes];
 }

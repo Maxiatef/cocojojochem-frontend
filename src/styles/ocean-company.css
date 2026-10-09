@@ -1,0 +1,16 @@
+/* Ocean redesign — company group additions. Scope every rule under .ocean */
+
+/* /services directory: the legal-terms link we append to the scope note. */
+.ocean .svc-scope a{color:#165377;text-decoration:underline;text-underline-offset:3px}
+
+/* /about: our published testimonials, after the value cards (not in the reference). */
+.ocean .e-quotes{padding-block:80px 90px}
+.ocean .e-quotes>h2{font-size:clamp(32px,4.2vw,56px);line-height:1.05;letter-spacing:-.05em;font-weight:400;max-width:820px;margin:18px 0 40px;color:var(--e-ink)}
+.ocean .e-quotes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px}
+.ocean .e-quotes-grid figure{margin:0;padding:32px;border:1px solid #d3e4ef;border-radius:24px;background:linear-gradient(140deg,#fff,#edf6fc);display:flex;flex-direction:column;gap:24px}
+.ocean .e-quotes-grid blockquote{margin:0;flex:1}
+.ocean .e-quotes-grid blockquote p{font-size:18px;line-height:1.65;color:#23445f;margin:0}
+.ocean .e-quotes-grid figcaption{display:grid;gap:4px;font-size:14px;color:#567084}
+.ocean .e-quotes-grid figcaption strong{color:var(--e-ink);font-size:15px}
+.ocean .e-quotes-grid figcaption small{color:var(--e-blue);font-weight:600}
+@media(max-width:540px){.ocean .e-quotes{padding-block:55px 60px}.ocean .e-quotes-grid figure{padding:26px}}

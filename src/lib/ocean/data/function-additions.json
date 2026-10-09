@@ -1,0 +1,524 @@
+{
+  "bySlug": {
+    "aox-bht-01": {
+      "name": "BHT",
+      "inci": "BHT",
+      "functions": [
+        "Antioxidant",
+        "Fragrance"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/32185",
+      "matchBasis": "exact-official-inci-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "2,6-DI-TERT-BUTYL-P-CRESOL",
+          "BHT",
+          "BUTYLATED HYDROXYTOLUENE",
+          "BUTYLHYDROXYTOLUENUM"
+        ],
+        "catalogINCI": "Butylated hydroxytoluene",
+        "catalogCAS": "128-37-0",
+        "cosingId": "32185"
+      }
+    },
+    "tex-ddseamud-01": {
+      "name": "Dead Sea Mud",
+      "inci": "SEA SILT",
+      "functions": [
+        "Skin conditioning"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/92613",
+      "matchBasis": "exact-official-inci-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "MARIS LIMUS",
+          "SEA SILT"
+        ],
+        "catalogINCI": "Maris Limus",
+        "catalogCAS": "Not available",
+        "cosingId": "92613"
+      }
+    },
+    "ref-barentz-beta-carotene-54b4aa4713": {
+      "name": "Beta carotene",
+      "inci": "CI 40800",
+      "functions": [
+        "Colorant"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/32748",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "BETA CAROTENE",
+          "BETACAROTENE",
+          "CI 40800"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "32748"
+      }
+    },
+    "ref-barentz-l-leucine-053ff45261": {
+      "name": "L-Leucine",
+      "inci": "LEUCINE",
+      "functions": [
+        "Antistatic",
+        "Hair conditioning",
+        "Skin conditioning"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/35003",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "L-LEUCINE",
+          "LEUCINE"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "35003"
+      }
+    },
+    "ref-imcd-pyridoxine-hydrochloride-5b8f67d5e7": {
+      "name": "Pyridoxine Hydrochloride",
+      "inci": "PYRIDOXINE HCL",
+      "functions": [
+        "Antistatic",
+        "Hair conditioning",
+        "Skin conditioning"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/37388",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "3,4-PYRIDINEDIMETHANOL, 5-HYDROXY-6-METHYL-, HYDROCHLORIDE",
+          "PYRIDOXINE HCL",
+          "PYRIDOXINE HYDROCHLORIDE",
+          "PYRIDOXINI HYDRCHLORIDUM"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "37388"
+      }
+    },
+    "ref-makingcosmetics-titanium-dioxide-3d94d896be": {
+      "name": "Titanium Dioxide",
+      "inci": "TITANIUM DIOXIDE",
+      "functions": [
+        "Colorant",
+        "Opacifying",
+        "Uv absorber",
+        "Uv filter"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/38617",
+      "matchBasis": "exact-official-inci-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "TITANII DIOXIDUM",
+          "TITANIUM DIOXIDE",
+          "TITANIUM DIOXIDE (CI 77891)"
+        ],
+        "catalogINCI": "Titanium dioxide (CI 77891)",
+        "catalogCAS": "13463-67-7",
+        "cosingId": "38617"
+      }
+    },
+    "ref-new-directions-aromatics-dead-sea-mineral-mud-8126d79c43": {
+      "name": "Dead Sea Mineral Mud",
+      "inci": "SEA SILT",
+      "functions": [
+        "Skin conditioning"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/92613",
+      "matchBasis": "exact-official-inci-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "MARIS LIMUS",
+          "SEA SILT"
+        ],
+        "catalogINCI": "Maris Limus",
+        "catalogCAS": null,
+        "cosingId": "92613"
+      }
+    },
+    "ref-redox-cysteine-hydrochloride-378f4c910b": {
+      "name": "Cysteine Hydrochloride",
+      "inci": "CYSTEINE HCL",
+      "functions": [
+        "Antioxidant",
+        "Hair conditioning",
+        "Hair waving or straightening",
+        "Reducing"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/75423",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "CYSTEINE HCL",
+          "CYSTEINE HYDROCHLORIDE"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "75423"
+      }
+    },
+    "ref-redox-dextrose-30857a7343": {
+      "name": "Dextrose",
+      "inci": "GLUCOSE",
+      "functions": [
+        "Humectant"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/34012",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "DEXTROSE",
+          "DEXTROSUM / GLUCOSUM",
+          "GLUCOSE"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "34012"
+      }
+    },
+    "ref-redox-peanut-oil-560c5f9d30": {
+      "name": "Peanut Oil",
+      "inci": "ARACHIS HYPOGAEA OIL",
+      "functions": [
+        "Skin conditioning - occlusive"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/31969",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "ARACHIDIS OLEUM",
+          "ARACHIS HYPOGAEA (PEANUT) OIL",
+          "ARACHIS HYPOGAEA OIL",
+          "PEANUT OIL"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "31969"
+      }
+    },
+    "ref-univar-ethanol-190-proof-95-undenatured-alcohol-usp-grade-kosher-liquid--59f23de7be": {
+      "name": "Ethanol",
+      "inci": "ALCOHOL",
+      "functions": [
+        "Antifoaming",
+        "Antimicrobial",
+        "Astringent",
+        "Fragrance",
+        "Solvent",
+        "Viscosity controlling"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/31401",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "ALCOHOL",
+          "ALCOHOLUM / ETHANOLUM",
+          "ETHANOL"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "31401"
+      }
+    },
+    "ref-univar-ethanol-200-proof-100-undenatured-alchol-usp-grade-kosher-liquid--c4a24f058f": {
+      "name": "Ethanol",
+      "inci": "ALCOHOL",
+      "functions": [
+        "Antifoaming",
+        "Antimicrobial",
+        "Astringent",
+        "Fragrance",
+        "Solvent",
+        "Viscosity controlling"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/31401",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "ALCOHOL",
+          "ALCOHOLUM / ETHANOLUM",
+          "ETHANOL"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "31401"
+      }
+    },
+    "ref-california-chemical-monoethanolamine": {
+      "name": "Monoethanolamine",
+      "inci": "ETHANOLAMINE",
+      "functions": [
+        "Buffering"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/33796",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "2-AMINOETHANOL",
+          "ETHANOLAMINE",
+          "MONOETHANOLAMINE"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "33796"
+      }
+    },
+    "ref-california-chemical-trisodium-citrate": {
+      "name": "Trisodium Citrate",
+      "inci": "SODIUM CITRATE",
+      "functions": [
+        "Buffering",
+        "Chelating",
+        "Fragrance"
+      ],
+      "sourceName": "European Commission CosIng",
+      "sourceUrl": "https://ec.europa.eu/growth/tools-databases/cosing/details/37816",
+      "matchBasis": "exact-official-product-name-alias",
+      "reviewedAt": "2026-10-08",
+      "note": "Functions listed for this ingredient identity in CosIng. They do not establish a supplier grade specification or approval for any application.",
+      "scope": "Functions for the exact named ingredient identity only. Do not infer chemical purity, molecular weight, thermal properties, supplier composition, or grade-specific efficacy from this match.",
+      "evidence": {
+        "officialAliases": [
+          "NATRII CITRAS",
+          "SODIUM CITRATE",
+          "TRISODIUM CITRATE"
+        ],
+        "catalogINCI": null,
+        "catalogCAS": null,
+        "cosingId": "37816"
+      }
+    }
+  },
+  "summary": {
+    "catalogRows": 3467,
+    "rawBrowsingTagsPresent": 913,
+    "rawBrowsingTagsEmpty": 2554,
+    "existingOfficialFunctionRefs": 1528,
+    "currentlyWithAnyFunctions": 2065,
+    "additionalSafeExactOfficialMatches": 14,
+    "totalOfficialFunctionRefsAfterAdditions": 1542,
+    "currentlyEmptyFunctionsFilledByAdditions": 12,
+    "remainingWithoutAnyFunctionsAfterAdditions": 1390,
+    "rawTagsHidingAdditionalOfficialFunctions": 368,
+    "bySource": {
+      "aogebio-cosmetic": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "azelis": {
+        "products": 15,
+        "officialFunctions": 9,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "barentz": {
+        "products": 220,
+        "officialFunctions": 113,
+        "rawTagsEmpty": 220,
+        "additionalOfficialMatches": 2
+      },
+      "basf": {
+        "products": 10,
+        "officialFunctions": 8,
+        "rawTagsEmpty": 10,
+        "additionalOfficialMatches": 0
+      },
+      "brenntag": {
+        "products": 67,
+        "officialFunctions": 42,
+        "rawTagsEmpty": 67,
+        "additionalOfficialMatches": 0
+      },
+      "california-chemical": {
+        "products": 169,
+        "officialFunctions": 50,
+        "rawTagsEmpty": 31,
+        "additionalOfficialMatches": 2
+      },
+      "chemotto": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "cocojojo": {
+        "products": 9,
+        "officialFunctions": 9,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "croda": {
+        "products": 3,
+        "officialFunctions": 3,
+        "rawTagsEmpty": 1,
+        "additionalOfficialMatches": 0
+      },
+      "green-stone-swiss": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "gutins": {
+        "products": 11,
+        "officialFunctions": 11,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "imcd": {
+        "products": 740,
+        "officialFunctions": 7,
+        "rawTagsEmpty": 740,
+        "additionalOfficialMatches": 1
+      },
+      "independent-chemical-corporation": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "ingredients-online": {
+        "products": 71,
+        "officialFunctions": 43,
+        "rawTagsEmpty": 71,
+        "additionalOfficialMatches": 0
+      },
+      "jungbunzlauer": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "knowde": {
+        "products": 8,
+        "officialFunctions": 7,
+        "rawTagsEmpty": 6,
+        "additionalOfficialMatches": 0
+      },
+      "lotioncrafter": {
+        "products": 193,
+        "officialFunctions": 128,
+        "rawTagsEmpty": 193,
+        "additionalOfficialMatches": 0
+      },
+      "makingcosmetics": {
+        "products": 743,
+        "officialFunctions": 302,
+        "rawTagsEmpty": 26,
+        "additionalOfficialMatches": 3
+      },
+      "new-directions-aromatics": {
+        "products": 479,
+        "officialFunctions": 335,
+        "rawTagsEmpty": 479,
+        "additionalOfficialMatches": 1
+      },
+      "parchem": {
+        "products": 3,
+        "officialFunctions": 3,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "phibrochem": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "quzhou-ebright-chemicals": {
+        "products": 7,
+        "officialFunctions": 7,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "rawsource": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "redox": {
+        "products": 636,
+        "officialFunctions": 376,
+        "rawTagsEmpty": 636,
+        "additionalOfficialMatches": 3
+      },
+      "unilong-industry": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      },
+      "univar": {
+        "products": 74,
+        "officialFunctions": 66,
+        "rawTagsEmpty": 74,
+        "additionalOfficialMatches": 2
+      },
+      "yuanlian-chemical": {
+        "products": 1,
+        "officialFunctions": 1,
+        "rawTagsEmpty": 0,
+        "additionalOfficialMatches": 0
+      }
+    }
+  }
+}

@@ -10,14 +10,18 @@ import {
   PROJECTS_EVENT,
   PROJECTS_KEY,
   Project,
+  SAVED_REFS_EVENT,
+  SAVED_REFS_KEY,
+  SavedReference,
   getCompare,
   getProjects,
+  getSavedReferences,
   setWorkspaceChangeListener,
   write,
 } from './stores';
 
 /**
- * Keeps the comparison list and projects in step with the customer's account.
+ * Keeps the comparison list, projects and saved supplier references in step with the customer's account.
  *
  * - Guest: nothing leaves the browser.
  * - Signing in: the guest's browser copy is merged into the account
@@ -35,7 +39,10 @@ const OWNER_KEY = 'cocojojochem_workspace_owner';
 interface Workspace {
   compare: CompareItem[];
   projects: Project[];
+  savedReferences: SavedReference[];
 }
+
+const EMPTY: Workspace = { compare: [], projects: [], savedReferences: [] };
 
 function currentUser(): string | null {
   const token = getCustomerToken();
@@ -46,6 +53,7 @@ function currentUser(): string | null {
 function apply(ws: Workspace) {
   write(COMPARE_KEY, COMPARE_EVENT, ws.compare, true);
   write(PROJECTS_KEY, PROJECTS_EVENT, ws.projects, true);
+  write(SAVED_REFS_KEY, SAVED_REFS_EVENT, ws.savedReferences || [], true);
 }
 
 async function syncOnAuth() {
@@ -55,7 +63,7 @@ async function syncOnAuth() {
   if (!user) {
     if (owner) {
       localStorage.removeItem(OWNER_KEY);
-      apply({ compare: [], projects: [] });
+      apply(EMPTY);
     }
     return;
   }
@@ -66,7 +74,9 @@ async function syncOnAuth() {
       ws = await customerApi.get<Workspace>('/workspace');
     } else {
       // owner null = guest data worth keeping; another user's = discard.
-      const local = owner ? { compare: [], projects: [] } : { compare: getCompare(), projects: getProjects() };
+      const local = owner
+        ? EMPTY
+        : { compare: getCompare(), projects: getProjects(), savedReferences: getSavedReferences() };
       ws = await customerApi.post<Workspace>('/workspace/merge', local);
     }
     localStorage.setItem(OWNER_KEY, user);
@@ -88,7 +98,9 @@ function push(key: string) {
         ? customerApi.put('/workspace/compare', { items: getCompare() })
         : key === PROJECTS_KEY
           ? customerApi.put('/workspace/projects', { projects: getProjects() })
-          : null;
+          : key === SAVED_REFS_KEY
+            ? customerApi.put('/workspace/saved-references', { items: getSavedReferences() })
+            : null;
     request?.catch(() => {
       /* the browser copy is intact; the next change or sign-in retries */
     });

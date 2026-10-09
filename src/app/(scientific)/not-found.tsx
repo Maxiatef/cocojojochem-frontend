@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import BrandLogo from '@/components/ocean/motion/brand-logo';
 
 /**
- * The storefront's 404, in the Gloss Studio layout.
- *
- * Inside the storefront route group, so a lost visitor still has the header,
- * search and footer — and the routes below cover everything we carry.
+ * The storefront's 404, in the reference's not-found markup. It renders inside
+ * the storefront shell's <main>, so the reference's <main> becomes a div.
  */
 export const metadata: Metadata = {
   title: 'Page not found',
@@ -13,35 +11,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const ROUTES: [string, string, string][] = [
-  ['/products', 'Shop ingredients', 'Every material we stock, filterable'],
-  ['/categories', 'Browse by category', 'Oils, butters, emulsifiers, actives'],
-  ['/ingredients-a-z', 'Ingredients A–Z', 'Find a material by its name'],
-  ['/contact', 'Contact us', 'Ask us what we can source'],
-];
-
 export default function NotFound() {
   return (
-    <>
-      <div className="r-page-intro r-wrap">
-        <span className="r-eyebrow">Error 404</span>
-        <h1>We couldn’t find that page.</h1>
-        <p>
-          The address may be mistyped, or the material may no longer be listed. Our catalog changes as stock and
-          sourcing change. The links below cover everything we carry.
-        </p>
+    <div className="r-not-found">
+      <div className="r-not-found-logo">
+        <BrandLogo />
       </div>
-      <section className="r-wrap r-section">
-        <h2>Where to go instead</h2>
-        <div className="docs-grid">
-          {ROUTES.map(([href, label, hint]) => (
-            <Link key={href} href={href} className="info-card">
-              <h3>{label}</h3>
-              <p>{hint}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-    </>
+      <h1>Let’s find your next ingredient.</h1>
+      <p>This page could not be found. Browse the shop or search the full ingredient library.</p>
+      <a href="/shop">Shop ingredients</a> · <a href="/ingredients-a-z">Browse A–Z</a>
+    </div>
   );
 }

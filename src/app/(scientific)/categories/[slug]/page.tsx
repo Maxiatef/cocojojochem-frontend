@@ -1,28 +1,29 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { FileText, FlaskConical, Package } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
 import { Category, Paginated, Product } from '@/lib/types';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
-import { Breadcrumb, DirectoryHero } from '@/components/gloss/categories/DirectoryHero';
-import { categoryPhoto } from '@/components/gloss/categories/GlossPhoto';
-import { ListingLayout } from '@/components/gloss/categories/ListingLayout';
-import { LongForm } from '@/components/gloss/categories/LongForm';
+import {
+  CategoryCatalog,
+  readCatalogQuery,
+  redirectToPickedGroup,
+  type CatalogGroupOption,
+} from '@/components/ocean/categories/CategoryCatalog';
+import { CategoryGuide } from '@/components/ocean/categories/CategoryGuide';
 
 /**
- * A single ingredient category, in the Gloss Studio design.
+ * A single ingredient category, in the ocean design.
  *
- * The prototype has no category page of its own — a category opens the shop
- * filtered to it. This page keeps our indexable /categories/<slug> URL and
- * builds it from the shop's parts instead: a `library-hero` head with the
- * category's photo, subcategory chips (`r-filter-chips`), the shop's filter
- * column with "Find the right fit.", and a `r-product-grid` of ProductCards.
- * The faceted filter engine is not duplicated: the column links across to
- * /products?category=<slug>, where the same catalogue can be sorted and narrowed.
+ * The reference has no category page of its own — a category opens the
+ * catalog filtered to it (/products?category=<id>). This page keeps our
+ * indexable /categories/<slug> URL and draws it as that filtered catalog
+ * (`CategoryCatalog`: r-catalog-head, source bar, filter column, alphabet,
+ * r-catalog-grid of our product cards), with the buying guidance below in
+ * the reference's FAQ parts.
  *
- * The whole category is still listed server-side, so crawlers see every
- * product link without a second hidden list.
+ * The whole category is fetched server-side; the JSON-LD lists every product
+ * and the grid pages through them 24 at a time with plain links.
  */
 
 // The directory shows the whole category on one page. This cap exists only so
@@ -105,9 +106,12 @@ function guidanceSubheadings(name: string) {
 
 export async function generateMetadata({
   params,
+  searchParams = {},
 }: {
   params: { slug: string };
+  searchParams?: Record<string, string | string[] | undefined>;
 }): Promise<Metadata> {
+  redirectToPickedGroup(searchParams, 'category', params.slug, '/categories');
   const category = await serverFetch<Category>(`/wholesale/categories/${params.slug}`);
 
   // See products/[slug] — same soft-404 fix, same reason.
@@ -126,13 +130,24 @@ export async function generateMetadata({
   });
 }
 
-export default async function CategoryDetailPage({ params }: { params: { slug: string } }) {
+export default async function CategoryDetailPage({
+  params,
+  searchParams = {},
+}: {
+  params: { slug: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  redirectToPickedGroup(searchParams, 'category', params.slug, '/categories');
+
   const category = await serverFetch<Category>(`/wholesale/categories/${params.slug}`);
   if (!category) notFound();
 
-  const productsRes = await serverFetch<Paginated<Product>>(
-    `/wholesale/products?categoryId=${category.id}&page=1&limit=${MAX_RECORDS}&sort=name_asc`,
-  );
+  const [productsRes, rootsRes] = await Promise.all([
+    serverFetch<Paginated<Product>>(
+      `/wholesale/products?categoryId=${category.id}&page=1&limit=${MAX_RECORDS}&sort=name_asc`,
+    ),
+    serverFetch<Paginated<Category>>('/wholesale/categories?page=1&limit=100&rootsOnly=true', { revalidate: 300 }),
+  ]);
   const products = productsRes?.data || [];
   const total = productsRes?.pagination.total ?? products.length;
   // The API is asked for name_asc, but the page's promise is "A-Z" — so it
@@ -141,16 +156,15 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
   const [intro, ...moreDescription] = descriptionParagraphs(category.description);
   const lower = category.name.toLowerCase();
 
-  const children = category.children || [];
-  const chips = children.length
-    ? children.map((child) => ({
-        href: `/categories/${child.slug}`,
-        label: child.name,
-        count: child.productCount,
-      }))
-    : category.parent
-      ? [{ href: `/categories/${category.parent.slug}`, label: `All ${category.parent.name.toLowerCase()}` }]
-      : [];
+  // Every category for the filter column: roots, each followed by its subcategories.
+  const options: CatalogGroupOption[] = [];
+  for (const root of rootsRes?.data || []) {
+    options.push({ slug: root.slug, label: root.name, count: root.productCount });
+    for (const child of root.children || [])
+      options.push({ slug: child.slug, label: '— ' + child.name, count: child.productCount });
+  }
+  if (!options.some((o) => o.slug === category.slug))
+    options.unshift({ slug: category.slug, label: category.name, count: total });
 
   return (
     <>
@@ -173,71 +187,45 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
         ]}
       />
 
-      <Breadcrumb
-        trail={[
-          { name: 'Home', href: '/' },
-          { name: 'Categories', href: '/categories' },
-          ...(category.parent
-            ? [{ name: category.parent.name, href: `/categories/${category.parent.slug}` }]
-            : []),
-          { name: category.name },
-        ]}
-      />
-
-      {/* The category's own photograph wins; the prototype's matching
-          ingredient photo only stands in when there is none. The alt says
-          what the picture is rather than repeating the heading. */}
-      <DirectoryHero
-        eyebrow={category.parent ? category.parent.name : 'Ingredient category'}
+      <CategoryCatalog
+        path={`/categories/${category.slug}`}
         title={category.name}
         intro={
           intro ||
-          `Wholesale ${lower} for cosmetic and personal care formulation, listed A–Z with INCI names, pack sizes, trade pricing and current stock.`
+          `Wholesale ${lower} for cosmetic and personal care formulation, with INCI names, pack sizes, trade pricing and current stock.`
         }
-        meta={[
-          { icon: <FlaskConical size={16} aria-hidden="true" />, text: `${total} ${total === 1 ? 'ingredient' : 'ingredients'} · A–Z` },
-          { icon: <Package size={16} aria-hidden="true" />, text: 'Wholesale pack sizes' },
-          { icon: <FileText size={16} aria-hidden="true" />, text: 'COA & SDS on request' },
-        ]}
-        image={categoryPhoto(category)}
-        imageAlt={
-          category.imageUrl
-            ? `Photograph illustrating the ${category.name} ingredient category`
-            : `${category.name} representative ingredient texture`
-        }
-        figure={{ value: total, label: total === 1 ? 'INGREDIENT' : 'INGREDIENTS' }}
-      />
-
-      <ListingLayout
-        label={`${category.name} ingredients`}
         products={records}
-        total={total}
-        chips={chips}
-        filterHref={`/products?category=${category.slug}`}
-        filterText={`Narrow ${lower} by function, price and stock in the full catalog.`}
-        backLink={{ href: '/categories', label: 'All ingredient categories' }}
-        empty={{
-          title: 'Nothing listed here yet.',
-          text: `No ${lower} are published right now. Send a quote request and we will confirm what we can source for you.`,
+        query={readCatalogQuery(searchParams)}
+        groupLabel="Category"
+        groupParam="category"
+        groupOptions={options}
+        currentGroup={category.slug}
+        groupChip={{
+          label: category.name,
+          removeHref: category.parent ? `/categories/${category.parent.slug}` : '/categories',
         }}
-      />
-
-      {moreDescription.length > 0 ? (
-        <LongForm
-          eyebrow={`About ${lower}`}
-          heading={`${category.name} in formulation`}
-          paragraphs={moreDescription}
-          aside={categoryAside(category)}
-        />
-      ) : (
-        <LongForm
-          eyebrow={`Buying ${lower}`}
-          heading={`How to order ${lower} wholesale`}
-          paragraphs={buyingGuidance(category.name, total)}
-          subheadings={guidanceSubheadings(category.name)}
-          aside={categoryAside(category)}
-        />
-      )}
+        related={(category.children || []).map((child) => ({
+          href: `/categories/${child.slug}`,
+          label: child.productCount != null ? `${child.name} (${child.productCount})` : child.name,
+        }))}
+      >
+        {moreDescription.length > 0 ? (
+          <CategoryGuide
+            eyebrow={`About ${lower}`}
+            heading={`${category.name} in formulation`}
+            paragraphs={moreDescription}
+            aside={categoryAside(category)}
+          />
+        ) : (
+          <CategoryGuide
+            eyebrow={`Buying ${lower}`}
+            heading={`How to order ${lower} wholesale`}
+            paragraphs={buyingGuidance(category.name, total)}
+            subheadings={guidanceSubheadings(category.name)}
+            aside={categoryAside(category)}
+          />
+        )}
+      </CategoryCatalog>
     </>
   );
 }

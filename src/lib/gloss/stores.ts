@@ -110,7 +110,7 @@ export interface CompareItem {
 
 export const COMPARE_KEY = 'cocojojochem_compare';
 export const COMPARE_EVENT = 'cocojojochem-compare-changed';
-export const COMPARE_LIMIT = 4;
+export const COMPARE_LIMIT = 7;
 
 export function getCompare(): CompareItem[] {
   return read<CompareItem[]>(COMPARE_KEY, []);
@@ -129,7 +129,7 @@ export function toggleCompare(item: CompareItem): boolean {
     return false;
   }
   if (list.length >= COMPARE_LIMIT) {
-    notify('Compare up to four ingredients. Remove one to add another.');
+    notify('Compare up to 7 ingredients. Remove one to add another.');
     return false;
   }
   write(COMPARE_KEY, COMPARE_EVENT, [...list, item]);
@@ -216,4 +216,40 @@ export function removeFromProject(id: string, slug: string) {
   const p = getProjects().find((x) => x.id === id);
   if (!p) return;
   updateProject(id, { items: p.items.filter((i) => i.slug !== slug) });
+}
+
+/* ------------------------------------------------- saved supplier references */
+
+/**
+ * Wishlist entries for supplier-reference materials. Our account wishlist is
+ * keyed by catalog product id, which references don't have, so they are kept
+ * here (same localStorage + event pattern as compare) and shown alongside it.
+ */
+export interface SavedReference {
+  slug: string;
+  name: string;
+}
+
+export const SAVED_REFS_KEY = 'cocojojochem_saved_references';
+export const SAVED_REFS_EVENT = 'cocojojochem-saved-references-changed';
+
+export function getSavedReferences(): SavedReference[] {
+  return read<SavedReference[]>(SAVED_REFS_KEY, []);
+}
+
+export function useSavedReferences(): SavedReference[] {
+  return useStore<SavedReference[]>(SAVED_REFS_KEY, SAVED_REFS_EVENT, []);
+}
+
+/** Add or remove; returns whether it is now saved. */
+export function toggleSavedReference(item: SavedReference): boolean {
+  const list = getSavedReferences();
+  if (list.some((i) => i.slug === item.slug)) {
+    write(SAVED_REFS_KEY, SAVED_REFS_EVENT, list.filter((i) => i.slug !== item.slug));
+    notify('Removed from wishlist');
+    return false;
+  }
+  write(SAVED_REFS_KEY, SAVED_REFS_EVENT, [item, ...list].slice(0, 200));
+  notify('Saved to your wishlist');
+  return true;
 }

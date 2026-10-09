@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ProjectsWorkspace } from '@/components/gloss/workspace/ProjectsWorkspace';
+import { Projects } from '@/components/ocean/workspace/Projects';
 
 // Per-browser workspace: nothing to index.
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default function ProjectsPage() {
         <p>Organize shortlisted ingredients and development notes.</p>
       </div>
       <section className="r-wrap r-section">
-        <ProjectsWorkspace />
+        <Projects />
       </section>
     </>
   );

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CompareTable } from '@/components/gloss/workspace/CompareTable';
+import { Comparison } from '@/components/ocean/workspace/Comparison';
 
 // The comparison lives in the visitor's browser: nothing to index.
 export const metadata: Metadata = {
@@ -13,11 +13,11 @@ export default function ComparePage() {
     <>
       <div className="r-page-intro r-wrap">
         <span className="r-eyebrow">Side by side</span>
-        <h1>Find your best fit.</h1>
-        <p>Compare published properties for up to four ingredients.</p>
+        <h1>Compare ingredients.</h1>
+        <p>Add up to 7 ingredients to compare their functions, formulation details and physical properties.</p>
       </div>
       <section className="r-wrap r-section">
-        <CompareTable />
+        <Comparison />
       </section>
     </>
   );

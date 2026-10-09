@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
-import { FaqList } from '@/components/gloss/content/FaqList';
-import { PolicyAside } from '@/components/gloss/content/PolicyAside';
-import { SHIPPING_PAGE_ITEMS } from '@/components/gloss/content/faqData';
+import { SupportFaq, SupportIntro, SupportSection } from '@/components/ocean/support/SupportHelp';
+import { SHIPPING_PAGE_ITEMS } from '@/components/ocean/support/faqData';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Shipping & Returns',
@@ -32,15 +31,15 @@ export default function ShippingReturnsPage() {
         ])}
       />
 
-      <div className="r-page-intro r-wrap">
-        <span className="r-eyebrow">Ordering with confidence</span>
-        <h1>Shipping, returns &amp; support.</h1>
-        <p>The details to help you plan your next order.</p>
-      </div>
-
-      <section className="r-wrap r-section">
-        <div className="r-help-layout">
-          <div>
+      <SupportIntro
+        eyebrow="Ordering with confidence"
+        title="Shipping, returns & support."
+        copy="The details to help you plan your next order."
+      />
+      <SupportSection>
+        <SupportFaq
+          items={SHIPPING_PAGE_ITEMS}
+          before={
             <dl className="r-ship-facts">
               <div>
                 <dt>Handling time</dt>
@@ -55,11 +54,9 @@ export default function ShippingReturnsPage() {
                 <dd>5:00 PM Eastern Time</dd>
               </div>
             </dl>
-            <FaqList items={SHIPPING_PAGE_ITEMS} />
-          </div>
-          <PolicyAside />
-        </div>
-      </section>
+          }
+        />
+      </SupportSection>
     </>
   );
 }

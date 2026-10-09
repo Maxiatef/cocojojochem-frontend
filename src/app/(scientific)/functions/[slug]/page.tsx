@@ -1,19 +1,20 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { FileText, FlaskConical, Package } from 'lucide-react';
 import { serverFetch } from '@/lib/serverFetch';
 import { Paginated, Product, ProductFunction } from '@/lib/types';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/seo/JsonLd';
 import { SITE_NAME, clampDescription, pageMetadata } from '@/lib/seo';
-import { categoryImage } from '@/lib/gloss/images';
-import { Breadcrumb, DirectoryHero } from '@/components/gloss/categories/DirectoryHero';
-import { ListingLayout } from '@/components/gloss/categories/ListingLayout';
+import {
+  CategoryCatalog,
+  readCatalogQuery,
+  redirectToPickedGroup,
+  type CatalogGroupOption,
+} from '@/components/ocean/categories/CategoryCatalog';
 
 /**
  * Every material we stock that performs one formulation function, as a real,
- * indexable page — in the Gloss Studio design, built from the same parts as
- * a category page: `library-hero` head, the shop's filter column, and a
- * `r-product-grid` of ProductCards.
+ * indexable page — in the ocean design, drawn like a category page: the
+ * reference's filtered catalog (/products?function=<tag>) via `CategoryCatalog`.
  *
  * Functions used to have no page of their own: every link went to
  * /products?functionSlug=<slug>, which could never rank (robots.txt disallows
@@ -56,9 +57,12 @@ function functionKeywords(name: string): string[] {
 
 export async function generateMetadata({
   params,
+  searchParams = {},
 }: {
   params: { slug: string };
+  searchParams?: Record<string, string | string[] | undefined>;
 }): Promise<Metadata> {
+  redirectToPickedGroup(searchParams, 'function', params.slug, '/functions');
   const [fn, productsRes] = await Promise.all([
     loadFunction(params.slug),
     loadProducts(params.slug),
@@ -84,18 +88,32 @@ export async function generateMetadata({
   });
 }
 
-export default async function FunctionDetailPage({ params }: { params: { slug: string } }) {
-  const [fn, productsRes] = await Promise.all([
+export default async function FunctionDetailPage({
+  params,
+  searchParams = {},
+}: {
+  params: { slug: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  redirectToPickedGroup(searchParams, 'function', params.slug, '/functions');
+
+  const [fn, productsRes, allRes] = await Promise.all([
     loadFunction(params.slug),
     loadProducts(params.slug),
+    serverFetch<Paginated<ProductFunction>>('/wholesale/functions?page=1&limit=300', { revalidate: 300 }),
   ]);
   if (!fn) notFound();
 
   const products = productsRes?.data || [];
-  const total = productsRes?.pagination.total ?? products.length;
   // Sorted locally as well, as on the category page: the page promises A–Z.
   const records = [...products].sort((a, b) => a.name.localeCompare(b.name));
   const lower = fn.name.toLowerCase();
+
+  const options: CatalogGroupOption[] = (allRes?.data || [])
+    .filter((f) => (f.productCount ?? 0) > 0 || f.slug === fn.slug)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((f) => ({ slug: f.slug, label: f.name, count: f.productCount }));
+  if (!options.some((o) => o.slug === fn.slug)) options.unshift({ slug: fn.slug, label: fn.name });
 
   return (
     <>
@@ -118,46 +136,22 @@ export default async function FunctionDetailPage({ params }: { params: { slug: s
         ]}
       />
 
-      <Breadcrumb
-        trail={[
-          { name: 'Home', href: '/' },
-          { name: 'Functions', href: '/functions' },
-          { name: fn.name },
-        ]}
-      />
-
-      {/* Short on purpose when there's no authored description. Every
-          function page shares this sentence, so it states what the list is
-          and stops — unique copy belongs in the admin's description field
-          (Admin → Functions), which replaces it. */}
-      <DirectoryHero
-        eyebrow="Ingredients by function"
-        title={`${fn.name} ingredients`}
+      {/* Every function page shares the fallback sentence; unique copy belongs
+          in the admin's description field (Admin → Functions), which replaces it. */}
+      <CategoryCatalog
+        path={`/functions/${fn.slug}`}
+        title={fn.name}
         intro={
           fn.description ||
-          `Materials we stock that are used for their ${lower} function in cosmetic and personal care formulations. Each listing shows the INCI name, pack sizes, wholesale pricing and current stock.`
+          `Materials we stock that are used for their ${lower} function in cosmetic and personal care formulations, with INCI names, pack sizes, wholesale pricing and current stock.`
         }
-        meta={[
-          { icon: <FlaskConical size={16} aria-hidden="true" />, text: `${total} ${total === 1 ? 'material' : 'materials'} · A–Z` },
-          { icon: <Package size={16} aria-hidden="true" />, text: 'Wholesale pack sizes' },
-          { icon: <FileText size={16} aria-hidden="true" />, text: 'COA & SDS on request' },
-        ]}
-        image={categoryImage(fn.slug || fn.name)}
-        imageAlt={`${fn.name} representative ingredient texture`}
-        figure={{ value: total, label: total === 1 ? 'MATERIAL' : 'MATERIALS' }}
-      />
-
-      <ListingLayout
-        label={`${fn.name} ingredients`}
         products={records}
-        total={total}
-        filterHref={`/products?functionSlug=${fn.slug}`}
-        filterText={`Narrow ${lower} materials by category, price and stock in the full catalog.`}
-        backLink={{ href: '/functions', label: 'All functions' }}
-        empty={{
-          title: 'Sourced to order.',
-          text: `No ${lower} materials are published in the catalogue right now. We source many materials to order — send a quote request describing what you need and we will confirm what we can supply.`,
-        }}
+        query={readCatalogQuery(searchParams)}
+        groupLabel="Function"
+        groupParam="function"
+        groupOptions={options}
+        currentGroup={fn.slug}
+        groupChip={{ label: fn.name, removeHref: '/functions' }}
       />
     </>
   );

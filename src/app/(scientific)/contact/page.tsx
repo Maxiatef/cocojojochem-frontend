@@ -1,36 +1,23 @@
-import Link from 'next/link';
-import { ContactForm } from '@/components/gloss/content/ContactForm';
+import { ContactRequest } from '@/components/ocean/support/ContactRequest';
+import { SupportIntro, SupportSection } from '@/components/ocean/support/SupportHelp';
 
 /**
- * Contact, in the Gloss Studio layout (prototype /contact).
+ * Contact, in the reference layout ("Let’s create something good.").
  *
- * Metadata and breadcrumb JSON-LD live in ./layout.tsx. The form is the same
- * `POST /wholesale/contact-messages` it always was — see ContactForm.
+ * Metadata and breadcrumb JSON-LD live in ./layout.tsx. The form still posts
+ * to `POST /wholesale/contact-messages` — see ContactRequest.
  */
 export default function ContactPage() {
   return (
     <>
-      <div className="r-page-intro r-wrap">
-        <span className="r-eyebrow">Talk to our team</span>
-        <h1>Let’s create something good.</h1>
-        <p>Ingredient questions, documentation and projects are welcome.</p>
-      </div>
-
-      <section className="r-wrap r-section">
-        <div className="r-checkout-layout">
-          <ContactForm />
-
-          <aside className="r-summary">
-            <h2>Prefer to speak with us?</h2>
-            <p>Discuss an ingredient, request a document or tell us about your project.</p>
-            <a href="mailto:support@cocojojo.com">support@cocojojo.com</a>
-            <a href="tel:+19496107164">+1 949 610 7164</a>
-            <p className="r-fine r-contact-hours">Monday – Friday, 9:00 AM – 6:00 PM Pacific</p>
-            <p className="r-fine r-contact-hours">California, United States</p>
-            <Link href="/quote-request">Need bulk pricing? Request a quote</Link>
-          </aside>
-        </div>
-      </section>
+      <SupportIntro
+        eyebrow="Talk to our team"
+        title="Let’s create something good."
+        copy="Ingredient questions, documentation and projects are welcome."
+      />
+      <SupportSection>
+        <ContactRequest />
+      </SupportSection>
     </>
   );
 }

@@ -1,0 +1,54 @@
+{
+  "reviewedAt": "2026-10-08",
+  "originalReferences": 21434,
+  "retainedReferences": 3259,
+  "excludedReferences": 18175,
+  "exclusionsByReason": {
+    "branded_or_company_specific": 14883,
+    "uncertain_identity": 1879,
+    "non_cosmetic_or_supplies": 1413
+  },
+  "ownProductsRemoved": [
+    "foam-booster",
+    "jojocol-12"
+  ],
+  "ownProductsRetained": 9,
+  "newGenericIngredients": 30,
+  "finalReferences": 3458,
+  "finalCatalogRecords": 3467,
+  "categoryCount": 24,
+  "categoryCounts": {
+    "carrier-oils": 577,
+    "actives-vitamins": 191,
+    "rheology": 105,
+    "botanicals": 513,
+    "butters-waxes": 161,
+    "surfactants": 85,
+    "exfoliants-acids": 66,
+    "proteins-peptides": 61,
+    "emollients-conditioners": 158,
+    "colors-minerals": 112,
+    "antioxidants": 39,
+    "emulsifiers": 135,
+    "humectants": 126,
+    "preservation": 97,
+    "film-formers": 16,
+    "ph-adjusters": 204,
+    "chelators": 25,
+    "solvents": 52,
+    "aromatics": 537,
+    "uv-filters": 34,
+    "deodorants": 9,
+    "oral-care": 29,
+    "formulation-aids": 122,
+    "hair-color-perm": 13
+  },
+  "scope": "Conservative product-identity screening and targeted market-gap verification. Not an exhaustive market inventory, trademark/patent clearance or regulatory authorization.",
+  "californiaChemicalImport": {
+    "reviewedRows": 683,
+    "addedReferences": 169,
+    "brandedOrProprietaryExcluded": 174,
+    "gradeConfirmationNeeded": 31,
+    "audit": "data/california-chemical-review/"
+  }
+}

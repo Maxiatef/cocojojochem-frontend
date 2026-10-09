@@ -377,6 +377,8 @@ export interface ReferenceAddable {
   name: string;
   category: string;
   sourceUrl: string;
+  /** Card photo; defaults to the category's representative image. */
+  image?: string;
 }
 
 /**
@@ -391,7 +393,7 @@ export function addReferenceToCart(entry: ReferenceAddable, size: string | null 
     productSlug: entry.slug,
     productName: entry.name,
     variantLabel: size?.trim() || null,
-    imageUrl: categoryImage(entry.category),
+    imageUrl: entry.image || categoryImage(entry.category),
     quantity,
   });
 }

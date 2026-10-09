@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { pageMetadata } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
+import { SupportIntro, SupportSection } from '@/components/ocean/support/SupportHelp';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Accessibility & Assistance',
@@ -26,44 +26,33 @@ export default function AccessibilityPage() {
         ])}
       />
 
-      <div className="r-page-intro r-wrap">
-        <span className="r-eyebrow">Designed for more people</span>
-        <h1>Accessibility &amp; assistance.</h1>
-        <p>We continue to improve clear navigation, readable information and keyboard access.</p>
-      </div>
-
-      <section className="r-wrap r-section">
+      <SupportIntro
+        eyebrow="Designed for more people"
+        title="Accessibility & assistance."
+        copy="We continue to improve clear navigation, readable information and keyboard access."
+      />
+      <SupportSection>
         <div className="r-policy-copy">
           <p>
-            Use the skip link at the top of every page to reach the main content. Ingredient
-            information is available as text, controls can be reached with a keyboard, and much of
-            the interface’s motion is reduced when your device asks for reduced motion.
+            Use the skip link to reach the main content. Ingredient information remains available as text, and the
+            interface respects reduced-motion preferences.
           </p>
           <p>
-            We aim for WCAG 2.1 Level AA, but we do not claim full conformance: some parts may not
-            fully meet it yet, including payment pages hosted by third parties and some older PDF
-            documents.
+            We aim for WCAG 2.1 Level AA, but we do not claim full conformance: some parts may not fully meet it yet,
+            including payment pages hosted by third parties and some older PDF documents.
           </p>
           <p>
-            If you encounter a barrier, tell us the page and what you were trying to do so we can
-            help. Email{' '}
-            <a href="mailto:support@cocojojo.com?subject=Accessibility%20Issue%20Report">
-              support@cocojojo.com
-            </a>{' '}
-            with the subject “Accessibility Issue Report”, or call{' '}
-            <a href="tel:+19496107164">(949) 610-7164</a>. We can also take an order, answer a
-            product question or send a document in another format by phone or email.
+            If you encounter a barrier, tell us the page and what you were trying to do so we can help. Email{' '}
+            <a href="mailto:support@cocojojo.com?subject=Accessibility%20Issue%20Report">support@cocojojo.com</a> or
+            call <a href="tel:+19496107164">(949) 610-7164</a>. We can also take an order, answer a product question
+            or send a document in another format by phone or email. Our{' '}
+            <a href="/legal/accessibility-statement">Accessibility Statement</a> describes our commitments in full.
           </p>
-          <p>
-            Our{' '}
-            <Link href="/legal/accessibility-statement">Accessibility Statement</Link> describes
-            our commitments and response times in full.
-          </p>
-          <Link className="r-btn r-primary" href="/contact?subject=Accessibility%20support">
+          <a className="r-btn r-primary" href="/contact?subject=Accessibility%20support">
             Request assistance
-          </Link>
+          </a>
         </div>
-      </section>
+      </SupportSection>
     </>
   );
 }
