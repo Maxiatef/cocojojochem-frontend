@@ -129,7 +129,7 @@ export function toggleCompare(item: CompareItem): boolean {
     return false;
   }
   if (list.length >= COMPARE_LIMIT) {
-    notify('Compare up to four ingredients. Remove one to add another.');
+    notify('Compare up to 7 ingredients. Remove one to add another.');
     return false;
   }
   write(COMPARE_KEY, COMPARE_EVENT, [...list, item]);
