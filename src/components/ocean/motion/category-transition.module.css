@@ -1,0 +1,277 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: transparent;
+  color: #123c5a;
+  isolation: isolate;
+  overscroll-behavior: contain;
+}
+.dialog::backdrop {
+  background: transparent;
+}
+.surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #bddcec;
+  will-change: clip-path;
+}
+.image {
+  position: absolute;
+  display: block;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+  transform-origin: 0 0;
+  will-change: transform;
+  user-select: none;
+  pointer-events: none;
+}
+.fog {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 18% 28%, #86c5e55c 0%, transparent 54%),
+    radial-gradient(ellipse at 84% 14%, #a5d9f166 0%, transparent 58%),
+    linear-gradient(180deg, #6bb7e117 0%, #b9e1f37a 31%, #d7edf5ed 69%, #e8f4faff 100%);
+  pointer-events: none;
+  will-change: opacity;
+}
+.caption {
+  position: absolute;
+  left: max(24px, 6vw);
+  right: max(24px, 6vw);
+  bottom: max(38px, 7dvh);
+  max-height: calc(100% - 130px);
+  overflow: auto;
+  scrollbar-width: none;
+  will-change: transform, opacity;
+}
+.caption::-webkit-scrollbar {
+  display: none;
+}
+.eyebrow {
+  margin: 0 0 20px;
+  color: #2b6383;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.caption h2 {
+  max-width: 1320px;
+  margin: 0;
+  color: #123c5a;
+  font-size: clamp(54px, 8.6vw, 156px);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+.count {
+  margin: 27px 0 0;
+  color: #32627c;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.cancel {
+  position: absolute;
+  z-index: 2;
+  top: max(22px, env(safe-area-inset-top));
+  right: max(24px, env(safe-area-inset-right));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  min-width: 104px;
+  min-height: 46px;
+  padding: 11px 17px;
+  border: 1px solid #d5eaf7cc;
+  border-radius: 28px;
+  background: #eef9ffe8;
+  box-shadow: 0 4px 24px #173e5921;
+  color: #214d69;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.cancel:hover {
+  background: #fff;
+}
+.cancel:focus-visible {
+  outline: 3px solid #1477a3;
+  outline-offset: 4px;
+}
+@media (max-width: 700px) {
+  .caption {
+    left: max(23px, env(safe-area-inset-left));
+    right: max(23px, env(safe-area-inset-right));
+    bottom: max(34px, calc(env(safe-area-inset-bottom) + 24px));
+    max-height: calc(100% - 115px);
+  }
+  .eyebrow {
+    font-size: 13px;
+    margin-bottom: 17px;
+    letter-spacing: 0.11em;
+  }
+  .caption h2 {
+    font-size: clamp(43px, 11vw, 78px);
+    line-height: 1.02;
+    letter-spacing: -0.05em;
+  }
+  .count {
+    margin-top: 22px;
+    font-size: 16px;
+  }
+  .cancel {
+    top: max(18px, env(safe-area-inset-top));
+    right: max(18px, env(safe-area-inset-right));
+    min-width: 99px;
+    min-height: 46px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .surface,
+  .image,
+  .fog,
+  .caption {
+    will-change: auto;
+  }
+}
+.portal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 53%, #344e75, #15233d 38%, #080f20 78%);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+.molecularScene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.portalShade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, #06112418 5%, transparent 60%), linear-gradient(0deg, #07112270, transparent 35%);
+  pointer-events: none;
+}
+.portalCopy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 70px max(25px, 8vw);
+  color: #f7fbff;
+  text-shadow: 0 2px 35px #07172e99;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.portalCopy > span {
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  margin-bottom: 26px;
+}
+.portalCopy > strong {
+  max-width: 1250px;
+  font-size: clamp(48px, 8vw, 130px);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+.portalCopy > small {
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0.035em;
+  margin-top: 29px;
+  color: #e2efff;
+}
+.wash {
+  position: absolute;
+  inset: 0;
+  background: #f8fcff;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+.dialog[data-phase="bridge"] .cancel {
+  background: #11274470;
+  color: #eef8ff;
+  border-color: #e2f2ff55;
+  backdrop-filter: blur(14px);
+}
+.dialog[data-phase="navigating"] .cancel,
+.dialog[data-phase="arriving"] .cancel {
+  visibility: hidden;
+}
+.loading {
+  position: absolute;
+  z-index: 3;
+  left: 24px;
+  right: 24px;
+  top: 50%;
+  text-align: center;
+  font-size: 15px;
+  color: #42627c;
+  animation: loadingIn 0.4s 0.8s both;
+}
+@keyframes loadingIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 700px) {
+  .portalCopy {
+    padding: 75px 26px;
+  }
+  .portalCopy > span {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    margin-bottom: 22px;
+  }
+  .portalCopy > strong {
+    font-size: clamp(40px, 11.5vw, 76px);
+    line-height: 1.03;
+    letter-spacing: -0.045em;
+  }
+  .portalCopy > small {
+    font-size: 15px;
+    margin-top: 25px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal,
+  .portalCopy,
+  .wash {
+    will-change: auto;
+  }
+  .loading {
+    animation: none;
+  }
+}

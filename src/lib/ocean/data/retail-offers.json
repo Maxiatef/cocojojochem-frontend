@@ -1,0 +1,12 @@
+[
+  {
+    "id": "golden-retail-gallon",
+    "slug": "jojoba-golden-retail",
+    "label": "1 Gallon",
+    "price": 8999,
+    "stock": "Confirm availability",
+    "lead": "Published retail price checked October 1, 2026. Delivery confirmed before payment.",
+    "stripePrice": null,
+    "updated": "2026-10-01"
+  }
+]

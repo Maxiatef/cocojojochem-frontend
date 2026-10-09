@@ -1,0 +1,246 @@
+{
+  "jojoba-oil-clear": {
+    "overview": "COCOJOJO identifies this refined jojoba material as a botanical liquid wax ester used for emolliency and skin conditioning. Its neutral colour and odour distinguish the clear grade from golden jojoba. MakingCosmetics provides useful ingredient-family guidance for incorporating jojoba into cosmetic formulas.",
+    "appearance": "COCOJOJO describes a clear, colourless liquid with no odour.",
+    "solubility": "Oil-soluble and water-insoluble in the MakingCosmetics jojoba reference.",
+    "phase": "Oil phase, according to the MakingCosmetics reference.",
+    "useLevel": "MakingCosmetics reference range: 1–50%; this is not a COCOJOJO grade specification.",
+    "applications": [
+      "Creams and lotions",
+      "Hair-care formulas",
+      "Makeup",
+      "Bath oils"
+    ],
+    "processing": [
+      "The MakingCosmetics reference can be incorporated directly into the oil phase."
+    ],
+    "storage": "MakingCosmetics reference: keep cool, dry and protected from light.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Jojoba Oil - Clear",
+        "url": "https://cocojojo.com/wholesale/product/jojoba-oil-clear"
+      },
+      {
+        "title": "MakingCosmetics · Jojoba Oil, USDA Certified Organic",
+        "url": "https://www.makingcosmetics.com/OIL-JOJO-02.html?lang=en_US"
+      },
+      {
+        "title": "MakingCosmetics · Jojoba oil specification sheet",
+        "url": "https://www.makingcosmetics.com/on/demandware.static/-/Sites-makingcosmetics-master/default/dwf2767f63/fact-sheets/fact-sheet-jojoba-oil-co3.pdf"
+      }
+    ],
+    "matchingNote": "The MakingCosmetics reference is a golden organic grade, while this COCOJOJO product is clear and refined. These are related ingredients, not verified equivalent grades."
+  },
+  "jojoba-oil-golden": {
+    "overview": "COCOJOJO describes its golden jojoba as an unrefined botanical liquid wax ester that retains natural colour and aroma. It serves as an emollient and carrier for skin and hair formulas. MakingCosmetics also documents jojoba as a liquid wax derived from jojoba seeds.",
+    "appearance": "COCOJOJO describes a golden liquid with a mild natural aroma.",
+    "solubility": "Oil-soluble and water-insoluble in the MakingCosmetics jojoba reference.",
+    "phase": "Oil phase, according to the MakingCosmetics reference.",
+    "useLevel": "MakingCosmetics reference range: 1–50%; this is not a COCOJOJO grade specification.",
+    "applications": [
+      "Creams and lotions",
+      "Hair care",
+      "Makeup",
+      "Bath oils"
+    ],
+    "processing": [
+      "The MakingCosmetics reference permits direct addition to the oil phase."
+    ],
+    "storage": "MakingCosmetics reference: keep cool, dry and shielded from light.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Unrefined Jojoba Oil - Golden",
+        "url": "https://cocojojo.com/wholesale/product/jojoba-oil-golden"
+      },
+      {
+        "title": "MakingCosmetics · Jojoba Oil, USDA Certified Organic",
+        "url": "https://www.makingcosmetics.com/OIL-JOJO-02.html?lang=en_US"
+      },
+      {
+        "title": "MakingCosmetics · Jojoba oil specification sheet",
+        "url": "https://www.makingcosmetics.com/on/demandware.static/-/Sites-makingcosmetics-master/default/dwf2767f63/fact-sheets/fact-sheet-jojoba-oil-co3.pdf"
+      }
+    ],
+    "matchingNote": "COCOJOJO describes this grade as unfiltered. MakingCosmetics describes a filtered organic grade. Shared botanical identity does not establish identical processing or specifications."
+  },
+  "eucalyptus-hydrosol": {
+    "overview": "COCOJOJO identifies this ingredient as distilled botanical water from Eucalyptus globulus, with the INCI Eucalyptus Globulus Leaf Water. Its listed uses include water-phase personal care formulas, facial mists and hair or scalp products.",
+    "appearance": null,
+    "solubility": null,
+    "phase": "Water phase, as identified by COCOJOJO.",
+    "useLevel": null,
+    "applications": [
+      "Facial mists",
+      "Toners",
+      "Hair and scalp products",
+      "Aftershave products"
+    ],
+    "processing": [],
+    "storage": null,
+    "sources": [
+      {
+        "title": "COCOJOJO · Eucalyptus Hydrosol",
+        "url": "https://cocojojo.com/wholesale/product/eucalyptus-hydrosol"
+      },
+      {
+        "title": "MakingCosmetics · Eucalyptus Extract (different ingredient; comparison only)",
+        "url": "https://www.makingcosmetics.com/Z-BOT-EUCALYP-01.html?lang=en_US"
+      }
+    ],
+    "matchingNote": "No matching MakingCosmetics hydrosol reference was verified. Its Eucalyptus Extract contains glycerin, water and Eucalyptus Globulus Leaf Extract, which differs from this leaf water. The extract's use level, pH, preservative and handling specifications have not been transferred."
+  },
+  "shea-nut-butter-natural": {
+    "overview": "COCOJOJO describes this natural, unrefined shea butter as an emollient butter for skin, body and hair care, including balms and sticks. MakingCosmetics identifies shea butter as the plant fat obtained from African karite nuts and supplies general guidance for working it into oil-based formulation phases.",
+    "appearance": "COCOJOJO describes a creamy butter with its characteristic natural aroma; a colour specification was not verified.",
+    "solubility": "MakingCosmetics reference: soluble in oils; insoluble in water.",
+    "phase": "Oil phase, according to the MakingCosmetics reference.",
+    "useLevel": "MakingCosmetics reference range: 3–100%; this is not a COCOJOJO grade specification.",
+    "applications": [
+      "Body butters",
+      "Balms and sticks",
+      "Creams and lotions",
+      "Facial moisturizers"
+    ],
+    "processing": [
+      "MakingCosmetics advises melting the butter before incorporating it into the oil phase."
+    ],
+    "storage": "MakingCosmetics reference: keep in a closed container in a dry location at room temperature.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Shea Nut Butter - Natural",
+        "url": "https://cocojojo.com/wholesale/product/shea-nut-butter-natural"
+      },
+      {
+        "title": "MakingCosmetics · Shea Butter, USDA Certified Organic",
+        "url": "https://www.makingcosmetics.com/BUT-SHEA-01.html?lang=en_US"
+      },
+      {
+        "title": "MakingCosmetics · Shea butter specification sheet",
+        "url": "https://www.makingcosmetics.com/on/demandware.static/-/Sites-makingcosmetics-master/default/dw12522b11/fact-sheets/fact-sheet-shea-butter-co.pdf"
+      }
+    ],
+    "matchingNote": "COCOJOJO's natural grade is unrefined; MakingCosmetics documents a refined organic grade. Appearance, aroma and grade-specific specifications are not interchangeable."
+  },
+  "sunflower-oil-high-oleic": {
+    "overview": "COCOJOJO identifies this as refined sunflower oil from high-oleic cultivars, used as an emollient in skin, hair and colour cosmetics. MakingCosmetics likewise describes a high-oleic sunflower seed oil, with the higher oleic content associated with greater resistance to oxidation than standard sunflower varieties.",
+    "appearance": "MakingCosmetics reference: a transparent honey-to-tan liquid with a mild odour; COCOJOJO appearance was not independently verified.",
+    "solubility": "Oil-soluble in the MakingCosmetics reference.",
+    "phase": "Oil phase, according to the MakingCosmetics reference.",
+    "useLevel": "MakingCosmetics reference: 1–100%, with 10% described for hair care; these are reference levels, not COCOJOJO specifications.",
+    "applications": [
+      "Creams and lotions",
+      "Hair-care products",
+      "Bath oils",
+      "Lip-care formulas"
+    ],
+    "processing": [
+      "MakingCosmetics permits direct addition to the oil phase."
+    ],
+    "storage": "MakingCosmetics reference: protect from light and keep in cool, dry conditions.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Sunflower Oil - High Oleic",
+        "url": "https://cocojojo.com/wholesale/product/sunflower-oil-high-oleic"
+      },
+      {
+        "title": "MakingCosmetics · Sunflower Oil, USDA Certified Organic",
+        "url": "https://www.makingcosmetics.com/OIL-SUNFL-01.html?lang=en_US"
+      },
+      {
+        "title": "MakingCosmetics · Sunflower oil specification sheet",
+        "url": "https://www.makingcosmetics.com/on/demandware.static/-/Sites-makingcosmetics-master/default/dw12de3c92/fact-sheets/fact-sheet-sunflower-oil-co2.pdf"
+      }
+    ],
+    "matchingNote": "Both references describe high-oleic sunflower oil. MakingCosmetics' organic certification and supplier-specific specifications do not establish the COCOJOJO grade's certification or equivalence."
+  },
+  "niacinamide-vitamin-b3": {
+    "overview": "Niacinamide is a water-soluble vitamin used in skin-care formulas aimed at a more even-looking complexion. COCOJOJO identifies this ingredient for serums and lotions, with skin-conditioning and barrier-support roles.",
+    "appearance": "MakingCosmetics reference: colorless crystals or white crystalline powder/granules.",
+    "solubility": "MakingCosmetics reference: dissolves in water, ethanol and glycerol.",
+    "phase": "MakingCosmetics reference: water phase; its USP grade may also be incorporated into a finished cream base.",
+    "useLevel": "MakingCosmetics USP-grade reference: 1–6%. This is not a verified COCOJOJO specification.",
+    "applications": [
+      "Serums",
+      "Lotions",
+      "Creams",
+      "Cosmetic complexion-care formulas"
+    ],
+    "processing": [
+      "MakingCosmetics specifies an ideal final pH of 6 for its USP grade; confirm the appropriate pH with COCOJOJO before formulation.",
+      "Do not transfer the separate Niacinamide PH grade's acidic-pH guidance to this product."
+    ],
+    "storage": "MakingCosmetics USP-grade reference: keep tightly closed, cool, dry and protected from light.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Niacinamide (Vitamin B3)",
+        "url": "https://cocojojo.com/wholesale/product/niacinamide-vitamin-b3"
+      },
+      {
+        "title": "MakingCosmetics · Vitamin B3 (Niacinamide), USP",
+        "url": "https://www.makingcosmetics.com/VIT-NIAC-01-30.html?lang=en_US"
+      },
+      {
+        "title": "MakingCosmetics · Niacinamide PH",
+        "url": "https://www.makingcosmetics.com/VIT-NIAC-03.html?lang=en_US"
+      }
+    ],
+    "matchingNote": "INCI matches. COCOJOJO does not identify USP or PH grade; supplier-grade equivalence, purity and pH tolerance remain unverified. MakingCosmetics publishes different pH guidance for its two grades."
+  },
+  "carbomer-940": {
+    "overview": "Carbomer is a polymer thickener that develops gel structure after hydration and neutralization. COCOJOJO positions its Carbomer 940 for clear gels, serums and gel-creams where viscosity and suspension are important.",
+    "appearance": "MakingCosmetics Carbomer 940 reference: a finely divided white powder.",
+    "solubility": "MakingCosmetics describes its grade as water-soluble; thorough hydration is required.",
+    "phase": "Aqueous phase for dispersion and hydration before neutralization.",
+    "useLevel": "MakingCosmetics Carbomer 940 reference: 0.1–0.5%, selected for the desired viscosity. Not a verified COCOJOJO specification.",
+    "applications": [
+      "Clear gels",
+      "Gel-creams",
+      "Hair gels",
+      "Creams and lotions"
+    ],
+    "processing": [
+      "Disperse and hydrate thoroughly before adjusting pH.",
+      "MakingCosmetics reports gel formation above pH 6 and lists sodium hydroxide, potassium hydroxide or triethanolamine as neutralizers for its grade."
+    ],
+    "storage": "MakingCosmetics reference: keep the container closed in dry conditions at room temperature.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Carbomer 940",
+        "url": "https://cocojojo.com/wholesale/product/carbomer-940"
+      },
+      {
+        "title": "MakingCosmetics · Carbomer 940",
+        "url": "https://www.makingcosmetics.com/THK-CARBM-01.html?lang=en_US"
+      }
+    ],
+    "matchingNote": "Product grade name and INCI match. The reference is specifically Carbomer 940, not Carbomer 980 QD. Supplier specifications and finished-formula performance still require confirmation."
+  },
+  "alpha-arbutin": {
+    "overview": "Alpha-arbutin is a water-soluble cosmetic active for products targeting uneven-looking skin tone and visible dark spots. COCOJOJO lists Alpha-Arbutin as its INCI; the MakingCosmetics reference also specifically concerns alpha-arbutin.",
+    "appearance": "MakingCosmetics reference: white powder with crystalline structure.",
+    "solubility": "Soluble in water, as stated by both suppliers.",
+    "phase": "MakingCosmetics reference: add through the water phase during cool-down.",
+    "useLevel": "MakingCosmetics publishes 0.2–2% for its material. Treat this as a supplier reference, not a universal limit or a verified COCOJOJO dosage.",
+    "applications": [
+      "Complexion-care lotions",
+      "Brightening creams",
+      "Cosmetic makeup formulas"
+    ],
+    "processing": [
+      "MakingCosmetics specifies addition below 40°C and an ideal formulation pH of 5–7.",
+      "Confirm processing conditions and finished-product stability for the supplied COCOJOJO material."
+    ],
+    "storage": "MakingCosmetics reference: store cool and dry, protected from light.",
+    "sources": [
+      {
+        "title": "COCOJOJO · Alpha Arbutin",
+        "url": "https://cocojojo.com/wholesale/product/alpha-arbutin"
+      },
+      {
+        "title": "MakingCosmetics · Alpha-Arbutin",
+        "url": "https://www.makingcosmetics.com/SWH-ALARBUT-01.html?lang=en_US"
+      }
+    ],
+    "matchingNote": "INCI and alpha isomer match. No beta-arbutin or blended brightening ingredient data have been substituted. Supplier-grade equivalence is unverified."
+  }
+}
