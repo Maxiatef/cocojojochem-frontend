@@ -1,50 +1,32 @@
 'use client';
 
-import { FormEvent, ReactNode, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserRound } from 'lucide-react';
 import { customerApi } from '@/lib/customerApi';
 import { clearCustomerToken, getCustomerToken } from '@/lib/customerAuth';
-import { CustomerProfile, Order } from '@/lib/types';
-import { formatUsd } from '@/lib/pricing';
+import { CustomerProfile, Order, QuoteRequest } from '@/lib/types';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { OrderShippingModal } from '@/components/commerce/OrderShippingModal';
 import { shortId } from '@/lib/ids';
 import { useStorefrontSession } from '@/lib/useStorefrontSession';
-import { useCompare, useProjects } from '@/lib/gloss/stores';
-import { OrderCard } from '@/components/gloss/account/OrderCard';
-import { ReorderButton } from '@/components/gloss/account/ReorderButton';
-import { RequestHistory } from '@/components/gloss/account/RequestHistory';
+import { useCompare, useProjects, useSavedReferences } from '@/lib/gloss/stores';
+import { useCartTotalCount } from '@/components/gloss/CartLines';
 import { PasswordInput } from '@/components/gloss/account/PasswordInput';
+import { AccountOrders, AccountRequests } from '@/components/ocean/workspace/AccountLists';
 
 /**
- * The customer account, in the Gloss Studio design.
+ * The customer account in the reference's AccountWorkspace layout
+ * (store-client.tsx): intro panel, count tiles, "Your requests", fine print.
  *
- * The prototype's account page is a short workspace: an intro panel, a row of
- * count tiles, and "Your requests". Ours is a real trade account, so the same
- * frame carries more:
- *
- *  - The intro greets the signed-in customer and keeps the ledger line —
- *    orders placed, lifetime value, open orders — the first thing a trade
- *    buyer looks for on their own account.
- *  - The tiles cover everything a customer keeps with us: orders, the quote
- *    list, the wishlist, projects, the comparison and the profile.
- *  - Orders take the wide column and the profile/password panel the narrow
- *    one, so the thing people come here for is read first.
- *
- * Order numbers, account ids, dates and money stay in the account mono
- * (ga-mono): they are compared against printed documents, and a
- * proportional face makes 0/O and 1/l ambiguous.
+ * Ours is a real trade account, so the same frame also carries the
+ * customer's orders and profile/password after the reference's requests.
+ * Auth is unchanged: no token, straight to /account/login.
  */
 
-/** Orders still moving. Anything else is history or was cancelled. */
-const OPEN_STATUSES = ['PENDING', 'PROCESSING', 'SHIPPED'];
-
-// Padding a uuid to six characters does nothing — it is already 36 — so this
-// shows the id's first block instead. Long enough to quote in a support
-// email, short enough to read.
+// Padding a uuid to six characters does nothing (it is already 36), so this
+// shows the id's first block instead.
 function accountId(id: string) {
   return `ACCT-${shortId(id)}`;
 }
@@ -69,18 +51,19 @@ export default function AccountPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [shippingModalOrder, setShippingModalOrder] = useState<Order | null>(null);
 
-  // Tile counts. The session hook already resolves the quote-list and
-  // wishlist counts for signed-in and guest visitors alike; projects and the
-  // comparison are browser-local workspace stores.
-  const { quoteListCount, wishlistCount } = useStorefrontSession();
+  // Tile counts: the session hook resolves the wishlist count for signed-in
+  // and guest visitors alike; saved references, projects and the comparison
+  // are workspace stores; the cart count covers priced and to-confirm lines.
+  const { wishlistCount } = useStorefrontSession();
+  const savedReferences = useSavedReferences();
   const projects = useProjects();
   const compare = useCompare();
+  const { count: cartCount } = useCartTotalCount();
 
   useEffect(() => {
     if (!getCustomerToken()) {
-      // A full page load, not router.replace. The in-app swap drew this empty
-      // page, then slid the login form in underneath the footer — a 0.47
-      // layout shift on mobile. Login as a fresh document shifts nothing.
+      // A full page load, not router.replace: login as a fresh document
+      // shifts nothing.
       window.location.replace('/account/login?redirect=/account');
       return;
     }
@@ -96,6 +79,13 @@ export default function AccountPage() {
   const { data: orders, isLoading: ordersLoading } = useQuery({
     queryKey: ['customer-orders'],
     queryFn: () => customerApi.get<Order[]>('/orders'),
+    enabled: ready,
+  });
+
+  // Same key as <AccountRequests>, so this is one request.
+  const { data: requests } = useQuery({
+    queryKey: ['customer-quote-requests'],
+    queryFn: () => customerApi.get<QuoteRequest[]>('/wholesale/quote-requests/mine'),
     enabled: ready,
   });
 
@@ -128,25 +118,15 @@ export default function AccountPage() {
     router.push('/account/login');
   }
 
-  // The sign-in check needs localStorage, so it can't run on the server.
-  // Until it has, hold a full screen of space: returning nothing let the
-  // footer paint at the top, only to be pushed away a moment later.
-  if (!ready) return <div className="min-h-screen" aria-busy="true" />;
-
-  // Cancelled orders are excluded from lifetime value — money that was never
-  // taken shouldn't inflate a figure a buyer may quote back to us.
-  const settled = (orders || []).filter((o) => o.status !== 'CANCELLED');
-  const lifetime = settled.reduce((sum, o) => sum + Number(o.total), 0);
-  const openCount = (orders || []).filter((o) => OPEN_STATUSES.includes(o.status)).length;
   const firstName = profile?.fullName?.trim().split(' ')[0];
 
-  const tiles: { href: string; value: ReactNode; label: string }[] = [
-    { href: '/account/orders', value: ordersLoading ? '—' : (orders || []).length, label: 'Orders' },
-    { href: '#requests', value: quoteListCount, label: 'Price to confirm' },
-    { href: '/saved', value: wishlistCount, label: 'Wishlist' },
-    { href: '/projects', value: projects.length, label: 'Projects' },
-    { href: '/compare', value: compare.length, label: 'Compare' },
-    { href: '#profile', value: <UserRound aria-hidden />, label: 'Profile' },
+  const tiles: [string, number | string, string][] = [
+    ['/saved', wishlistCount + savedReferences.length, 'Wishlist'],
+    ['/projects', projects.length, 'Projects'],
+    ['/cart', cartCount, 'Cart selections'],
+    ['/account/orders', ordersLoading || !orders ? '—' : orders.length, 'Orders'],
+    ['#requests', requests ? requests.length : '—', 'Requests'],
+    ['/compare', compare.length, 'Compare'],
   ];
 
   return (
@@ -154,189 +134,136 @@ export default function AccountPage() {
       <div className="r-page-intro r-wrap">
         <span className="r-eyebrow">Your account</span>
         <h1>Everything in one place.</h1>
-        <p>Return to your orders, quote list, saved ingredients and projects.</p>
+        <p>Return to your ingredients, projects and requests.</p>
       </div>
-
       <section className="r-wrap r-section">
-        <div className="r-account-intro">
-          <div>
-            <span className="r-eyebrow">
-              {profile ? <span className="ga-mono">{accountId(profile.id)}</span> : 'Your formulation workspace'}
-            </span>
-            {profileLoading ? (
-              <div className="ga-skeleton" style={{ height: 40, maxWidth: 300 }} aria-hidden />
-            ) : (
-              <h2>{firstName ? `Welcome back, ${firstName}.` : 'A place for your next idea.'}</h2>
-            )}
-            <p>
-              {profile?.company?.name ? `${profile.company.name} · ` : ''}
-              {profile
-                ? `Member since ${new Date(profile.createdAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    year: 'numeric',
-                  })}. `
-                : ''}
-              Your orders, quote list and saved ingredients stay connected to your sign-in.
-            </p>
-
-            {/* Ledger line. Standing, quantified — the first thing a trade
-                buyer looks for on their own account. */}
-            <dl className="ga-ledger">
+        {/* The sign-in check needs localStorage, so it can't run on the
+            server. Until it has, hold the space instead of painting a
+            workspace that is about to redirect. */}
+        {!ready ? (
+          <div className="r-account-pending" aria-busy="true" />
+        ) : (
+          <>
+            <div className="r-account-intro">
               <div>
-                <dt>Orders placed</dt>
-                <dd className="ga-mono">{ordersLoading ? '—' : String((orders || []).length)}</dd>
+                <span className="r-eyebrow">Your formulation workspace</span>
+                <h2>{firstName ? 'Welcome back, ' + firstName + '.' : 'A place for your next idea.'}</h2>
+                <p>Your saved ingredients, projects and requests stay connected to your sign-in.</p>
               </div>
-              <div>
-                <dt>Lifetime value</dt>
-                <dd className="ga-mono">{ordersLoading ? '—' : formatUsd(lifetime)}</dd>
-              </div>
-              <div>
-                <dt>Open orders</dt>
-                <dd className="ga-mono">{ordersLoading ? '—' : String(openCount)}</dd>
-              </div>
-            </dl>
-          </div>
-          <button type="button" onClick={handleLogout} className="r-btn r-outline">
-            Sign out
-          </button>
-        </div>
-
-        <nav className="r-account-tiles" aria-label="Your workspace">
-          {tiles.map((tile) => (
-            <Link key={tile.href} href={tile.href}>
-              <strong>{tile.value}</strong>
-              <span>{tile.label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="ga-account-grid">
-          {/* ---- Orders: the reason people open this page ---- */}
-          <div>
-            <div className="r-section-heading">
-              <h2>Your orders</h2>
-              {orders && orders.length > 0 && <Link href="/account/orders">Track an order</Link>}
+              <button type="button" onClick={handleLogout} className="r-btn r-outline">
+                Sign out
+              </button>
             </div>
-
-            {ordersLoading && (
-              <div className="ga-orders" aria-busy="true">
-                {[0, 1].map((i) => (
-                  <div key={i} className="ga-skeleton" style={{ height: 150 }} />
-                ))}
-              </div>
-            )}
-
-            {orders && orders.length === 0 && (
-              <div className="r-muted-panel">
-                No orders yet. Your orders will appear here with their current status.
-                <p>
-                  <Link href="/products" className="ga-link">
-                    Browse the catalog
-                  </Link>
-                </p>
-              </div>
-            )}
-
-            {orders && orders.length > 0 && (
-              <ul className="ga-orders">
-                {orders.map((order) => (
-                  <OrderCard
-                    key={order.id}
-                    order={order}
-                    onTrack={setShippingModalOrder}
-                    action={<ReorderButton order={order} />}
-                  />
-                ))}
-              </ul>
-            )}
+            <div className="r-account-tiles">
+              {tiles.map(([url, n, label]) => (
+                <a href={url} key={url}>
+                  <strong>{n}</strong>
+                  <span>{label}</span>
+                </a>
+              ))}
+            </div>
 
             <div className="r-section-heading" id="requests">
               <h2>Your requests</h2>
-              <Link href="/cart">
-                {quoteListCount > 0 ? `${quoteListCount} waiting in your cart` : 'Your cart'}
-              </Link>
+              <a href="/contact">Start a new request</a>
             </div>
-            <RequestHistory />
-          </div>
+            <AccountRequests />
 
-          {/* ---- Profile panel ---- */}
-          <aside className="ga-account-aside">
-            <div className="r-form-card" id="profile">
-              <div className="ga-card-head">
-                <h2>Profile</h2>
-                {!editing && profile && (
-                  <button type="button" onClick={startEditing} className="ga-link">
-                    Edit
-                  </button>
+            <div className="r-section-heading" id="orders">
+              <h2>Your orders</h2>
+              <a href="/account/orders">Track an order</a>
+            </div>
+            <AccountOrders orders={orders} loading={ordersLoading} onTrack={setShippingModalOrder} />
+
+            <div className="r-section-heading" id="profile">
+              <h2>Your details</h2>
+              {profile && <span className="r-account-id">{accountId(profile.id)}</span>}
+            </div>
+            <div className="r-account-details">
+              <div className="r-form-card">
+                <div className="ga-card-head">
+                  <h2>Profile</h2>
+                  {!editing && profile && (
+                    <button type="button" onClick={startEditing} className="ga-link">
+                      Edit
+                    </button>
+                  )}
+                </div>
+
+                {profileLoading && <p className="r-fine">Loading your profile…</p>}
+
+                {profile && !editing && (
+                  <dl className="ga-specs">
+                    <SpecRow label="Name" value={profile.fullName} />
+                    <SpecRow label="Email" value={profile.email} muted />
+                    <SpecRow label="Phone" value={profile.phone || 'Not set'} />
+                    {profile.company?.name && <SpecRow label="Company" value={profile.company.name} muted />}
+                    <SpecRow
+                      label="Member since"
+                      value={new Date(profile.createdAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                      muted
+                    />
+                  </dl>
+                )}
+
+                {profile && editing && (
+                  <form onSubmit={handleSave} className="ga-stack">
+                    <div className="r-field">
+                      <label htmlFor="f-profile-name">Full name</label>
+                      <input
+                        id="f-profile-name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                        autoComplete="name"
+                      />
+                    </div>
+
+                    <div className="r-field">
+                      <label htmlFor="f-profile-phone">Phone</label>
+                      <input
+                        id="f-profile-phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        autoComplete="tel"
+                      />
+                    </div>
+
+                    <p className="r-fine">
+                      Email can&rsquo;t be changed here. Contact us to move the account to a different address.
+                    </p>
+
+                    {saveError && (
+                      <p role="alert" className="r-error">
+                        {saveError}
+                      </p>
+                    )}
+
+                    <div className="ga-actions">
+                      <button type="submit" disabled={saveMutation.isPending} className="r-btn r-primary">
+                        {saveMutation.isPending ? 'Saving…' : 'Save changes'}
+                      </button>
+                      <button type="button" onClick={() => setEditing(false)} className="r-btn r-outline">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
                 )}
               </div>
 
-              {profileLoading && (
-                <div className="ga-stack" aria-hidden>
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="ga-skeleton" style={{ height: 16 }} />
-                  ))}
-                </div>
-              )}
-
-              {profile && !editing && (
-                <dl className="ga-specs">
-                  <SpecRow label="Name" value={profile.fullName} />
-                  <SpecRow label="Email" value={profile.email} muted />
-                  <SpecRow label="Phone" value={profile.phone || 'Not set'} />
-                  {profile.company?.name && <SpecRow label="Company" value={profile.company.name} muted />}
-                </dl>
-              )}
-
-              {profile && editing && (
-                <form onSubmit={handleSave} className="ga-stack">
-                  <div className="r-field">
-                    <label htmlFor="f-profile-name">Full name</label>
-                    <input
-                      id="f-profile-name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
-                      autoComplete="name"
-                    />
-                  </div>
-
-                  <div className="r-field">
-                    <label htmlFor="f-profile-phone">Phone</label>
-                    <input
-                      id="f-profile-phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      autoComplete="tel"
-                    />
-                  </div>
-
-                  <p className="r-fine">
-                    Email can&rsquo;t be changed here — contact us to move the account to a different address.
-                  </p>
-
-                  {saveError && (
-                    <p role="alert" className="r-error">
-                      {saveError}
-                    </p>
-                  )}
-
-                  <div className="ga-actions">
-                    <button type="submit" disabled={saveMutation.isPending} className="r-btn r-primary">
-                      {saveMutation.isPending ? 'Saving…' : 'Save changes'}
-                    </button>
-                    <button type="button" onClick={() => setEditing(false)} className="r-btn r-outline">
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
+              <ChangePasswordCard />
             </div>
 
-            <ChangePasswordCard />
-          </aside>
-        </div>
+            <p className="r-fine">
+              For purchases previously placed on cocojojo.com,{' '}
+              <a href="https://cocojojo.com/login">open your existing customer account</a>.
+            </p>
+          </>
+        )}
       </section>
 
       {shippingModalOrder && (

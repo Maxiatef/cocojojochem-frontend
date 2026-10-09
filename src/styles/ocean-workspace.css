@@ -1,1 +1,17 @@
 /* Ocean redesign — workspace group additions. Scope every rule under .ocean */
+
+/* /account — our additions inside the reference AccountWorkspace frame */
+.ocean .r-account-pending { min-height: 60vh; }
+.ocean .r-account-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 25px;
+  align-items: start;
+  margin: 15px 0 32px;
+}
+.ocean .r-account-id { font-size: 13px; color: #51727f; font-variant-numeric: tabular-nums; }
+.ocean .r-request-list details > .r-project-actions { margin: 0 0 18px; }
+.ocean .r-request-list .r-project-actions button { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 760px) {
+  .ocean .r-account-details { grid-template-columns: 1fr; }
+}
