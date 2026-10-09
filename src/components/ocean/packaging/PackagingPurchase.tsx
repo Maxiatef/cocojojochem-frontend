@@ -23,6 +23,14 @@ export function PackagingPurchase({ data: r }: { data: ReferenceCardData }) {
         Price on request
         <span>Pricing confirmed before payment</span>
       </div>
+      {/* Packaging has no priced packs, so the reference's pack-size list has
+          only its "Request a size" entry. Kept for the identical layout. */}
+      <label className="r-field">
+        Pack size
+        <select value="request" onChange={() => {}}>
+          <option value="request">Request a size</option>
+        </select>
+      </label>
       <label className="r-field">
         Preferred size
         <input

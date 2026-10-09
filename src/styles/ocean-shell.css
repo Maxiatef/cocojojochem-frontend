@@ -1,0 +1,12 @@
+/* Ocean redesign — document-level rules the scoped build can't express.
+   scripts/build-ocean-css.cjs rewrites `html` to `.ocean`, which never reaches
+   the page scroller, so the reference's smooth scrolling is restored here for
+   storefront pages only (the wrapper is inside <body>, hence :has). */
+html:has(.ocean) {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:has(.ocean) {
+    scroll-behavior: auto;
+  }
+}
