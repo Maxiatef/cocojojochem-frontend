@@ -110,7 +110,7 @@ export interface CompareItem {
 
 export const COMPARE_KEY = 'cocojojochem_compare';
 export const COMPARE_EVENT = 'cocojojochem-compare-changed';
-export const COMPARE_LIMIT = 4;
+export const COMPARE_LIMIT = 7;
 
 export function getCompare(): CompareItem[] {
   return read<CompareItem[]>(COMPARE_KEY, []);
