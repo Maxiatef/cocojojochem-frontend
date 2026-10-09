@@ -17,14 +17,20 @@ interface WorkspaceProject {
 }
 
 /**
- * What a customer is comparing and formulating on the storefront — read-only,
- * for sales follow-ups. Product names link to the live product page.
+ * What a customer is comparing, saving and formulating on the storefront —
+ * read-only, for sales follow-ups. Names link to the live storefront page:
+ * packaging items (slugs start with `packaging-`) to /packaging, everything
+ * else to /products.
  */
+const itemHref = (slug: string) => (slug.startsWith('packaging-') ? '/packaging/' : '/products/') + slug;
+
 export function CustomerWorkspace({ userId }: { userId: string }) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-customer-workspace', userId],
     queryFn: () =>
-      api.get<{ compare: WorkspaceItem[]; projects: WorkspaceProject[] }>(`/workspace/user/${userId}`),
+      api.get<{ compare: WorkspaceItem[]; projects: WorkspaceProject[]; savedReferences?: WorkspaceItem[] }>(
+        `/workspace/user/${userId}`,
+      ),
   });
 
   const heading = (text: string) => (
@@ -33,11 +39,12 @@ export function CustomerWorkspace({ userId }: { userId: string }) {
   const productLink = (item: WorkspaceItem) => (
     <a
       key={item.slug}
-      href={`/products/${item.slug}`}
+      href={itemHref(item.slug)}
       target="_blank"
       rel="noopener noreferrer"
       className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-200"
     >
+      {item.slug.startsWith('packaging-') && <span className="mr-1 text-slate-400">Packaging ·</span>}
       {item.name}
     </a>
   );
@@ -53,6 +60,15 @@ export function CustomerWorkspace({ userId }: { userId: string }) {
           <div className="flex flex-wrap gap-2">{data.compare.map(productLink)}</div>
         ) : (
           <p className="text-sm text-slate-500">Nothing in their comparison.</p>
+        )}
+      </div>
+
+      <div>
+        {heading('Saved supplier references & packaging')}
+        {data.savedReferences?.length ? (
+          <div className="flex flex-wrap gap-2">{data.savedReferences.map(productLink)}</div>
+        ) : (
+          <p className="text-sm text-slate-500">Nothing saved.</p>
         )}
       </div>
 
