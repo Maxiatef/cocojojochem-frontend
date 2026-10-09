@@ -174,7 +174,11 @@ export function ReferenceActions({ data: r }: { data: ReferenceCardData }) {
         className="r-btn r-primary r-small"
         onClick={async () => {
           setBusy(true);
-          await addReferenceToCart({ slug: r.slug, name: r.name, category: r.category, sourceUrl: r.sourceUrl }, null, 1);
+          await addReferenceToCart(
+            { slug: r.slug, name: r.name, category: r.category, sourceUrl: r.sourceUrl, image: r.image },
+            null,
+            1,
+          );
           setBusy(false);
         }}
       >
