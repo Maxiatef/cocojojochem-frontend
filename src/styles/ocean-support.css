@@ -1,1 +1,14 @@
 /* Ocean redesign — support pages group (faq, shipping, contact, accessibility, 404). Scope every rule under .ocean */
+
+/* Shipping & returns: our handling / transit / cut-off facts above the FAQ. */
+.ocean .r-ship-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 18px}
+.ocean .r-ship-facts>div{background:linear-gradient(130deg,#f0f8fa,#fff);border:1px solid #d6e6eb;border-radius:14px;padding:18px 20px}
+.ocean .r-ship-facts dt{color:#267585;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.ocean .r-ship-facts dd{margin:8px 0 0;font-size:16px;line-height:1.5}
+@media(max-width:760px){.ocean .r-ship-facts{grid-template-columns:1fr;gap:10px}}
+
+/* 404: the reference's inline-styled not-found <main>, as a class. */
+.ocean .r-not-found{max-width:700px;margin:100px auto;padding:30px;font-family:Arial,sans-serif}
+.ocean .r-not-found-logo{width:230px;margin-bottom:30px}
+.ocean .r-not-found-logo .cj-brand{display:block;width:100%;height:auto}
+.ocean .r-not-found a{text-decoration:underline}

@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema } from '@/components/seo/JsonLd';
-import { FaqList } from '@/components/gloss/content/FaqList';
-import { PolicyAside } from '@/components/gloss/content/PolicyAside';
-import { FAQ_PAGE_ITEMS } from '@/components/gloss/content/faqData';
+import { SupportFaq, SupportIntro, SupportSection } from '@/components/ocean/support/SupportHelp';
+import { FAQ_PAGE_ITEMS } from '@/components/ocean/support/faqData';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Frequently Asked Questions',
@@ -40,18 +39,14 @@ export default function FaqPage() {
         ]}
       />
 
-      <div className="r-page-intro r-wrap">
-        <span className="r-eyebrow">A little clarity goes a long way</span>
-        <h1>Your questions, answered.</h1>
-        <p>The details to help you plan your next order.</p>
-      </div>
-
-      <section className="r-wrap r-section">
-        <div className="r-help-layout">
-          <FaqList items={FAQ_PAGE_ITEMS} />
-          <PolicyAside />
-        </div>
-      </section>
+      <SupportIntro
+        eyebrow="A little clarity goes a long way"
+        title="Your questions, answered."
+        copy="The details to help you plan your next order."
+      />
+      <SupportSection>
+        <SupportFaq items={FAQ_PAGE_ITEMS} />
+      </SupportSection>
     </>
   );
 }
