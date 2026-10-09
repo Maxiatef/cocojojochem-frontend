@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { BookOpen, FileText, GitCompareArrows } from 'lucide-react';
 import { pageMetadata } from '@/lib/seo';
-import { BatchCalculator } from '@/components/gloss/workspace/BatchCalculator';
+import FormulationTools from '@/components/ocean/tools/FormulationTools';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Formulation Tools & Batch Calculator',
@@ -18,33 +16,17 @@ export const metadata: Metadata = pageMetadata({
   ],
 });
 
+/** Reference "/formulation-tools": Formulation studio — 38 calculators + the formula worksheet. */
 export default function FormulationToolsPage() {
   return (
     <>
       <div className="r-page-intro r-wrap">
-        <span className="r-eyebrow">Practical tools for creating</span>
-        <h1>A little precision goes a long way.</h1>
-        <p>Plan ingredient weights and compare technical details.</p>
+        <span className="r-eyebrow">Formulation studio</span>
+        <h1>Precision for every stage.</h1>
+        <p>Explore practical calculations for cosmetic chemistry, production and laboratory planning.</p>
       </div>
       <section className="r-wrap r-section">
-        <BatchCalculator />
-        <div className="r-services-grid">
-          <Link href="/compare">
-            <GitCompareArrows size={24} />
-            <h3>Ingredient comparison</h3>
-            <p>Review identity, specifications and pack sizes together.</p>
-          </Link>
-          <Link href="/projects">
-            <BookOpen size={24} />
-            <h3>Project workspace</h3>
-            <p>Keep your materials and notes in one place.</p>
-          </Link>
-          <Link href="/documents">
-            <FileText size={24} />
-            <h3>Document search</h3>
-            <p>Find published safety sheets and technical references.</p>
-          </Link>
-        </div>
+        <FormulationTools />
       </section>
     </>
   );
