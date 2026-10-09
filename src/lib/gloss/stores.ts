@@ -217,3 +217,39 @@ export function removeFromProject(id: string, slug: string) {
   if (!p) return;
   updateProject(id, { items: p.items.filter((i) => i.slug !== slug) });
 }
+
+/* ------------------------------------------------- saved supplier references */
+
+/**
+ * Wishlist entries for supplier-reference materials. Our account wishlist is
+ * keyed by catalog product id, which references don't have, so they are kept
+ * here (same localStorage + event pattern as compare) and shown alongside it.
+ */
+export interface SavedReference {
+  slug: string;
+  name: string;
+}
+
+export const SAVED_REFS_KEY = 'cocojojochem_saved_references';
+export const SAVED_REFS_EVENT = 'cocojojochem-saved-references-changed';
+
+export function getSavedReferences(): SavedReference[] {
+  return read<SavedReference[]>(SAVED_REFS_KEY, []);
+}
+
+export function useSavedReferences(): SavedReference[] {
+  return useStore<SavedReference[]>(SAVED_REFS_KEY, SAVED_REFS_EVENT, []);
+}
+
+/** Add or remove; returns whether it is now saved. */
+export function toggleSavedReference(item: SavedReference): boolean {
+  const list = getSavedReferences();
+  if (list.some((i) => i.slug === item.slug)) {
+    write(SAVED_REFS_KEY, SAVED_REFS_EVENT, list.filter((i) => i.slug !== item.slug));
+    notify('Removed from wishlist');
+    return false;
+  }
+  write(SAVED_REFS_KEY, SAVED_REFS_EVENT, [item, ...list].slice(0, 200));
+  notify('Saved to your wishlist');
+  return true;
+}
