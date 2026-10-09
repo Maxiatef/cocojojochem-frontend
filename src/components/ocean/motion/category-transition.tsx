@@ -475,7 +475,6 @@ export default function CategoryTransition({ selection, onCancel, onNavigate }: 
           src={selection.image}
           alt=""
           decoding="sync"
-          {...({ fetchpriority: "high" } as object)}
         />
         <div ref={fogRef} className={styles.fog} aria-hidden="true" />
         <div ref={captionRef} className={styles.caption}>

@@ -212,7 +212,7 @@ export function PackagingDetail({ p }: { p: PackagingProduct }) {
       <section className="r-wrap r-product-detail pk-detail">
         <div className="r-detail-image">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={p.image} alt={p.imageNote} width={740} height={740} {...({ fetchpriority: 'high' } as object)} />
+          <img src={p.image} alt={p.imageNote} width={740} height={740} />
           <span>{p.imageNote}</span>
         </div>
         <div className="r-detail-copy">

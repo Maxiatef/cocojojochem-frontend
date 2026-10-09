@@ -1,16 +1,4 @@
-import '@/styles/ocean.css';
-import '@/styles/gloss-workspace.css';
-import '@/styles/gloss-account.css';
-import '@/styles/ocean-catalog.css';
-import '@/styles/ocean-product.css';
-import '@/styles/ocean-home.css';
-import '@/styles/ocean-categories.css';
-import '@/styles/ocean-company.css';
-import '@/styles/ocean-tools.css';
-import '@/styles/ocean-workspace.css';
-import '@/styles/ocean-newsletter.css';
-import '@/styles/ocean-shell.css';
-import '@/styles/ocean-support.css';
+import '@/styles/storefront-styles';
 import { OceanShell } from '@/components/ocean/OceanShell';
 import { CategoryNavigation } from '@/components/ocean/motion/category-navigation';
 import { GlossMotion } from '@/components/ocean/motion/gloss-experience';

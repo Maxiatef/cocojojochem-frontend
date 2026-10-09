@@ -28,7 +28,6 @@ export default function LogoAssembly({ variant = "entry" }: { variant?: "entry" 
       <BrandLogo
         className={prefix + "-assembled"}
         decorative
-        {...({ fetchpriority: variant === "entry" ? "high" : "auto" } as object)}
         decoding="async"
       />
       <div className={prefix + "-logo-pieces"}>

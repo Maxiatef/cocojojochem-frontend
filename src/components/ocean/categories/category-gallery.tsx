@@ -353,7 +353,6 @@ export default function CategoryGallery({ categories }: { categories: Category[]
                     width={900}
                     height={600}
                     loading={index < 2 ? "eager" : "lazy"}
-                    {...({ fetchpriority: index === 0 ? "high" : "auto" } as object)}
                   />
                 </div>
                 <span className={styles.explore} aria-hidden="true">

@@ -70,7 +70,6 @@ function Hero({ about = false }: { about?: boolean }) {
               alt=""
               width={about ? 1564 : 1536}
               height={about ? 1006 : 1024}
-              {...({ fetchpriority: 'high' } as object)}
             />
           </div>
           <div className="e-glass-label">

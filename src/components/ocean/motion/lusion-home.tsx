@@ -146,7 +146,6 @@ export default function LusionHero({
                   width={1254}
                   height={1254}
                   alt=""
-                  {...({ fetchpriority: "high" } as object)}
                   draggable={false}
                 />
               </div>

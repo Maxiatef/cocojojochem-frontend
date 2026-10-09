@@ -25,7 +25,7 @@ function DetailImage({ src, alt, representative }: { src: string; alt: string; r
   return (
     <div className="r-detail-image">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} width={740} height={740} {...({ fetchpriority: 'high' } as object)} />
+      <img src={src} alt={alt} width={740} height={740} />
       {representative && <span>Representative category image</span>}
       <div>
         <FlaskConical size={22} />

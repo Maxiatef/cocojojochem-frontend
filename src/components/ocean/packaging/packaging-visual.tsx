@@ -39,7 +39,6 @@ export function PackagingVisual() {
             alt="Glass cosmetic jars and an airless pump bottle with glossy ocean-blue and chrome details"
             width={1254}
             height={1254}
-            {...({ fetchpriority: "high" } as object)}
             draggable={false}
           />
         </div>

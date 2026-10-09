@@ -308,7 +308,6 @@ export default function CinematicIntro({
                   alt=""
                   draggable={false}
                   decoding="async"
-                  {...({ fetchpriority: "high" } as object)}
                 />
               </div>
               <div className="cj-entry-electrons">

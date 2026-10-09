@@ -84,7 +84,6 @@ export function GlossHero({ price, pack }: { price: string; pack: string }) {
                 alt={active.label + " representative ingredient photograph"}
                 width={700}
                 height={760}
-                {...({ fetchpriority: "high" } as object)}
               />
               <span className="g-photo-label">
                 THE INGREDIENT EDIT <span>0{selected + 1} / 03</span>
