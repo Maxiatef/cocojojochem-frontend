@@ -1,1 +1,11 @@
 /* Ocean redesign — home group additions. Scope every rule under .ocean */
+
+/* The logo sits directly on the scene, without the light card the reference
+   draws behind it (the logo PNG is already transparent). */
+.ocean .cj-brand-surface,
+.ocean.gloss-theme .cj-brand-surface {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
