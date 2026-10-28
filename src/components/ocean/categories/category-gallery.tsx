@@ -210,14 +210,6 @@ export default function CategoryGallery({ categories }: { categories: Category[]
         surface.removeEventListener("pointercancel", leave);
       });
     });
-    // The title uses the whole available width, including on narrow screens.
-    const title = el.querySelector<HTMLElement>("[data-cg-title]")!;
-    const titleText = title.querySelector<HTMLElement>("[data-cg-title-text]")!;
-    function fitTitle() {
-      title.style.setProperty("--cg-title-width", String(title.clientWidth / Math.max(1, titleText.offsetWidth)));
-    }
-    const resizeObserver = new ResizeObserver(fitTitle);
-    resizeObserver.observe(title);
     function focus(event: FocusEvent) {
       if (event.target instanceof Element) {
         const card = event.target.closest<HTMLElement>("[data-cg-card]");
@@ -226,7 +218,6 @@ export default function CategoryGallery({ categories }: { categories: Category[]
     }
     function resize() {
       lastScroll = window.scrollY;
-      fitTitle();
       schedule();
     }
     window.addEventListener("scroll", scroll, { passive: true });
@@ -236,12 +227,8 @@ export default function CategoryGallery({ categories }: { categories: Category[]
     el.addEventListener("focusin", focus);
     el.addEventListener("focusout", schedule);
     sync();
-    fitTitle();
     document.fonts.ready.then(() => {
-      if (!disposed) {
-        fitTitle();
-        schedule();
-      }
+      if (!disposed) schedule();
     });
     return () => {
       disposed = true;
@@ -249,7 +236,6 @@ export default function CategoryGallery({ categories }: { categories: Category[]
       syncMotion.current = null;
       cancelAnimationFrame(frame);
       observer.disconnect();
-      resizeObserver.disconnect();
       cleanup.forEach((fn) => fn());
       window.removeEventListener("scroll", scroll);
       window.removeEventListener("resize", resize);
@@ -298,9 +284,9 @@ export default function CategoryGallery({ categories }: { categories: Category[]
             ({String(categories.length).padStart(2, "0")}) <ArrowDownRight aria-hidden="true" />
           </span>
         </div>
-        <h1 className={styles.title} data-cg-title aria-label="Categories">
-          <span className={styles.titleText} data-cg-title-text aria-hidden="true">
-            {"CATEGORIES".split("").map((letter, index) => (
+        <h1 className={styles.title} aria-label="Categories">
+          <span className={styles.titleText} aria-hidden="true">
+            {"Categories".split("").map((letter, index) => (
               <span key={index} className={styles.letter} style={{ "--cg-letter": index } as CSSProperties}>
                 {letter}
               </span>
